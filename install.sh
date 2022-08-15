@@ -2,6 +2,11 @@
 
 set -e
 
+PACKAGES=(
+    "https://github.com/IceWhaleTech/CasaOS-Gateway/releases/download/v0.3.6-alpha1/linux-${ARCH}-casaos-gateway-v0.3.6-alpha1.tar.gz"
+    "https://github.com/IceWhaleTech/CasaOS-UserService/releases/download/v0.3.6-alpha1/linux-${ARCH}-casaos-user-service-migration-tool-v0.3.6-alpha1.tar.gz"
+)
+
 BUILD_DIR=${1}
 
 TMP_ROOT=/tmp/casaos-installer
@@ -49,11 +54,6 @@ case $(uname -m) in
 esac
 
 if [ -z "${BUILD_DIR}" ]; then
-
-    PACKAGES=(
-        "https://github.com/IceWhaleTech/CasaOS-Gateway/releases/download/v0.3.5-alpha7/linux-${ARCH}-casaos-gateway-v0.3.5-alpha7.tar.gz"
-        "https://github.com/IceWhaleTech/CasaOS-UserService/releases/download/v0.3.5-alpha3/linux-${ARCH}-casaos-user-service-migration-tool-v0.3.5-alpha3.tar.gz"
-    )
 
     mkdir -p ${TMP_ROOT} || __error "Failed to create temporary directory"
     TMP_DIR=$(mktemp -d -p ${TMP_ROOT} || __error "Failed to create temporary directory")
