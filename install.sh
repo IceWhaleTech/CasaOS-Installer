@@ -2,6 +2,24 @@
 
 set -e
 
+ARCH="unknown"
+
+case $(uname -m) in
+    x86_64)
+        ARCH="amd64"
+        ;;
+    aarch64)
+        ARCH="arm64"
+        ;;
+    armv7l)
+        ARCH="arm-7"
+        ;;
+    *)
+        echo "Unsupported architecture"
+        exit 1
+        ;;
+esac
+
 PACKAGES=(
     "https://github.com/IceWhaleTech/CasaOS-Gateway/releases/download/v0.3.6-alpha1/linux-${ARCH}-casaos-gateway-v0.3.6-alpha1.tar.gz"
     "https://github.com/IceWhaleTech/CasaOS-UserService/releases/download/v0.3.6-alpha1/linux-${ARCH}-casaos-user-service-v0.3.6-alpha1.tar.gz"
@@ -34,24 +52,6 @@ if [ "${OS}" != "Linux" ]; then
     echo "This script is only for Linux"
     exit 1
 fi
-
-ARCH="unknown"
-
-case $(uname -m) in
-    x86_64)
-        ARCH="amd64"
-        ;;
-    aarch64)
-        ARCH="arm64"
-        ;;
-    armv7l)
-        ARCH="arm-7"
-        ;;
-    *)
-        echo "Unsupported architecture"
-        exit 1
-        ;;
-esac
 
 if [ -z "${BUILD_DIR}" ]; then
 
