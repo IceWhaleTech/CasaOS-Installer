@@ -4,7 +4,7 @@ set -e
 
 PACKAGES=(
     "https://github.com/IceWhaleTech/CasaOS-Gateway/releases/download/v0.3.6-alpha1/linux-${ARCH}-casaos-gateway-v0.3.6-alpha1.tar.gz"
-    "https://github.com/IceWhaleTech/CasaOS-UserService/releases/download/v0.3.6-alpha1/linux-${ARCH}-casaos-user-service-migration-tool-v0.3.6-alpha1.tar.gz"
+    "https://github.com/IceWhaleTech/CasaOS-UserService/releases/download/v0.3.6-alpha1/linux-${ARCH}-casaos-user-service-v0.3.6-alpha1.tar.gz"
 )
 
 BUILD_DIR=${1}
@@ -60,14 +60,13 @@ if [ -z "${BUILD_DIR}" ]; then
 
     pushd "${TMP_DIR}"
 
-    __info "Downloading packages..."
     for PACKAGE in "${PACKAGES[@]}"; do
+        __info "Downloading ${PACKAGE}..."
         curl -sLO "${PACKAGE}" || __error "Failed to download package"
     done
 
-    __info "Extracting packages..."
     for PACKAGE_FILE in linux-*-casaos-*.tar.gz; do
-
+        __info "Extracting ${PACKAGE_FILE}..."
         tar zxvf "${PACKAGE_FILE}" || __error "Failed to extract package"
     done
 
