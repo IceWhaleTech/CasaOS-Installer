@@ -14,6 +14,10 @@ __info_done() {
     echo -e "✅ ${1}"
 }
 
+__warning() {
+    echo -e "🟨 ${1}"
+}
+
 __error() {
     echo "🟥 ${1}"
     exit 1
@@ -56,13 +60,14 @@ if [ -z "${BUILD_DIR}" ]; then
 
     pushd "${TMP_DIR}"
 
+    __info "Downloading packages..."
     for PACKAGE in "${PACKAGES[@]}"; do
-        __info "Downloading ${PACKAGE}..."
         curl -sLO "${PACKAGE}" || __error "Failed to download package"
     done
 
+    __info "Extracting packages..."
     for PACKAGE_FILE in linux-*-casaos-*.tar.gz; do
-        __info "Extracting ${PACKAGE_FILE}..."
+
         tar zxvf "${PACKAGE_FILE}" || __error "Failed to extract package"
     done
 
@@ -71,10 +76,37 @@ if [ -z "${BUILD_DIR}" ]; then
     popd
 fi
 
+SERVICES_TO_STOP=(
+    "casaos.service"
+    "casaos-gateway.service"
+    "casaos-user-service.service"
+)
+
+__info "Stopping CasaOS services..."
+for SERVICE in "${SERVICES_TO_STOP[@]}"; do
+    systemctl stop "${SERVICE}" || __warning "Service ${SERVICE} does not exist."
+done
+
 MIGRATION_SCRIPT_DIR=$(realpath -e "${BUILD_DIR}"/scripts/migration/script.d || __error "Failed to find migration script directory")
 
+__info "Running migration script before installation..."
 for MIGRATION_SCRIPT in "${MIGRATION_SCRIPT_DIR}"/*.sh; do
-    __info "Running ${MIGRATION_SCRIPT}..."
     bash "${MIGRATION_SCRIPT}" || __error "Failed to run migration script"
 done
 
+__info "Installing CasaOS..."
+SYSROOT_DIR=$(realpath -e "${BUILD_DIR}"/sysroot || __error "Failed to find sysroot directory")
+
+# Generate manifest for uninstallation
+MANIFEST_FILE=${BUILD_DIR}/sysroot/var/lib/casaos/manifest
+touch "${MANIFEST_FILE}" || __error "Failed to create manifest file"
+find "${SYSROOT_DIR}" -type f | cut -c ${#SYSROOT_DIR}- | cut -c 2- | tee "${MANIFEST_FILE}" || __error "Failed to create manifest file"
+
+cp -rv "${SYSROOT_DIR}"/* / || __error "Failed to install CasaOS"
+
+SETUP_SCRIPT_DIR=$(realpath -e "${BUILD_DIR}"/scripts/setup/script.d || __error "Failed to find setup script directory")
+
+__info "Setting up CasaOS..."
+for SETUP_SCRIPT in "${SETUP_SCRIPT_DIR}"/*.sh; do
+    bash "${SETUP_SCRIPT}" || __error "Failed to run setup script"
+done
