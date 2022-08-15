@@ -82,15 +82,15 @@ SERVICES_TO_STOP=(
     "casaos-user-service.service"
 )
 
-__info "Stopping CasaOS services..."
 for SERVICE in "${SERVICES_TO_STOP[@]}"; do
+    __info "Stopping ${SERVICE}..."
     systemctl stop "${SERVICE}" || __warning "Service ${SERVICE} does not exist."
 done
 
 MIGRATION_SCRIPT_DIR=$(realpath -e "${BUILD_DIR}"/scripts/migration/script.d || __error "Failed to find migration script directory")
 
-__info "Running migration script before installation..."
 for MIGRATION_SCRIPT in "${MIGRATION_SCRIPT_DIR}"/*.sh; do
+    __info "Running ${MIGRATION_SCRIPT}..."
     bash "${MIGRATION_SCRIPT}" || __error "Failed to run migration script"
 done
 
@@ -106,7 +106,7 @@ cp -rv "${SYSROOT_DIR}"/* / || __error "Failed to install CasaOS"
 
 SETUP_SCRIPT_DIR=$(realpath -e "${BUILD_DIR}"/scripts/setup/script.d || __error "Failed to find setup script directory")
 
-__info "Setting up CasaOS..."
 for SETUP_SCRIPT in "${SETUP_SCRIPT_DIR}"/*.sh; do
+    __info "Running ${SETUP_SCRIPT}..."
     bash "${SETUP_SCRIPT}" || __error "Failed to run setup script"
 done
