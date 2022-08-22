@@ -21,8 +21,8 @@ case $(uname -m) in
 esac
 
 PACKAGES=(
-    "https://github.com/IceWhaleTech/CasaOS-Gateway/releases/download/v0.3.6-alpha1/linux-${ARCH}-casaos-gateway-v0.3.6-alpha1.tar.gz"
-    "https://github.com/IceWhaleTech/CasaOS-UserService/releases/download/v0.3.6-alpha1/linux-${ARCH}-casaos-user-service-v0.3.6-alpha1.tar.gz"
+    "https://github.com/IceWhaleTech/CasaOS-Gateway/releases/download/v0.3.6-alpha2/linux-${ARCH}-casaos-gateway-v0.3.6-alpha2.tar.gz"
+    "https://github.com/IceWhaleTech/CasaOS-UserService/releases/download/v0.3.6-alpha2/linux-${ARCH}-casaos-user-service-v0.3.6-alpha2.tar.gz"
 )
 
 BUILD_DIR=${1}
