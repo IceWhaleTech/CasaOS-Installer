@@ -20,14 +20,7 @@ case $(uname -m) in
         ;;
 esac
 
-PACKAGES=(
-    "https://github.com/IceWhaleTech/CasaOS-Gateway/releases/download/v0.3.6-alpha2/linux-${ARCH}-casaos-gateway-v0.3.6-alpha2.tar.gz"
-    "https://github.com/IceWhaleTech/CasaOS-UserService/releases/download/v0.3.6-alpha2/linux-${ARCH}-casaos-user-service-v0.3.6-alpha2.tar.gz"
-)
-
 BUILD_DIR=${1}
-
-TMP_ROOT=/tmp/casaos-installer
 
 __info() {
     echo -e "🟩 ${1}"
@@ -55,15 +48,23 @@ fi
 
 if [ -z "${BUILD_DIR}" ]; then
 
+    URL_LATEST_VERSION="https://raw.githubusercontent.com/IceWhaleTech/CasaOS-Installer/main/dist/latest"
+    VERSION=$(curl -s "${URL_LATEST_VERSION}" || __error "Failed to get latest version")
+
+    URL_MANIFEST="https://raw.githubusercontent.com/IceWhaleTech/CasaOS-Installer/main/dist/${VERSION}"
+
+    TMP_ROOT=/tmp/casaos-installer
+    
     mkdir -p ${TMP_ROOT} || __error "Failed to create temporary directory"
     TMP_DIR=$(mktemp -d -p ${TMP_ROOT} || __error "Failed to create temporary directory")
 
     pushd "${TMP_DIR}"
 
-    for PACKAGE in "${PACKAGES[@]}"; do
-        __info "Downloading ${PACKAGE}..."
+    while read -r line || [ -n "$line" ]; do
+        PACKAGE=$(eval echo "$line")
+        __info "Downloading ${PACKAGE} for ${ARCH}..."
         curl -sLO "${PACKAGE}" || __error "Failed to download package"
-    done
+    done < <(curl -s "${URL_MANIFEST}" || __error "Failed to get packages")
 
     for PACKAGE_FILE in linux-*-casaos-*.tar.gz; do
         __info "Extracting ${PACKAGE_FILE}..."
