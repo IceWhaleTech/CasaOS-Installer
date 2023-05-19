@@ -4,13 +4,35 @@ import (
 	"log"
 
 	"gopkg.in/ini.v1"
+
+	"github.com/IceWhaleTech/CasaOS-Installer/common"
 )
+
+type CommonModel struct {
+	RuntimePath string
+}
+
+type APPModel struct {
+	LogPath     string
+	LogSaveName string
+	LogFileExt  string
+}
 
 const (
 	InstallerConfigFilePath = "/etc/casaos/installer.conf"
 )
 
 var (
+	CommonInfo = &CommonModel{
+		RuntimePath: "/var/run/casaos",
+	}
+
+	AppInfo = &APPModel{
+		LogPath:     "/var/log/casaos",
+		LogSaveName: common.InstallerServiceName,
+		LogFileExt:  "log",
+	}
+
 	Cfg            *ini.File
 	ConfigFilePath string
 )

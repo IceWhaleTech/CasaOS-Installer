@@ -1,0 +1,17 @@
+openapi: 3.1.0
+
+info:
+  title: CasaOS Installer API
+  version: v2
+  description: API for installing and updating CasaOS on a device
+
+servers:
+  - url: /v2/installer
+
+security:
+  - access_token: []
+
+paths:
+  /latest:
+    get:
+      summary: Get the information about the latest release of CasaOS

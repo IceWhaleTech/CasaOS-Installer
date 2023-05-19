@@ -1,5 +1,8 @@
 package common
 
 const (
-	InstallerVersion = "0.4.5"
+	Localhost = "127.0.0.1"
+
+	InstallerVersion     = "0.4.5"
+	InstallerServiceName = "installer"
 )
