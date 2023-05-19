@@ -48,9 +48,9 @@ func main() {
 	// notify systemd that we are ready
 	{
 		if supported, err := daemon.SdNotify(false, daemon.SdNotifyReady); err != nil {
-			logger.Error("Failed to notify systemd that files backup service is ready", zap.Any("error", err))
+			logger.Error("Failed to notify systemd that installer service is ready", zap.Any("error", err))
 		} else if supported {
-			logger.Info("Notified systemd that files backup service is ready")
+			logger.Info("Notified systemd that installer service is ready")
 		} else {
 			logger.Info("This process is not running as a systemd service.")
 		}
