@@ -18,6 +18,10 @@ type APPModel struct {
 	LogFileExt  string
 }
 
+type ServerModel struct {
+	ReleaseURL string
+}
+
 const (
 	InstallerConfigFilePath = "/etc/casaos/installer.conf"
 )
@@ -31,6 +35,10 @@ var (
 		LogPath:     "/var/log/casaos",
 		LogSaveName: common.InstallerServiceName,
 		LogFileExt:  "log",
+	}
+
+	ServerInfo = &ServerModel{
+		ReleaseURL: "TODO", // TODO
 	}
 
 	Cfg            *ini.File
