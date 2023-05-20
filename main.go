@@ -15,6 +15,7 @@ import (
 	"github.com/IceWhaleTech/CasaOS-Common/utils/logger"
 	"github.com/IceWhaleTech/CasaOS-Installer/common"
 	"github.com/IceWhaleTech/CasaOS-Installer/internal/config"
+	"github.com/IceWhaleTech/CasaOS-Installer/service"
 	"github.com/coreos/go-systemd/daemon"
 	"go.uber.org/zap"
 )
@@ -42,6 +43,8 @@ func main() {
 
 		config.InitSetup(*configFlag)
 	}
+
+	service.Initialize()
 
 	apiService, apiServiceError := StartAPIService()
 

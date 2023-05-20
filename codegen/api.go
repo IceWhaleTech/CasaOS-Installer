@@ -20,6 +20,29 @@ const (
 	Access_tokenScopes = "access_token.Scopes"
 )
 
+// BaseResponse defines model for BaseResponse.
+type BaseResponse struct {
+	// Message message returned by server side if there is any
+	Message *string `json:"message,omitempty"`
+}
+
+// Release defines model for Release.
+type Release struct {
+	ReleaseNotes *string `json:"releaseNotes,omitempty"`
+	Version      *string `json:"version,omitempty"`
+}
+
+// ReleaseOK defines model for ReleaseOK.
+type ReleaseOK struct {
+	Data *Release `json:"data,omitempty"`
+
+	// Message message returned by server side if there is any
+	Message *string `json:"message,omitempty"`
+}
+
+// ResponseInternalServerError defines model for ResponseInternalServerError.
+type ResponseInternalServerError = BaseResponse
+
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
 	// Get the information about the latest release of CasaOS
@@ -78,11 +101,15 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"H4sIAAAAAAAC/zSPz2rzMBDEX0XMWSTfl950Cz0UQ6GBHkMoW3uTiMqS0K4Nwejdi+z0pD8zszu/BX0a",
-	"c4ocVeCWauHjNcEtGFj64rP6FOFwPHXmmorxUZRC8PFmKA5mygNpe7yS0MenSdGQGXj2PcNCvQaGw1Ps",
-	"tiwXczx1sJi5yDZ9PqBapMyRsofDy+7/7h8sMum91cI+kLJou954PVLmQq1cN8DhjfV9c1gUlpyisMDF",
-	"KQQLmcaRymOzGb2zaYxlXOOGvtO0/W47TOHAJGzS9UmFWquFcD8Vrw+48wLqexb50vTDEe58qZdmKI1o",
-	"1acS4LCfD3v/B416qb8BAAD//wRALHtuAQAA",
+	"H4sIAAAAAAAC/4xUwY7aMBD9FWvaY0QQ273kRquqQlRltRxXqJpNJuA2sa2xEzVF/vfKdoAFyooTnsz4",
+	"zXtvxuyh1K3RipSzUOyByRqtLMXgmRpCS6tlCEqtHCkXjmhMI0t0Uqv8l9UqfLPljlqM2aZZ1VC87OEj",
+	"Uw0FfMhPPfJUZ/PPaOl5bAY+24NhbYidTK0rdBHsPYiRHnjvN977DCqyJUsTeEEBqyX4DA49FsoRK2zW",
+	"xD3xV2bNd6iiP9iahsKxJWtxS1DAAUokLJHAfPbGg/uVX/O+AX/Ej/6cgRSX7h257i+wx4Rgch0rqsTr",
+	"IGxqY2VFQtbC7YhJSCtQDZCdHADIwA0mnKxjqbaJ+2EIVxw4JX5ol+KLuxn0xFZe2Az9dPJp8vi/VkE/",
+	"lR1LN6yDDwkVy5Ks/en0b4pIMqjcEVbEkIHCNoDMO7fTLP/G2Z6w0cglDUmGVLW+tmv+tBC1ZiGVddg0",
+	"Um0Fqkp0pkIXgi9ocbUWWgkUFfWypIAuXZQyJhfpLrGYPy3gjWzoZ8EGbUihkVDAw2Q6eYAMDLpdFJc3",
+	"6MjG5dxS/AkGRxWLCgr4Ru57qsjOH+5sOr21hce6/PS6fQaP9924/ZbifLq2RR4Ss7BIItjKbWQs8FV3",
+	"6WuSJcYNEboejYSzKce/kPP5vmz8JhSEtjbmO26ggLyf5fLgM/iN/xcAAP//vX5ItNcEAAA=",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file
