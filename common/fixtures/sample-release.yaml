@@ -1,0 +1,10 @@
+version: v0.4.4
+release_notes: |
+  TOOD: add release notes
+packages:
+  - url: https://github.com/IceWhaleTech/get/releases/download/v0.4.4-alpha1/casaos-amd64-v0.4.4-alpha1.tar.gz
+    architecture: amd64
+  - url: https://github.com/IceWhaleTech/get/releases/download/v0.4.4-alpha1/casaos-arm64-v0.4.4-alpha1.tar.gz
+    architecture: arm64
+  - url: https://github.com/IceWhaleTech/get/releases/download/v0.4.4-alpha1/casaos-arm-7-v0.4.4-alpha1.tar.gz
+    architecture: armv7

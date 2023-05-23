@@ -8,8 +8,13 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func (a *api) GetLatest(ctx echo.Context) error {
-	release, err := service.Installer.GetLatest(ctx)
+func (a *api) GetRelease(ctx echo.Context, params codegen.GetReleaseParams) error {
+	tag := "main"
+	if params.Version != nil && *params.Version != "latest" {
+		tag = *params.Version
+	}
+
+	release, err := service.Installer.GetRelease(ctx, tag)
 	if err != nil {
 		message := err.Error()
 		return ctx.JSON(http.StatusInternalServerError, &codegen.ResponseInternalServerError{
@@ -18,6 +23,10 @@ func (a *api) GetLatest(ctx echo.Context) error {
 	}
 
 	return ctx.JSON(http.StatusOK, &codegen.ReleaseOK{
-		Data: &release,
+		Data: release,
 	})
+}
+
+func (a *api) InstallRelease(ctx echo.Context, params codegen.InstallReleaseParams) error {
+	panic("not implemented")
 }

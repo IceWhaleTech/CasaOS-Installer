@@ -19,7 +19,7 @@ type APPModel struct {
 }
 
 type ServerModel struct {
-	ReleaseURL string
+	ReleaseBaseURL string
 }
 
 const (
@@ -38,7 +38,7 @@ var (
 	}
 
 	ServerInfo = &ServerModel{
-		ReleaseURL: "TODO", // TODO
+		ReleaseBaseURL: "https://raw.githubusercontent.com/IceWhaleTech/get",
 	}
 
 	Cfg            *ini.File

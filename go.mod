@@ -6,8 +6,10 @@ require (
 	github.com/IceWhaleTech/CasaOS v0.4.3
 	github.com/IceWhaleTech/CasaOS-Common v0.4.3
 	github.com/coreos/go-systemd v0.0.0-20191104093116-d3cd4ed1dbcf
+	github.com/deepmap/oapi-codegen v1.12.4
 	github.com/getkin/kin-openapi v0.117.0
 	github.com/labstack/echo/v4 v4.10.2
+	github.com/samber/lo v1.38.1
 	go.uber.org/zap v1.24.0
 	gopkg.in/ini.v1 v1.67.0
 )
@@ -17,7 +19,6 @@ require (
 	github.com/apapsch/go-jsonmerge/v2 v2.0.0 // indirect
 	github.com/coreos/go-systemd/v22 v22.5.0 // indirect
 	github.com/deckarep/golang-set/v2 v2.3.0 // indirect
-	github.com/deepmap/oapi-codegen v1.12.4 // indirect
 	github.com/disintegration/imaging v1.6.2 // indirect
 	github.com/dsnet/compress v0.0.2-0.20210315054119-f66993602bf5 // indirect
 	github.com/dsoprea/go-exif/v3 v3.0.0-20221012082141-d21ac8e2de85 // indirect
@@ -75,6 +76,7 @@ require (
 	go.uber.org/atomic v1.10.0 // indirect
 	go.uber.org/multierr v1.10.0 // indirect
 	golang.org/x/crypto v0.7.0 // indirect
+	golang.org/x/exp v0.0.0-20220303212507-bbda1eaf7a17 // indirect
 	golang.org/x/image v0.6.0 // indirect
 	golang.org/x/net v0.8.0 // indirect
 	golang.org/x/sync v0.1.0 // indirect

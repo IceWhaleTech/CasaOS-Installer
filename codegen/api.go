@@ -8,10 +8,12 @@ import (
 	"compress/gzip"
 	"encoding/base64"
 	"fmt"
+	"net/http"
 	"net/url"
 	"path"
 	"strings"
 
+	"github.com/deepmap/oapi-codegen/pkg/runtime"
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/labstack/echo/v4"
 )
@@ -20,17 +22,37 @@ const (
 	Access_tokenScopes = "access_token.Scopes"
 )
 
+// Defines values for PackageArchitecture.
+const (
+	Amd64 PackageArchitecture = "amd64"
+	Arm64 PackageArchitecture = "arm64"
+	Arm7  PackageArchitecture = "arm-7"
+)
+
 // BaseResponse defines model for BaseResponse.
 type BaseResponse struct {
 	// Message message returned by server side if there is any
 	Message *string `json:"message,omitempty"`
 }
 
+// Package defines model for Package.
+type Package struct {
+	Architecture PackageArchitecture `json:"architecture"`
+	URL          string              `json:"url"`
+}
+
+// PackageArchitecture defines model for Package.Architecture.
+type PackageArchitecture string
+
 // Release defines model for Release.
 type Release struct {
-	ReleaseNotes *string `json:"releaseNotes,omitempty"`
-	Version      *string `json:"version,omitempty"`
+	Packages     []Package `json:"packages"`
+	ReleaseNotes string    `json:"release_notes"`
+	Version      string    `json:"version"`
 }
+
+// Version defines model for Version.
+type Version = string
 
 // ReleaseOK defines model for ReleaseOK.
 type ReleaseOK struct {
@@ -43,11 +65,29 @@ type ReleaseOK struct {
 // ResponseInternalServerError defines model for ResponseInternalServerError.
 type ResponseInternalServerError = BaseResponse
 
+// ResponseOK defines model for ResponseOK.
+type ResponseOK = BaseResponse
+
+// GetReleaseParams defines parameters for GetRelease.
+type GetReleaseParams struct {
+	// Version version of the release
+	Version *Version `form:"version,omitempty" json:"version,omitempty"`
+}
+
+// InstallReleaseParams defines parameters for InstallRelease.
+type InstallReleaseParams struct {
+	// Version version of the release
+	Version *Version `form:"version,omitempty" json:"version,omitempty"`
+}
+
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
 	// Get the information about the latest release of CasaOS
-	// (GET /latest)
-	GetLatest(ctx echo.Context) error
+	// (GET /release)
+	GetRelease(ctx echo.Context, params GetReleaseParams) error
+	// Install a release of CasaOS
+	// (POST /release)
+	InstallRelease(ctx echo.Context, params InstallReleaseParams) error
 }
 
 // ServerInterfaceWrapper converts echo contexts to parameters.
@@ -55,14 +95,43 @@ type ServerInterfaceWrapper struct {
 	Handler ServerInterface
 }
 
-// GetLatest converts echo context to params.
-func (w *ServerInterfaceWrapper) GetLatest(ctx echo.Context) error {
+// GetRelease converts echo context to params.
+func (w *ServerInterfaceWrapper) GetRelease(ctx echo.Context) error {
 	var err error
 
 	ctx.Set(Access_tokenScopes, []string{""})
 
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetReleaseParams
+	// ------------- Optional query parameter "version" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "version", ctx.QueryParams(), &params.Version)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter version: %s", err))
+	}
+
 	// Invoke the callback with all the unmarshalled arguments
-	err = w.Handler.GetLatest(ctx)
+	err = w.Handler.GetRelease(ctx, params)
+	return err
+}
+
+// InstallRelease converts echo context to params.
+func (w *ServerInterfaceWrapper) InstallRelease(ctx echo.Context) error {
+	var err error
+
+	ctx.Set(Access_tokenScopes, []string{""})
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params InstallReleaseParams
+	// ------------- Optional query parameter "version" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "version", ctx.QueryParams(), &params.Version)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter version: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshalled arguments
+	err = w.Handler.InstallRelease(ctx, params)
 	return err
 }
 
@@ -94,22 +163,28 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 		Handler: si,
 	}
 
-	router.GET(baseURL+"/latest", wrapper.GetLatest)
+	router.GET(baseURL+"/release", wrapper.GetRelease)
+	router.POST(baseURL+"/release", wrapper.InstallRelease)
 
 }
 
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"H4sIAAAAAAAC/4xUwY7aMBD9FWvaY0QQ273kRquqQlRltRxXqJpNJuA2sa2xEzVF/vfKdoAFyooTnsz4",
-	"zXtvxuyh1K3RipSzUOyByRqtLMXgmRpCS6tlCEqtHCkXjmhMI0t0Uqv8l9UqfLPljlqM2aZZ1VC87OEj",
-	"Uw0FfMhPPfJUZ/PPaOl5bAY+24NhbYidTK0rdBHsPYiRHnjvN977DCqyJUsTeEEBqyX4DA49FsoRK2zW",
-	"xD3xV2bNd6iiP9iahsKxJWtxS1DAAUokLJHAfPbGg/uVX/O+AX/Ej/6cgRSX7h257i+wx4Rgch0rqsTr",
-	"IGxqY2VFQtbC7YhJSCtQDZCdHADIwA0mnKxjqbaJ+2EIVxw4JX5ol+KLuxn0xFZe2Az9dPJp8vi/VkE/",
-	"lR1LN6yDDwkVy5Ks/en0b4pIMqjcEVbEkIHCNoDMO7fTLP/G2Z6w0cglDUmGVLW+tmv+tBC1ZiGVddg0",
-	"Um0Fqkp0pkIXgi9ocbUWWgkUFfWypIAuXZQyJhfpLrGYPy3gjWzoZ8EGbUihkVDAw2Q6eYAMDLpdFJc3",
-	"6MjG5dxS/AkGRxWLCgr4Ru57qsjOH+5sOr21hce6/PS6fQaP9924/ZbifLq2RR4Ss7BIItjKbWQs8FV3",
-	"6WuSJcYNEboejYSzKce/kPP5vmz8JhSEtjbmO26ggLyf5fLgM/iN/xcAAP//vX5ItNcEAAA=",
+	"H4sIAAAAAAAC/8RVTW/jNhD9K8S0R9lKs9kW0C0tisJIAQdJPw6BsZhIY4tdieQOR+56A/33gqRkRXGS",
+	"pmiBnkya1Mx7bx5nHqC0rbOGjHgoHsAhY0tCHHe/EXttTVhW5EvWTuIW9ulA2a2SmhRTQ+gJMtDh9FNH",
+	"fIAMDLY0XYYMfFlTiyncFrtGoIAGhbxABnJw4bYX1mYHfd9nwOSdNZ4imJuUZH0VNqU1QkbCEp1rdIkB",
+	"Wf6HT2inRNg06y0Udw/wNdMWCvgqnxjn6Z7Pv0dPN0My6LMHcGwdseiUukKJwV4LMcALwDcR/Fyx9RX0",
+	"GYw5VkaIDTa3xHviH5ktv4EVfcbWNRSWLXmPu6DXGEqlWCoF6x+L/Xbmp7hfDD9+9A/r8W+wBA2PxGJh",
+	"Zl8UT8t2FOmpfYcDxSQdG6rU/UH5xM/ripSOtmZS2is0wcpH6eF5p15j+XFINceAXNZaqJSO4ymZroXi",
+	"DrCtvr2ADJDb8XfxHWxOgmfQcTMrPtQizhd5vtNSd/fL0rb5qqTfa2zoFyrrfEeSDy/S55X90zQWq3x/",
+	"trxYXiywcTV+k5fo0fpFRLGYHS0Febn7ckIzg8+LnV0Mb/rXm58hvVCs1qY5QCHcUdh/6jRTFSgG4Nlc",
+	"gE00TnooJ1K5pGFca6HW/51fRtH7I1ZkxgNEXDHJB2MlBTyRdT/1tknaqMT7Z0r8OtOpw83zZhOnTXQu",
+	"lR1rOdwGAoM/ypK8/yD2I0UssYHWhBXx1EEvO6kt6y/xUU3o0OkrOiQDarO1p0a/vF6prWWljRdsGm12",
+	"Ck2lOlehhM0P6HF9q6xRqCra6zL0cNESxRgOV+lbYnV5vYJHwsH+PAhpHRl0Ggp4tzxbvoukpY7kRhuG",
+	"9Y5idwgFjzRWFRTwE8nNcXY8nj0v9OvpSj7Opn7zZE6cn529ZJzjvXwaJn0G79/2xcutO9a2a1vkQyIV",
+	"p2IoCbeRrMJ726V/07wbR2aYoEnnAMRZ/4xIQwH+L6GObf6/V2pgpvA5OR4/mMhz/lTuNoFQ6tpJh9go",
+	"Id+f53q0LPSb/q8AAAD//zp2oq7jCAAA",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

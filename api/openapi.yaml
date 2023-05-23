@@ -12,13 +12,26 @@ security:
   - access_token: []
 
 paths:
-  /latest:
+  /release:
     get:
       summary: Get the information about the latest release of CasaOS
-      operationId: getLatest
+      operationId: getRelease
+      parameters:
+        - $ref: "#/components/parameters/Version"
       responses:
         "200":
           $ref: "#/components/responses/ReleaseOK"
+        "500":
+          $ref: "#/components/responses/ResponseInternalServerError"
+
+    post:
+      summary: Install a release of CasaOS
+      operationId: installRelease
+      parameters:
+        - $ref: "#/components/parameters/Version"
+      responses:
+        "200":
+          $ref: "#/components/responses/ResponseOK"
         "500":
           $ref: "#/components/responses/ResponseInternalServerError"
 
@@ -28,6 +41,16 @@ components:
       type: apiKey
       in: header
       name: Authorization
+
+  parameters:
+    Version:
+      name: version
+      in: query
+      description: version of the release
+      required: false
+      schema:
+        type: string
+        default: latest
 
   responses:
     ResponseOK:
@@ -84,9 +107,35 @@ components:
           example: ""
 
     Release:
+      readOnly: true
+      required:
+        - version
+        - release_notes
+        - packages
       properties:
         version:
           type: string
           example: v0.4.5
-        releaseNotes:
+        release_notes:
           type: string
+        packages:
+          type: array
+          items:
+            $ref: "#/components/schemas/Package"
+
+    Package:
+      readOnly: true
+      required:
+        - url
+        - architecture
+      properties:
+        url:
+          type: string
+          example: https://github.com/IceWhaleTech/get/releases/download/v0.4.4-alpha1/casaos-amd64-v0.4.4-alpha1.tar.gz
+          x-go-name: URL
+        architecture:
+          type: string
+          enum:
+            - amd64
+            - arm64
+            - arm-7
