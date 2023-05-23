@@ -43,14 +43,19 @@ func DownloadPackage(ctx context.Context, packageURL string) (string, error) {
 	}
 
 	// download package
-	logger.Info("Downloading package", zap.String("url", packageURL))
-
 	client := &getter.Client{
-		Ctx:     ctx,
-		Src:     packageURL,
-		Dst:     tempDir,
-		Mode:    getter.ClientModeDir,
-		Options: []getter.ClientOption{},
+		Ctx:  ctx,
+		Src:  packageURL,
+		Dst:  tempDir,
+		Mode: getter.ClientModeDir,
+		Options: []getter.ClientOption{
+			getter.WithProgress(NewTracker(
+				func(downladed, totalSize int64) {
+					// TODO: send progress event to message bus if it exists
+					logger.Info("Downloading package", zap.String("url", packageURL), zap.Int64("downloaded", downladed), zap.Int64("totalSize", totalSize))
+				},
+			)),
+		},
 	}
 
 	if err := client.Get(); err != nil {

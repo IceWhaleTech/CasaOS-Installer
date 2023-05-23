@@ -13,6 +13,7 @@ require (
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/samber/lo v1.38.1
 	github.com/stretchr/testify v1.8.3
+	go.uber.org/goleak v1.2.1
 	go.uber.org/zap v1.24.0
 	gopkg.in/ini.v1 v1.67.0
 )
