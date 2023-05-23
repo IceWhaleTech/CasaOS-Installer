@@ -1,24 +1,63 @@
 package service
 
 import (
+	"context"
 	"fmt"
+	"time"
 
+	"github.com/IceWhaleTech/CasaOS-Common/utils/logger"
 	"github.com/IceWhaleTech/CasaOS-Installer/codegen"
 	"github.com/IceWhaleTech/CasaOS-Installer/internal"
 	"github.com/IceWhaleTech/CasaOS-Installer/internal/config"
 	"github.com/labstack/echo/v4"
+	"github.com/patrickmn/go-cache"
+	"go.uber.org/zap"
 )
 
 type InstallerService struct{}
 
-func (i *InstallerService) GetRelease(ctx echo.Context, tag string) (*codegen.Release, error) {
-	releaseURL := fmt.Sprintf("%s/%s/casaos-release", config.ServerInfo.ReleaseBaseURL, tag)
+const cacheKey = "release"
 
-	return internal.GetReleaseFrom(releaseURL)
+var (
+	Cache              = cache.New(5*time.Minute, 10*time.Minute)
+	ErrReleaseNotFound = fmt.Errorf("release not found")
+)
+
+func (i *InstallerService) GetRelease(tag string) (*codegen.Release, error) {
+	if cached, ok := Cache.Get(cacheKey); ok {
+		if release, ok := cached.(*codegen.Release); ok {
+			return release, nil
+		}
+	}
+
+	var release *codegen.Release
+	for _, baseURL := range config.ServerInfo.ReleaseBaseURLList {
+		releaseURL := fmt.Sprintf("%s/%s/casaos-release", baseURL, tag)
+
+		logger.Info("trying to get release information from url", zap.String("url", releaseURL))
+
+		_release, err := internal.GetReleaseFrom(releaseURL)
+		if err != nil {
+			logger.Info("error while getting release information - skipping", zap.Error(err), zap.String("url", releaseURL))
+			continue
+		}
+
+		release = _release
+		break
+	}
+
+	if release == nil {
+		return nil, ErrReleaseNotFound
+	}
+
+	Cache.Set(cacheKey, release, cache.DefaultExpiration)
+
+	return release, nil
 }
 
 func (i *InstallerService) InstallRelease(ctx echo.Context, release codegen.Release) error {
-	return internal.InstallRelease(release)
+	backgroundCtx := context.Background()
+	return internal.InstallRelease(backgroundCtx, release)
 }
 
 func NewInstallerService() *InstallerService {

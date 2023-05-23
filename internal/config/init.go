@@ -19,7 +19,7 @@ type APPModel struct {
 }
 
 type ServerModel struct {
-	ReleaseBaseURL string
+	ReleaseBaseURLList []string `ini:"release_base_url,,allowshadow"`
 }
 
 const (
@@ -38,7 +38,10 @@ var (
 	}
 
 	ServerInfo = &ServerModel{
-		ReleaseBaseURL: "https://raw.githubusercontent.com/IceWhaleTech/get",
+		ReleaseBaseURLList: []string{
+			"https://raw.githubusercontent.com/IceWhaleTech/get",
+			"https://casaos.oss-cn-shanghai.aliyuncs.com/IceWhaleTech/get",
+		},
 	}
 
 	Cfg            *ini.File
@@ -60,6 +63,7 @@ func InitSetup(config string) {
 
 	mapTo("common", CommonInfo)
 	mapTo("app", AppInfo)
+	mapTo("server", ServerInfo)
 }
 
 func mapTo(section string, v interface{}) {

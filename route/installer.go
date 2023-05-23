@@ -14,9 +14,16 @@ func (a *api) GetRelease(ctx echo.Context, params codegen.GetReleaseParams) erro
 		tag = *params.Version
 	}
 
-	release, err := service.Installer.GetRelease(ctx, tag)
+	release, err := service.Installer.GetRelease(tag)
 	if err != nil {
 		message := err.Error()
+
+		if err == service.ErrReleaseNotFound {
+			return ctx.JSON(http.StatusNotFound, &codegen.ResponseNotFound{
+				Message: &message,
+			})
+		}
+
 		return ctx.JSON(http.StatusInternalServerError, &codegen.ResponseInternalServerError{
 			Message: &message,
 		})
@@ -28,5 +35,35 @@ func (a *api) GetRelease(ctx echo.Context, params codegen.GetReleaseParams) erro
 }
 
 func (a *api) InstallRelease(ctx echo.Context, params codegen.InstallReleaseParams) error {
-	panic("not implemented")
+	tag := "main"
+	if params.Version != nil && *params.Version != "latest" {
+		tag = *params.Version
+	}
+
+	release, err := service.Installer.GetRelease(tag)
+	if err != nil {
+		message := err.Error()
+
+		if err == service.ErrReleaseNotFound {
+			return ctx.JSON(http.StatusNotFound, &codegen.ResponseNotFound{
+				Message: &message,
+			})
+		}
+
+		return ctx.JSON(http.StatusInternalServerError, &codegen.ResponseInternalServerError{
+			Message: &message,
+		})
+	}
+
+	if err := service.Installer.InstallRelease(ctx, *release); err != nil {
+		message := err.Error()
+		return ctx.JSON(http.StatusInternalServerError, &codegen.ResponseInternalServerError{
+			Message: &message,
+		})
+	}
+
+	message := "release being installed asynchronously"
+	return ctx.JSON(http.StatusOK, &codegen.ResponseOK{
+		Message: &message,
+	})
 }

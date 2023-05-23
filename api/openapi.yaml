@@ -21,6 +21,8 @@ paths:
       responses:
         "200":
           $ref: "#/components/responses/ReleaseOK"
+        "404":
+          $ref: "#/components/responses/ResponseNotFound"
         "500":
           $ref: "#/components/responses/ResponseInternalServerError"
 
@@ -32,6 +34,8 @@ paths:
       responses:
         "200":
           $ref: "#/components/responses/ResponseOK"
+        "404":
+          $ref: "#/components/responses/ResponseNotFound"
         "500":
           $ref: "#/components/responses/ResponseInternalServerError"
 

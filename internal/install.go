@@ -1,9 +1,12 @@
 package internal
 
 import (
+	"context"
 	"fmt"
+	"os"
 	"runtime"
 
+	"github.com/hashicorp/go-getter"
 	"github.com/samber/lo"
 	"go.uber.org/zap"
 
@@ -11,7 +14,7 @@ import (
 	"github.com/IceWhaleTech/CasaOS-Installer/codegen"
 )
 
-func InstallRelease(release codegen.Release) error {
+func GetPackageURLByCurrentArch(release codegen.Release) (string, error) {
 	// get current arch
 	arch := runtime.GOARCH
 
@@ -20,21 +23,58 @@ func InstallRelease(release codegen.Release) error {
 	}
 
 	if !lo.Contains([]string{string(codegen.Amd64), string(codegen.Arm64), string(codegen.Arm7)}, arch) {
-		return fmt.Errorf("unsupported architecture: %s", arch)
+		return "", fmt.Errorf("unsupported architecture: %s", arch)
 	}
 
-	var packageURL string
 	for _, pkg := range release.Packages {
 		if string(pkg.Architecture) == arch {
-			packageURL = pkg.URL
-			break
+			return pkg.URL, nil
 		}
 	}
 
+	return "", fmt.Errorf("package not found for architecture: %s", arch)
+}
+
+func DownloadPackage(ctx context.Context, packageURL string) (string, error) {
 	// prepare workdir
+	tempDir, err := os.MkdirTemp("", "casaos-installer-*")
+	if err != nil {
+		return "", err
+	}
 
 	// download package
 	logger.Info("Downloading package", zap.String("url", packageURL))
+
+	client := &getter.Client{
+		Ctx:     ctx,
+		Src:     packageURL,
+		Dst:     tempDir,
+		Mode:    getter.ClientModeDir,
+		Options: []getter.ClientOption{},
+	}
+
+	if err := client.Get(); err != nil {
+		if err := os.RemoveAll(tempDir); err != nil {
+			logger.Error("error while removing temp dir", zap.Error(err), zap.String("dir", tempDir))
+		}
+		return "", err
+	}
+
+	return tempDir, nil
+}
+
+func InstallRelease(ctx context.Context, release codegen.Release) error {
+	packageURL, err := GetPackageURLByCurrentArch(release)
+	if err != nil {
+		return err
+	}
+
+	// prepare workdir
+	tempDir, err := DownloadPackage(ctx, packageURL)
+	if err != nil {
+		return err
+	}
+	defer os.RemoveAll(tempDir)
 
 	panic("not implemented")
 }
