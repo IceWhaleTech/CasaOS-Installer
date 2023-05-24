@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"path/filepath"
 	"runtime"
 
 	"github.com/hashicorp/go-getter"
@@ -80,6 +81,22 @@ func InstallRelease(ctx context.Context, release codegen.Release) error {
 		return err
 	}
 	defer os.RemoveAll(tempDir)
+
+	if err := filepath.WalkDir(tempDir, func(path string, d os.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+
+		if d.IsDir() {
+			return nil
+		}
+
+		// TODO: pass file to decompressor
+
+		return nil
+	}); err != nil {
+		return err
+	}
 
 	panic("not implemented")
 }
