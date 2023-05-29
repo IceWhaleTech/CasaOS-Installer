@@ -56,8 +56,13 @@ func (i *InstallerService) GetRelease(tag string) (*codegen.Release, error) {
 }
 
 func (i *InstallerService) InstallRelease(ctx echo.Context, release codegen.Release) error {
+	// TODO: get releaseDir based on release
+
+	// TODO: if releaseDir does not exist, download and extract package to releaseDir
+	releaseDir := "TODO"
+
 	backgroundCtx := context.Background()
-	return internal.InstallRelease(backgroundCtx, release, "/")
+	return internal.InstallRelease(backgroundCtx, releaseDir, "/")
 }
 
 func NewInstallerService() *InstallerService {

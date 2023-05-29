@@ -2,7 +2,9 @@ package internal_test
 
 import (
 	"context"
+	"io/fs"
 	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/IceWhaleTech/CasaOS-Common/utils/logger"
@@ -37,35 +39,75 @@ func TestGetPackageURLByCurrentArch(t *testing.T) {
 	assert.NotEmpty(t, packageURL)
 }
 
+func TestDownloadPackage(t *testing.T) {
+	defer goleak.VerifyNone(t, goleak.IgnoreTopFunction("go.opencensus.io/stats/view.(*worker).start")) // https://github.com/census-instrumentation/opencensus-go/issues/1191
+
+	logger.LogInitConsoleOnly()
+
+	packageURL := "https://github.com/IceWhaleTech/get/releases/download/v0.4.4-alpha1/casaos-amd64-v0.4.4-alpha1.tar.gz"
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	releaseDir, err := os.MkdirTemp("", "casaos-test-releasedir-*")
+	assert.NoError(t, err)
+	defer os.RemoveAll(releaseDir)
+
+	err = internal.DownloadAndExtractPackage(ctx, releaseDir, packageURL)
+	assert.NoError(t, err)
+
+	expectedFiles := []string{
+		"/usr/bin/casaos",
+		"/var/lib/casaos",
+	}
+
+	for _, expectedFile := range expectedFiles {
+		_, err := os.Stat(filepath.Join(releaseDir, "build", "sysroot", expectedFile))
+		assert.NoError(t, err)
+	}
+}
+
 func TestInstallRelease(t *testing.T) {
 	defer goleak.VerifyNone(t, goleak.IgnoreTopFunction("go.opencensus.io/stats/view.(*worker).start"))
 
 	logger.LogInitConsoleOnly()
 
-	release := codegen.Release{
-		Packages: []codegen.Package{
-			{
-				Architecture: codegen.Amd64,
-				URL:          "https://github.com/IceWhaleTech/get/releases/download/v0.4.4-alpha1/casaos-amd64-v0.4.4-alpha1.tar.gz",
-			},
-			{
-				Architecture: codegen.Arm64,
-				URL:          "https://github.com/IceWhaleTech/get/releases/download/v0.4.4-alpha1/casaos-arm64-v0.4.4-alpha1.tar.gz",
-			},
-			{
-				Architecture: codegen.Arm7,
-				URL:          "https://github.com/IceWhaleTech/get/releases/download/v0.4.4-alpha1/casaos-arm-7-v0.4.4-alpha1.tar.gz",
-			},
-		},
-	}
+	releaseDir, err := os.MkdirTemp("", "casaos-test-releasedir-*")
+	assert.NoError(t, err)
+	defer os.RemoveAll(releaseDir)
+
+	sysrootPath, err := os.MkdirTemp("", "casaos-test-sysroot-*")
+	assert.NoError(t, err)
+	defer os.RemoveAll(sysrootPath)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	tmpDir, err := os.MkdirTemp("", "casaos-test-sysroot")
-	assert.NoError(t, err)
-	defer os.RemoveAll(tmpDir)
+	err = internal.InstallRelease(ctx, releaseDir, sysrootPath)
+	assert.ErrorIs(t, err, fs.ErrNotExist)
 
-	err = internal.InstallRelease(ctx, release, tmpDir)
+	sourceSysrootPath := filepath.Join(releaseDir, "build", "sysroot")
+	err = os.MkdirAll(filepath.Join(sourceSysrootPath, "usr", "bin"), 0o755)
 	assert.NoError(t, err)
+
+	err = os.MkdirAll(filepath.Join(sourceSysrootPath, "var", "lib"), 0o755)
+	assert.NoError(t, err)
+
+	expectedFiles := []string{
+		"/usr/bin/casaos",
+		"/var/lib/casaos",
+	}
+
+	for _, expectedFile := range expectedFiles {
+		err := os.WriteFile(filepath.Join(sourceSysrootPath, expectedFile), []byte{}, 0o600)
+		assert.NoError(t, err)
+	}
+
+	err = internal.InstallRelease(ctx, releaseDir, sysrootPath)
+	assert.NoError(t, err)
+
+	for _, expectedFile := range expectedFiles {
+		_, err := os.Stat(filepath.Join(sysrootPath, expectedFile))
+		assert.NoError(t, err)
+	}
 }

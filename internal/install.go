@@ -38,17 +38,11 @@ func GetPackageURLByCurrentArch(release codegen.Release) (string, error) {
 	return "", fmt.Errorf("package not found for architecture: %s", arch)
 }
 
-func DownloadAndExtractPackage(ctx context.Context, packageURL string) (string, error) {
-	// prepare workdir
-	tempDir, err := os.MkdirTemp("", "casaos-installer-*")
-	if err != nil {
-		return "", err
-	}
-
+func DownloadAndExtractPackage(ctx context.Context, releaseDir, packageURL string) error {
 	// download package
 	client := &getter.Client{
 		Ctx:   ctx,
-		Dst:   tempDir,
+		Dst:   releaseDir,
 		Mode:  getter.ClientModeDir,
 		Src:   packageURL,
 		Umask: 0x022,
@@ -63,29 +57,11 @@ func DownloadAndExtractPackage(ctx context.Context, packageURL string) (string, 
 	}
 
 	if err := client.Get(); err != nil {
-		if err := os.RemoveAll(tempDir); err != nil {
-			logger.Error("error while removing temp dir", zap.Error(err), zap.String("dir", tempDir))
-		}
-		return "", err
-	}
-
-	return tempDir, nil
-}
-
-func InstallRelease(ctx context.Context, release codegen.Release, sysroot string) error {
-	packageURL, err := GetPackageURLByCurrentArch(release)
-	if err != nil {
 		return err
 	}
 
-	// prepare workdir
-	tempDir, err := DownloadAndExtractPackage(ctx, packageURL)
-	if err != nil {
-		return err
-	}
-	defer os.RemoveAll(tempDir)
-
-	if err := filepath.WalkDir(tempDir, func(path string, d os.DirEntry, err error) error {
+	// extract each archive in releaseDir
+	if err := filepath.WalkDir(releaseDir, func(path string, d os.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
@@ -95,17 +71,21 @@ func InstallRelease(ctx context.Context, release codegen.Release, sysroot string
 		}
 
 		decompressor := NewDecompressor(path)
-		return decompressor.Decompress(tempDir, path, true, 0o022)
+		return decompressor.Decompress(releaseDir, path, true, 0o022)
 	}); err != nil {
 		return err
 	}
 
-	srcSysroot := filepath.Join(tempDir, "build", "sysroot") + "/"
+	return nil
+}
+
+func InstallRelease(ctx context.Context, releaseDir string, sysrootPath string) error {
+	srcSysroot := filepath.Join(releaseDir, "build", "sysroot") + "/"
 	if _, err := os.Stat(srcSysroot); err != nil {
 		return err
 	}
 
-	return file.CopyDir(srcSysroot, sysroot, "")
+	return file.CopyDir(srcSysroot, sysrootPath, "")
 }
 
 func NewDecompressor(filepath string) getter.Decompressor {
