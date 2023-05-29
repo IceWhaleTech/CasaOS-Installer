@@ -57,7 +57,7 @@ func (i *InstallerService) GetRelease(tag string) (*codegen.Release, error) {
 
 func (i *InstallerService) InstallRelease(ctx echo.Context, release codegen.Release) error {
 	backgroundCtx := context.Background()
-	return internal.InstallRelease(backgroundCtx, release)
+	return internal.InstallRelease(backgroundCtx, release, "/")
 }
 
 func NewInstallerService() *InstallerService {

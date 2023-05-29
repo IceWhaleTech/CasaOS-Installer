@@ -6,11 +6,13 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
 
 	"github.com/hashicorp/go-getter"
 	"github.com/samber/lo"
 	"go.uber.org/zap"
 
+	"github.com/IceWhaleTech/CasaOS-Common/utils/file"
 	"github.com/IceWhaleTech/CasaOS-Common/utils/logger"
 	"github.com/IceWhaleTech/CasaOS-Installer/codegen"
 )
@@ -36,7 +38,7 @@ func GetPackageURLByCurrentArch(release codegen.Release) (string, error) {
 	return "", fmt.Errorf("package not found for architecture: %s", arch)
 }
 
-func DownloadPackage(ctx context.Context, packageURL string) (string, error) {
+func DownloadAndExtractPackage(ctx context.Context, packageURL string) (string, error) {
 	// prepare workdir
 	tempDir, err := os.MkdirTemp("", "casaos-installer-*")
 	if err != nil {
@@ -45,10 +47,11 @@ func DownloadPackage(ctx context.Context, packageURL string) (string, error) {
 
 	// download package
 	client := &getter.Client{
-		Ctx:  ctx,
-		Src:  packageURL,
-		Dst:  tempDir,
-		Mode: getter.ClientModeDir,
+		Ctx:   ctx,
+		Dst:   tempDir,
+		Mode:  getter.ClientModeDir,
+		Src:   packageURL,
+		Umask: 0x022,
 		Options: []getter.ClientOption{
 			getter.WithProgress(NewTracker(
 				func(downladed, totalSize int64) {
@@ -69,14 +72,14 @@ func DownloadPackage(ctx context.Context, packageURL string) (string, error) {
 	return tempDir, nil
 }
 
-func InstallRelease(ctx context.Context, release codegen.Release) error {
+func InstallRelease(ctx context.Context, release codegen.Release, sysroot string) error {
 	packageURL, err := GetPackageURLByCurrentArch(release)
 	if err != nil {
 		return err
 	}
 
 	// prepare workdir
-	tempDir, err := DownloadPackage(ctx, packageURL)
+	tempDir, err := DownloadAndExtractPackage(ctx, packageURL)
 	if err != nil {
 		return err
 	}
@@ -91,12 +94,28 @@ func InstallRelease(ctx context.Context, release codegen.Release) error {
 			return nil
 		}
 
-		// TODO: pass file to decompressor
-
-		return nil
+		decompressor := NewDecompressor(path)
+		return decompressor.Decompress(tempDir, path, true, 0o022)
 	}); err != nil {
 		return err
 	}
 
-	panic("not implemented")
+	srcSysroot := filepath.Join(tempDir, "build", "sysroot") + "/"
+	if _, err := os.Stat(srcSysroot); err != nil {
+		return err
+	}
+
+	return file.CopyDir(srcSysroot, sysroot, "")
+}
+
+func NewDecompressor(filepath string) getter.Decompressor {
+	matchingLen := 0
+	archiveV := ""
+	for k := range getter.Decompressors {
+		if strings.HasSuffix(filepath, "."+k) && len(k) > matchingLen {
+			archiveV = k
+			matchingLen = len(k)
+		}
+	}
+	return getter.Decompressors[archiveV]
 }

@@ -37,19 +37,35 @@ func TestGetPackageURLByCurrentArch(t *testing.T) {
 	assert.NotEmpty(t, packageURL)
 }
 
-func TestDownloadPackage(t *testing.T) {
-	defer goleak.VerifyNone(t, goleak.IgnoreTopFunction("go.opencensus.io/stats/view.(*worker).start")) // https://github.com/census-instrumentation/opencensus-go/issues/1191
+func TestInstallRelease(t *testing.T) {
+	defer goleak.VerifyNone(t, goleak.IgnoreTopFunction("go.opencensus.io/stats/view.(*worker).start"))
 
 	logger.LogInitConsoleOnly()
 
-	packageURL := "https://github.com/IceWhaleTech/get/releases/download/v0.4.4-alpha1/casaos-amd64-v0.4.4-alpha1.tar.gz"
+	release := codegen.Release{
+		Packages: []codegen.Package{
+			{
+				Architecture: codegen.Amd64,
+				URL:          "https://github.com/IceWhaleTech/get/releases/download/v0.4.4-alpha1/casaos-amd64-v0.4.4-alpha1.tar.gz",
+			},
+			{
+				Architecture: codegen.Arm64,
+				URL:          "https://github.com/IceWhaleTech/get/releases/download/v0.4.4-alpha1/casaos-arm64-v0.4.4-alpha1.tar.gz",
+			},
+			{
+				Architecture: codegen.Arm7,
+				URL:          "https://github.com/IceWhaleTech/get/releases/download/v0.4.4-alpha1/casaos-arm-7-v0.4.4-alpha1.tar.gz",
+			},
+		},
+	}
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	tempDir, err := internal.DownloadPackage(ctx, packageURL)
+	tmpDir, err := os.MkdirTemp("", "casaos-test-sysroot")
 	assert.NoError(t, err)
+	defer os.RemoveAll(tmpDir)
 
-	defer os.RemoveAll(tempDir)
-	assert.NotEmpty(t, tempDir)
+	err = internal.InstallRelease(ctx, release, tmpDir)
+	assert.NoError(t, err)
 }
