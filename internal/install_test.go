@@ -9,34 +9,20 @@ import (
 
 	"github.com/IceWhaleTech/CasaOS-Common/utils/logger"
 	"github.com/IceWhaleTech/CasaOS-Installer/codegen"
+	"github.com/IceWhaleTech/CasaOS-Installer/common"
 	"github.com/IceWhaleTech/CasaOS-Installer/internal"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/goleak"
+	"gopkg.in/yaml.v3"
 )
 
 func TestGetPackageURLByCurrentArch(t *testing.T) {
 	defer goleak.VerifyNone(t, goleak.IgnoreTopFunction("go.opencensus.io/stats/view.(*worker).start")) // https://github.com/census-instrumentation/opencensus-go/issues/1191
 
-	release := codegen.Release{
-		Mirrors: []string{
-			"http://casaos.io/does/not/exist",
-			"https://github.com/IceWhaleTech",
-		},
-		Packages: []codegen.Package{
-			{
-				Architecture: codegen.Amd64,
-				Path:         "https://github.com/IceWhaleTech/get/releases/download/v0.4.4-alpha1/casaos-amd64-v0.4.4-alpha1.tar.gz",
-			},
-			{
-				Architecture: codegen.Arm64,
-				Path:         "https://github.com/IceWhaleTech/get/releases/download/v0.4.4-alpha1/casaos-arm64-v0.4.4-alpha1.tar.gz",
-			},
-			{
-				Architecture: codegen.Arm7,
-				Path:         "https://github.com/IceWhaleTech/get/releases/download/v0.4.4-alpha1/casaos-arm-7-v0.4.4-alpha1.tar.gz",
-			},
-		},
-	}
+	var release codegen.Release
+
+	err := yaml.Unmarshal([]byte(common.SampleReleaseYAML), &release)
+	assert.NoError(t, err)
 
 	for _, mirror := range release.Mirrors {
 		packageURL, err := internal.GetPackageURLByCurrentArch(release, mirror)

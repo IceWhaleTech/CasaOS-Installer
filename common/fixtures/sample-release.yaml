@@ -2,6 +2,7 @@ version: v0.4.4
 release_notes: |
   TOOD: add release notes
 mirrors:
+  - http://casaos.io/does/not/exist
   - https://github.com/IceWhaleTech
 packages:
   - path: /get/releases/download/v0.4.4-alpha1/casaos-amd64-v0.4.4-alpha1.tar.gz
