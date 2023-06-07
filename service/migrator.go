@@ -1,1 +1,4 @@
 package service
+
+func DownloadAllMigrationTools() {
+}

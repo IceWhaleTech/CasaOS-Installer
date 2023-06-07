@@ -1,0 +1,6 @@
+ls:
+  .go: snake_case
+
+ignore:
+  - .git
+  - node_modules

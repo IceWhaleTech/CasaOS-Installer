@@ -1,0 +1,89 @@
+# This is an example .goreleaser.yml file with some sensible defaults.
+# Make sure to check the documentation at https://goreleaser.com
+project_name: casaos-installer
+before:
+  hooks:
+    - go run github.com/loeffel-io/ls-lint@latest
+    - go run github.com/google/go-licenses@latest check . --disallowed_types=restricted
+    - go generate
+    - go mod tidy
+    - go test -race -v ./...
+builds:
+  - id: casaos-installer-amd64
+    binary: build/sysroot/usr/bin/casaos-installer
+    env:
+      - CC=x86_64-linux-gnu-gcc
+    gcflags:
+      - all=-N -l
+    ldflags:
+      - -extldflags "-static"
+    tags:
+      - musl
+      - netgo
+      - osusergo
+    goos:
+      - linux
+    goarch:
+      - amd64
+  - id: casaos-installer-arm64
+    binary: build/sysroot/usr/bin/casaos-installer
+    env:
+      - CC=aarch64-linux-gnu-gcc
+    gcflags:
+      - all=-N -l
+    ldflags:
+      - -extldflags "-static"
+    tags:
+      - musl
+      - netgo
+      - osusergo
+    goos:
+      - linux
+    goarch:
+      - arm64
+  - id: casaos-installer-arm-7
+    binary: build/sysroot/usr/bin/casaos-installer
+    env:
+      - CC=arm-linux-gnueabihf-gcc
+    gcflags:
+      - all=-N -l
+    ldflags:
+      - -extldflags "-static"
+    tags:
+      - musl
+      - netgo
+      - osusergo
+    goos:
+      - linux
+    goarch:
+      - arm
+    goarm:
+      - "7"
+archives:
+  - name_template: >-
+      {{ .Os }}-{{- if eq .Arch "arm" }}arm-7{{- else }}{{ .Arch }}{{- end }}-{{ .ProjectName }}-v{{ .Version }}
+    id: casaos-installer
+    builds:
+      - casaos-installer-amd64
+      - casaos-installer-arm64
+      - casaos-installer-arm-7
+    files:
+      - build/**/*
+checksum:
+  name_template: "checksums.txt"
+snapshot:
+  name_template: "{{ incpatch .Version }}-snapshot"
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+release:
+  github:
+    owner: IceWhaleTech
+    name: CasaOS-Installer
+  draft: true
+  prerelease: auto
+  mode: replace
+  name_template: "v{{ .Version }}"

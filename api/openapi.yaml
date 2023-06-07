@@ -142,7 +142,11 @@ components:
           minItems: 3
           items:
             $ref: "#/components/schemas/Package"
-
+        modules:
+          type: array
+          readOnly: false
+          items:
+            $ref: "#/components/schemas/Module"
     Package:
       readOnly: true
       required:
@@ -158,3 +162,15 @@ components:
             - amd64
             - arm64
             - arm-7
+    Module:
+      readOnly: true
+      required:
+        - name
+        - short
+      properties:
+        name:
+          type: string
+          example: casaos-gateway
+        short:
+          type: string
+          example: gateway

@@ -59,6 +59,12 @@ func InstallRelease(ctx echo.Context, release codegen.Release) error {
 	// TODO: if releaseDir does not exist, download and extract package to releaseDir
 	releaseDir := "TODO"
 
+	// TODO: write release information to releaseDir/release.yaml
+
 	backgroundCtx := context.Background()
-	return internal.InstallRelease(backgroundCtx, releaseDir, "/")
+	if err := internal.InstallRelease(backgroundCtx, releaseDir, "/"); err != nil {
+		return err
+	}
+
+	return nil
 }

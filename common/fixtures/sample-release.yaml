@@ -11,3 +11,16 @@ packages:
     architecture: arm64
   - path: /get/releases/download/v0.4.4-alpha1/casaos-arm-7-v0.4.4-alpha1.tar.gz
     architecture: armv7
+modules:
+  - name: casaos-gateway
+    short: gateway
+  - name: casaos-user-service
+    short: user-service
+  - name: casaos
+    short: casaos
+  - name: casaos-local-storage
+    short: local-storage
+  - name: casaos-message-bus
+    short: message-bus
+  - name: casaos-app-management
+    short: app-management
