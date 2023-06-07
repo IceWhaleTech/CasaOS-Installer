@@ -14,8 +14,6 @@ import (
 	"go.uber.org/zap"
 )
 
-type InstallerService struct{}
-
 const cacheKey = "release"
 
 var (
@@ -23,7 +21,7 @@ var (
 	ErrReleaseNotFound = fmt.Errorf("release not found")
 )
 
-func (i *InstallerService) GetRelease(tag string) (*codegen.Release, error) {
+func GetRelease(tag string) (*codegen.Release, error) {
 	if cached, ok := Cache.Get(cacheKey); ok {
 		if release, ok := cached.(*codegen.Release); ok {
 			return release, nil
@@ -55,7 +53,7 @@ func (i *InstallerService) GetRelease(tag string) (*codegen.Release, error) {
 	return release, nil
 }
 
-func (i *InstallerService) InstallRelease(ctx echo.Context, release codegen.Release) error {
+func InstallRelease(ctx echo.Context, release codegen.Release) error {
 	// TODO: get releaseDir based on release
 
 	// TODO: if releaseDir does not exist, download and extract package to releaseDir
@@ -63,8 +61,4 @@ func (i *InstallerService) InstallRelease(ctx echo.Context, release codegen.Rele
 
 	backgroundCtx := context.Background()
 	return internal.InstallRelease(backgroundCtx, releaseDir, "/")
-}
-
-func NewInstallerService() *InstallerService {
-	return &InstallerService{}
 }

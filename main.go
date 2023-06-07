@@ -15,7 +15,6 @@ import (
 	"github.com/IceWhaleTech/CasaOS-Common/utils/logger"
 	"github.com/IceWhaleTech/CasaOS-Installer/common"
 	"github.com/IceWhaleTech/CasaOS-Installer/internal/config"
-	"github.com/IceWhaleTech/CasaOS-Installer/service"
 	"github.com/coreos/go-systemd/daemon"
 	"github.com/robfig/cron/v3"
 	"go.uber.org/zap"
@@ -44,8 +43,6 @@ func main() {
 
 		config.InitSetup(*configFlag)
 	}
-
-	service.Initialize()
 
 	// TODO: setup cron to check for new release periodically
 	{

@@ -14,7 +14,7 @@ func (a *api) GetRelease(ctx echo.Context, params codegen.GetReleaseParams) erro
 		tag = *params.Version
 	}
 
-	release, err := service.Installer.GetRelease(tag)
+	release, err := service.GetRelease(tag)
 	if err != nil {
 		message := err.Error()
 
@@ -40,7 +40,7 @@ func (a *api) InstallRelease(ctx echo.Context, params codegen.InstallReleasePara
 		tag = *params.Version
 	}
 
-	release, err := service.Installer.GetRelease(tag)
+	release, err := service.GetRelease(tag)
 	if err != nil {
 		message := err.Error()
 
@@ -55,7 +55,7 @@ func (a *api) InstallRelease(ctx echo.Context, params codegen.InstallReleasePara
 		})
 	}
 
-	if err := service.Installer.InstallRelease(ctx, *release); err != nil {
+	if err := service.InstallRelease(ctx, *release); err != nil {
 		message := err.Error()
 		return ctx.JSON(http.StatusInternalServerError, &codegen.ResponseInternalServerError{
 			Message: &message,
