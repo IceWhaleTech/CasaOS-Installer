@@ -17,7 +17,7 @@ import (
 	"github.com/IceWhaleTech/CasaOS-Installer/codegen"
 )
 
-func GetPackageURLByCurrentArch(release codegen.Release) (string, error) {
+func GetPackageURLByCurrentArch(release codegen.Release, mirror string) (string, error) {
 	// get current arch
 	arch := runtime.GOARCH
 
@@ -31,7 +31,7 @@ func GetPackageURLByCurrentArch(release codegen.Release) (string, error) {
 
 	for _, pkg := range release.Packages {
 		if string(pkg.Architecture) == arch {
-			return pkg.URL, nil
+			return fmt.Sprintf("%s/%s", strings.TrimSuffix(mirror, "/"), pkg.Path), nil
 		}
 	}
 

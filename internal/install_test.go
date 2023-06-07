@@ -18,25 +18,31 @@ func TestGetPackageURLByCurrentArch(t *testing.T) {
 	defer goleak.VerifyNone(t, goleak.IgnoreTopFunction("go.opencensus.io/stats/view.(*worker).start")) // https://github.com/census-instrumentation/opencensus-go/issues/1191
 
 	release := codegen.Release{
+		Mirrors: []string{
+			"http://casaos.io/does/not/exist",
+			"https://github.com/IceWhaleTech",
+		},
 		Packages: []codegen.Package{
 			{
 				Architecture: codegen.Amd64,
-				URL:          "https://github.com/IceWhaleTech/get/releases/download/v0.4.4-alpha1/casaos-amd64-v0.4.4-alpha1.tar.gz",
+				Path:         "https://github.com/IceWhaleTech/get/releases/download/v0.4.4-alpha1/casaos-amd64-v0.4.4-alpha1.tar.gz",
 			},
 			{
 				Architecture: codegen.Arm64,
-				URL:          "https://github.com/IceWhaleTech/get/releases/download/v0.4.4-alpha1/casaos-arm64-v0.4.4-alpha1.tar.gz",
+				Path:         "https://github.com/IceWhaleTech/get/releases/download/v0.4.4-alpha1/casaos-arm64-v0.4.4-alpha1.tar.gz",
 			},
 			{
 				Architecture: codegen.Arm7,
-				URL:          "https://github.com/IceWhaleTech/get/releases/download/v0.4.4-alpha1/casaos-arm-7-v0.4.4-alpha1.tar.gz",
+				Path:         "https://github.com/IceWhaleTech/get/releases/download/v0.4.4-alpha1/casaos-arm-7-v0.4.4-alpha1.tar.gz",
 			},
 		},
 	}
 
-	packageURL, err := internal.GetPackageURLByCurrentArch(release)
-	assert.NoError(t, err)
-	assert.NotEmpty(t, packageURL)
+	for _, mirror := range release.Mirrors {
+		packageURL, err := internal.GetPackageURLByCurrentArch(release, mirror)
+		assert.NoError(t, err)
+		assert.NotEmpty(t, packageURL)
+	}
 }
 
 func TestDownloadPackage(t *testing.T) {

@@ -3,7 +3,6 @@ release_notes: |
   TOOD: add release notes
 mirrors:
   - https://github.com/IceWhaleTech
-  - https://github.91chifun.workers.dev/IceWhaleTech
 packages:
   - path: /get/releases/download/v0.4.4-alpha1/casaos-amd64-v0.4.4-alpha1.tar.gz
     architecture: amd64
