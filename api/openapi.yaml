@@ -1,0 +1,173 @@
+openapi: 3.0.3
+
+info:
+  title: CasaOS Installer API
+  version: v2
+  description: API for installing and updating CasaOS on a device
+
+servers:
+  - url: /v2/installer
+
+security:
+  - access_token: []
+
+paths:
+  /release:
+    get:
+      summary: Get the information about the latest release of CasaOS
+      operationId: getRelease
+      parameters:
+        - $ref: "#/components/parameters/Version"
+      responses:
+        "200":
+          $ref: "#/components/responses/ReleaseOK"
+        "404":
+          $ref: "#/components/responses/ResponseNotFound"
+        "500":
+          $ref: "#/components/responses/ResponseInternalServerError"
+
+    post:
+      summary: Install a release of CasaOS
+      operationId: installRelease
+      parameters:
+        - $ref: "#/components/parameters/Version"
+      responses:
+        "200":
+          $ref: "#/components/responses/ResponseOK"
+        "404":
+          $ref: "#/components/responses/ResponseNotFound"
+        "500":
+          $ref: "#/components/responses/ResponseInternalServerError"
+
+components:
+  securitySchemes:
+    access_token:
+      type: apiKey
+      in: header
+      name: Authorization
+
+  parameters:
+    Version:
+      name: version
+      in: query
+      description: version of the release
+      required: false
+      schema:
+        type: string
+        default: latest
+
+  responses:
+    ResponseOK:
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/BaseResponse"
+
+    ResponseInternalServerError:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/BaseResponse"
+          example:
+            message: "Internal Server Error"
+
+    ResponseNotFound:
+      description: Not Found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/BaseResponse"
+          example:
+            message: "Not Found"
+
+    ResponseBadRequest:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/BaseResponse"
+          example:
+            message: "Bad Request"
+
+    ReleaseOK:
+      description: OK
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: "#/components/schemas/BaseResponse"
+              - properties:
+                  data:
+                    $ref: "#/components/schemas/Release"
+
+  schemas:
+    BaseResponse:
+      properties:
+        message:
+          description: message returned by server side if there is any
+          type: string
+          example: ""
+
+    Release:
+      readOnly: true
+      required:
+        - version
+        - release_notes
+        - mirrors
+        - packages
+        - modules
+      properties:
+        version:
+          type: string
+          example: v0.4.5
+        release_notes:
+          type: string
+          example: |
+            Changes:
+            ...
+          x-oapi-codegen-extra-tags:
+            yaml: "release_notes,omitempty"
+        mirrors:
+          type: array
+          minItems: 1
+          items:
+            type: string
+            example: https://github.com/IceWhaleTech
+        packages:
+          type: array
+          minItems: 3
+          items:
+            $ref: "#/components/schemas/Package"
+        modules:
+          type: array
+          items:
+            $ref: "#/components/schemas/Module"
+    Package:
+      readOnly: true
+      required:
+        - path
+        - architecture
+      properties:
+        path:
+          type: string
+          example: /get/releases/download/v0.4.4-alpha1/casaos-amd64-v0.4.4-alpha1.tar.gz
+        architecture:
+          type: string
+          enum:
+            - amd64
+            - arm64
+            - arm-7
+    Module:
+      readOnly: true
+      required:
+        - name
+        - short
+      properties:
+        name:
+          type: string
+          example: casaos-gateway
+        short:
+          type: string
+          example: gateway
