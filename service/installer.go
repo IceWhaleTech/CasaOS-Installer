@@ -10,9 +10,9 @@ import (
 
 	"github.com/IceWhaleTech/CasaOS-Common/utils/logger"
 	"github.com/IceWhaleTech/CasaOS-Installer/codegen"
+	"github.com/IceWhaleTech/CasaOS-Installer/common"
 	"github.com/IceWhaleTech/CasaOS-Installer/internal"
 	"github.com/IceWhaleTech/CasaOS-Installer/internal/config"
-	"github.com/labstack/echo/v4"
 	"github.com/patrickmn/go-cache"
 	"go.uber.org/zap"
 	"gopkg.in/yaml.v3"
@@ -57,14 +57,14 @@ func GetRelease(tag string) (*codegen.Release, error) {
 	return release, nil
 }
 
-func DownloadRelease(ctx context.Context, release codegen.Release) error {
+func DownloadRelease(ctx context.Context, release codegen.Release) (string, error) {
 	if release.Mirrors == nil {
-		return fmt.Errorf("no mirror found")
+		return "", fmt.Errorf("no mirror found")
 	}
 
-	releaseDir, err := releaseDir(release)
+	releaseDir, err := ReleaseDir(release)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	var mirror string
@@ -87,34 +87,37 @@ func DownloadRelease(ctx context.Context, release codegen.Release) error {
 
 	buf, err := yaml.Marshal(release)
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	releaseFile := filepath.Join(releaseDir, "release.yaml")
+	releaseFilePath := filepath.Join(releaseDir, common.ReleaseYAMLFilename)
 
-	return os.WriteFile(releaseFile, buf, 0o600)
+	return releaseFilePath, os.WriteFile(releaseFilePath, buf, 0o600)
 }
 
-func InstallRelease(ctx echo.Context, release codegen.Release) error {
-	// TODO: get releaseDir based on release
-	releaseDir, err := releaseDir(release)
+func InstallRelease(ctx context.Context, release codegen.Release, sysrootPath string, tryDownload bool) error {
+	releaseDir, err := ReleaseDir(release)
 	if err != nil {
 		return err
 	}
 
-	// TODO: if releaseDir does not exist, download and extract package to releaseDir
-
-	// TODO: write release information to releaseDir/release.yaml
+	releaseFilePath := filepath.Join(releaseDir, common.ReleaseYAMLFilename)
+	if _, err := os.Stat(releaseFilePath); os.IsNotExist(err) && tryDownload {
+		logger.Info("release file not found - downloading...", zap.String("release_file_path", releaseFilePath))
+		if _, err := DownloadRelease(ctx, release); err != nil {
+			return err
+		}
+	}
 
 	backgroundCtx := context.Background()
-	if err := internal.InstallRelease(backgroundCtx, releaseDir, "/"); err != nil {
+	if err := internal.InstallRelease(backgroundCtx, releaseDir, sysrootPath); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func releaseDir(release codegen.Release) (string, error) {
+func ReleaseDir(release codegen.Release) (string, error) {
 	if release.Version == "" {
 		return "", fmt.Errorf("release version is empty")
 	}

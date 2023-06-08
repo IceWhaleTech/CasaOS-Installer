@@ -31,7 +31,7 @@ func GetPackageURLByCurrentArch(release codegen.Release, mirror string) (string,
 
 	for _, pkg := range release.Packages {
 		if string(pkg.Architecture) == arch {
-			return fmt.Sprintf("%s/%s", strings.TrimSuffix(mirror, "/"), pkg.Path), nil
+			return strings.TrimSuffix(mirror, "/") + pkg.Path, nil
 		}
 	}
 
