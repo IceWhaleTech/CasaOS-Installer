@@ -19,12 +19,11 @@ type APPModel struct {
 }
 
 type ServerModel struct {
-	ReleaseBaseURLList []string `ini:"release_base_url,,allowshadow"`
+	Mirrors   []string `ini:"mirrors,,allowshadow"`
+	CachePath string
 }
 
-const (
-	InstallerConfigFilePath = "/etc/casaos/installer.conf"
-)
+const InstallerConfigFilePath = "/etc/casaos/installer.conf"
 
 var (
 	CommonInfo = &CommonModel{
@@ -38,9 +37,10 @@ var (
 	}
 
 	ServerInfo = &ServerModel{
-		ReleaseBaseURLList: []string{
-			"https://raw.githubusercontent.com/IceWhaleTech/get",
+		CachePath: "/var/cache/casaos",
+		Mirrors: []string{
 			"https://casaos.oss-cn-shanghai.aliyuncs.com/IceWhaleTech/get",
+			"https://raw.githubusercontent.com/IceWhaleTech/get",
 		},
 	}
 

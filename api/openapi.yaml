@@ -117,34 +117,31 @@ components:
         - release_notes
         - mirrors
         - packages
+        - modules
       properties:
         version:
           type: string
-          readOnly: true
           example: v0.4.5
         release_notes:
           type: string
-          readOnly: true
           example: |
             Changes:
             ...
+          x-oapi-codegen-extra-tags:
+            yaml: "release_notes,omitempty"
         mirrors:
           type: array
-          readOnly: false
           minItems: 1
           items:
             type: string
-            readOnly: false
             example: https://github.com/IceWhaleTech
         packages:
           type: array
-          readOnly: false
           minItems: 3
           items:
             $ref: "#/components/schemas/Package"
         modules:
           type: array
-          readOnly: false
           items:
             $ref: "#/components/schemas/Module"
     Package:

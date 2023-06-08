@@ -1,13 +1,13 @@
 package internal
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"time"
 
 	httputil "github.com/IceWhaleTech/CasaOS-Common/utils/http"
 	"github.com/IceWhaleTech/CasaOS-Installer/codegen"
+	"gopkg.in/yaml.v3"
 )
 
 func GetReleaseFrom(releaseURL string) (*codegen.Release, error) {
@@ -23,10 +23,11 @@ func GetReleaseFrom(releaseURL string) (*codegen.Release, error) {
 	}
 
 	// parse release
-	var release *codegen.Release
-	if err := json.NewDecoder(response.Body).Decode(release); err != nil {
+	var release codegen.Release
+
+	if err := yaml.NewDecoder(response.Body).Decode(&release); err != nil {
 		return nil, err
 	}
 
-	return release, nil
+	return &release, nil
 }
