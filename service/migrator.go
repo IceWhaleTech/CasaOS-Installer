@@ -73,6 +73,8 @@ func DownloadMigrationTool(ctx context.Context, releaseDir string, module string
 
 	migrationToolsDir := filepath.Join(releaseDir, "migration", module)
 
+	// TODO: fill the URL template, e.g. ${DOWNLOAD_DOMAIN}IceWhaleTech/CasaOS/releases/download/v0.3.6/linux-${ARCH}-casaos-migration-tool-v0.3.6.tar.gz
+
 	return internal.DownloadAndExtractPackage(ctx, migrationToolsDir, migrationToolURL)
 }
 
