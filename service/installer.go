@@ -90,7 +90,7 @@ func DownloadRelease(ctx context.Context, release codegen.Release) (string, erro
 		return "", err
 	}
 
-	releaseFilePath := filepath.Join(releaseDir, common.ReleaseYAMLFilename)
+	releaseFilePath := filepath.Join(releaseDir, common.ReleaseYAMLFileName)
 
 	return releaseFilePath, os.WriteFile(releaseFilePath, buf, 0o600)
 }
@@ -101,7 +101,7 @@ func InstallRelease(ctx context.Context, release codegen.Release, sysrootPath st
 		return err
 	}
 
-	releaseFilePath := filepath.Join(releaseDir, common.ReleaseYAMLFilename)
+	releaseFilePath := filepath.Join(releaseDir, common.ReleaseYAMLFileName)
 	if _, err := os.Stat(releaseFilePath); os.IsNotExist(err) && tryDownload {
 		logger.Info("release file not found - downloading...", zap.String("release_file_path", releaseFilePath))
 		if _, err := DownloadRelease(ctx, release); err != nil {
@@ -115,12 +115,4 @@ func InstallRelease(ctx context.Context, release codegen.Release, sysrootPath st
 	}
 
 	return nil
-}
-
-func ReleaseDir(release codegen.Release) (string, error) {
-	if release.Version == "" {
-		return "", fmt.Errorf("release version is empty")
-	}
-
-	return filepath.Join(config.ServerInfo.CachePath, "releases", release.Version), nil
 }

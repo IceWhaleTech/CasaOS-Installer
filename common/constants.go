@@ -6,5 +6,8 @@ const (
 	InstallerVersion     = "0.4.5"
 	InstallerServiceName = "installer"
 
-	ReleaseYAMLFilename = "release.yaml"
+	ReleaseYAMLFileName   = "release.yaml"
+	MigrationListFileName = "migration.list"
+
+	LegacyWithoutVersion = "LEGACY_WITHOUT_VERSION"
 )

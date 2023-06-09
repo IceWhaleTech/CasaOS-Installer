@@ -185,6 +185,8 @@ github.com/IceWhaleTech/CasaOS v0.4.3 h1:ARLEN/ZgxF5z7JZ8AdHJqQz3EJ5Fc0NszmgNkN/
 github.com/IceWhaleTech/CasaOS v0.4.3/go.mod h1:FlKcNzgnyt4DjBoc1bVwAymBMcGcxQXoaRUT5TJjyTM=
 github.com/IceWhaleTech/CasaOS-Common v0.4.3 h1:sYsWYhP5EyksH6D0BDv8secIRGAKUZZDTIKqACdFZQ4=
 github.com/IceWhaleTech/CasaOS-Common v0.4.3/go.mod h1:zLzM1RhoBRDdW7DFlEoPq18OhbJYsvc8yFodW0bm/QI=
+github.com/Masterminds/semver/v3 v3.2.1 h1:RN9w6+7QoMeJVGyfmbcgs28Br8cvmnucEXnY0rYXWg0=
+github.com/Masterminds/semver/v3 v3.2.1/go.mod h1:qvl/7zhW3nngYb5+80sSMF+FG2BjYrf8m9wsX0PNOMQ=
 github.com/OneOfOne/xxhash v1.2.2/go.mod h1:HSdplMjZKSmBqAxg5vPj2TmRDmfkzw+cTzAElWljhcU=
 github.com/RaveNoX/go-jsoncommentstrip v1.0.0/go.mod h1:78ihd09MekBnJnxpICcwzCMzGrKSKYe4AqU6PDYYpjk=
 github.com/andybalholm/brotli v1.0.1/go.mod h1:loMXtMfwqflxFJPmdbJO0a3KNoPuLBgiu3qAvBg8x/Y=
