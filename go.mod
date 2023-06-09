@@ -5,6 +5,7 @@ go 1.20
 require (
 	github.com/IceWhaleTech/CasaOS v0.4.3
 	github.com/IceWhaleTech/CasaOS-Common v0.4.3
+	github.com/Masterminds/semver/v3 v3.2.1
 	github.com/coreos/go-systemd v0.0.0-20191104093116-d3cd4ed1dbcf
 	github.com/deepmap/oapi-codegen v1.12.4
 	github.com/getkin/kin-openapi v0.117.0
@@ -25,7 +26,6 @@ require (
 	cloud.google.com/go/compute v1.10.0 // indirect
 	cloud.google.com/go/iam v0.5.0 // indirect
 	cloud.google.com/go/storage v1.27.0 // indirect
-	github.com/Masterminds/semver/v3 v3.2.1 // indirect
 	github.com/andybalholm/brotli v1.0.5 // indirect
 	github.com/apapsch/go-jsonmerge/v2 v2.0.0 // indirect
 	github.com/aws/aws-sdk-go v1.44.122 // indirect

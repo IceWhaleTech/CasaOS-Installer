@@ -59,11 +59,9 @@ func DownloadAllMigrationTools(ctx context.Context, release codegen.Release) err
 				continue
 			}
 
-			if strings.ToUpper(parts[0]) == common.LegacyWithoutVersion {
-				parts[0] = "v0.0.0-legacy-without-version"
-			}
+			parts[0] = NormalizeVersion(parts[0])
 
-			version, err := semver.NewVersion(strings.TrimLeft(parts[0], "vV"))
+			version, err := semver.NewVersion(parts[0])
 			if err != nil {
 				return err
 			}

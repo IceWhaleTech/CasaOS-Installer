@@ -19,7 +19,7 @@ func TestInstallRelease(t *testing.T) {
 
 	logger.LogInitConsoleOnly()
 
-	release, err := service.GetRelease("dev-test")
+	release, err := service.GetRelease("main")
 	assert.NoError(t, err)
 
 	assert.NotNil(t, release)

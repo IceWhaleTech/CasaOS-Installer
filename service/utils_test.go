@@ -39,4 +39,9 @@ func TestNormalizeVersion(t *testing.T) {
 	assert.Equal(t, "v0.3.5-alpha.1", version)
 	_, err = semver.NewVersion(version)
 	assert.NoError(t, err)
+
+	version = service.NormalizeVersion("V0.3.5-alpha.1")
+	assert.Equal(t, "v0.3.5-alpha.1", version)
+	_, err = semver.NewVersion(version)
+	assert.NoError(t, err)
 }

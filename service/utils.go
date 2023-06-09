@@ -20,12 +20,14 @@ func ReleaseDir(release codegen.Release) (string, error) {
 }
 
 func NormalizeVersion(version string) string {
-	if _, err := semver.NewVersion(version); err == nil {
-		return version
-	}
-
 	if version == common.LegacyWithoutVersion {
 		return "v0.0.0-legacy-without-version"
+	}
+
+	version = "v" + strings.TrimLeft(version, "Vv")
+
+	if _, err := semver.NewVersion(version); err == nil {
+		return version
 	}
 
 	versionNumbers := strings.SplitN(version, ".", 3)
