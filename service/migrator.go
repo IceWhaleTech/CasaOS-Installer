@@ -10,6 +10,7 @@ import (
 	"github.com/IceWhaleTech/CasaOS-Common/utils/logger"
 	"github.com/IceWhaleTech/CasaOS-Installer/codegen"
 	"github.com/IceWhaleTech/CasaOS-Installer/common"
+	"github.com/IceWhaleTech/CasaOS-Installer/internal"
 	"github.com/Masterminds/semver/v3"
 	"go.uber.org/zap"
 )
@@ -51,7 +52,7 @@ func DownloadAllMigrationTools(ctx context.Context, release codegen.Release) err
 				continue
 			}
 
-			if err := DownloadMigrationTool(ctx, releaseDir, migration); err != nil {
+			if err := DownloadMigrationTool(ctx, releaseDir, module, migration); err != nil {
 				return err
 			}
 
@@ -62,7 +63,26 @@ func DownloadAllMigrationTools(ctx context.Context, release codegen.Release) err
 	panic("implement me")
 }
 
-func DownloadMigrationTool(ctx context.Context, releaseDir string, migration MigrationTool) error {
+func DownloadMigrationTool(ctx context.Context, releaseDir string, module string, migration MigrationTool) error {
+	migrationToolURL, err := NormalizeMigrationToolURL(migration.url)
+	if err != nil {
+		return err
+	}
+
+	migrationToolsDir := filepath.Join(releaseDir, "migration", module)
+
+	return internal.DownloadAndExtractPackage(ctx, migrationToolsDir, migrationToolURL)
+}
+
+func NormalizeMigrationToolURL(url string) (string, error) {
+	if !strings.HasSuffix(url, ".tar.gz") { // some old migration list has no full URL template, but just a version
+		url = NormalizeMigrationToolURLPass1(url)
+	}
+
+	panic("implement me")
+}
+
+func NormalizeMigrationToolURLPass1(url string) string {
 	panic("implement me")
 }
 

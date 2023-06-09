@@ -38,11 +38,11 @@ func GetPackageURLByCurrentArch(release codegen.Release, mirror string) (string,
 	return "", fmt.Errorf("package not found for architecture: %s", arch)
 }
 
-func DownloadAndExtractPackage(ctx context.Context, releaseDir, packageURL string) error {
+func DownloadAndExtractPackage(ctx context.Context, outDir, packageURL string) error {
 	// download package
 	client := &getter.Client{
 		Ctx:   ctx,
-		Dst:   releaseDir,
+		Dst:   outDir,
 		Mode:  getter.ClientModeDir,
 		Src:   packageURL,
 		Umask: 0x022,
@@ -61,7 +61,7 @@ func DownloadAndExtractPackage(ctx context.Context, releaseDir, packageURL strin
 	}
 
 	// extract each archive in releaseDir
-	if err := filepath.WalkDir(releaseDir, func(path string, d os.DirEntry, err error) error {
+	if err := filepath.WalkDir(outDir, func(path string, d os.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
@@ -71,7 +71,7 @@ func DownloadAndExtractPackage(ctx context.Context, releaseDir, packageURL strin
 		}
 
 		decompressor := NewDecompressor(path)
-		return decompressor.Decompress(releaseDir, path, true, 0o022)
+		return decompressor.Decompress(outDir, path, true, 0o022)
 	}); err != nil {
 		return err
 	}
