@@ -6,10 +6,13 @@ import (
 	"testing"
 
 	"github.com/IceWhaleTech/CasaOS-Common/utils/logger"
+	"github.com/IceWhaleTech/CasaOS-Installer/codegen"
+	"github.com/IceWhaleTech/CasaOS-Installer/common"
 	"github.com/IceWhaleTech/CasaOS-Installer/internal/config"
 	"github.com/IceWhaleTech/CasaOS-Installer/service"
 	"github.com/Masterminds/semver/v3"
 	"github.com/stretchr/testify/assert"
+	"gopkg.in/yaml.v3"
 )
 
 func TestDownloadMigrationTool(t *testing.T) {
@@ -31,7 +34,12 @@ func TestDownloadMigrationTool(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	err = service.DownloadMigrationTool(ctx, tmpDir, "casaos", service.MigrationTool{
+	var release codegen.Release
+
+	err = yaml.Unmarshal([]byte(common.SampleReleaseYAML), &release)
+	assert.NoError(t, err)
+
+	err = service.DownloadMigrationTool(ctx, release, "casaos", service.MigrationTool{
 		Version: *version,
 		URL:     "${DOWNLOAD_DOMAIN}IceWhaleTech/CasaOS/releases/download/v0.3.6/linux-${ARCH}-casaos-migration-tool-v0.3.6.tar.gz",
 	})

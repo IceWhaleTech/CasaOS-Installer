@@ -44,4 +44,8 @@ func TestNormalizeVersion(t *testing.T) {
 	assert.Equal(t, "v0.3.5-alpha.1", version)
 	_, err = semver.NewVersion(version)
 	assert.NoError(t, err)
+
+	version = service.NormalizeVersion("${DOWNLOAD_DOMAIN}IceWhaleTech/CasaOS/releases/download/v0.3.6/linux-${ARCH}-casaos-migration-tool-v0.3.6.tar.gz")
+	_, err = semver.NewVersion(version)
+	assert.ErrorIs(t, err, semver.ErrInvalidSemVer)
 }

@@ -10,4 +10,7 @@ const (
 	MigrationListFileName = "migration.list"
 
 	LegacyWithoutVersion = "LEGACY_WITHOUT_VERSION"
+
+	MirrorPlaceHolder = "${MIRROR}"
+	ArchPlaceHolder   = "${ARCH}"
 )

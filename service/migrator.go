@@ -28,11 +28,6 @@ func DownloadAllMigrationTools(ctx context.Context, release codegen.Release) err
 		return err
 	}
 
-	releaseDir, err := ReleaseDir(release)
-	if err != nil {
-		return err
-	}
-
 	migrationToolsMap, err := MigrationToolsMap(release)
 	if err != nil {
 		return err
@@ -54,7 +49,7 @@ func DownloadAllMigrationTools(ctx context.Context, release codegen.Release) err
 				continue
 			}
 
-			if err := DownloadMigrationTool(ctx, releaseDir, module, migration); err != nil {
+			if err := DownloadMigrationTool(ctx, release, module, migration); err != nil {
 				return err
 			}
 
@@ -65,29 +60,56 @@ func DownloadAllMigrationTools(ctx context.Context, release codegen.Release) err
 	panic("implement me")
 }
 
-func DownloadMigrationTool(ctx context.Context, releaseDir string, module string, migration MigrationTool) error {
-	migrationToolURL, err := NormalizeMigrationToolURL(migration.URL)
+func DownloadMigrationTool(ctx context.Context, release codegen.Release, module string, migration MigrationTool) error {
+	releaseDir, err := ReleaseDir(release)
 	if err != nil {
 		return err
 	}
 
+	migration.URL = NormalizeMigrationToolURL(migration.URL)
+
 	migrationToolsDir := filepath.Join(releaseDir, "migration", module)
+
+	for _, mirror := range release.Mirrors {
+		migration.URL = strings.ReplaceAll(migration.URL, common.MirrorPlaceHolder, mirror)
+	}
 
 	// TODO: fill the URL template, e.g. ${DOWNLOAD_DOMAIN}IceWhaleTech/CasaOS/releases/download/v0.3.6/linux-${ARCH}-casaos-migration-tool-v0.3.6.tar.gz
 
-	return internal.DownloadAndExtractPackage(ctx, migrationToolsDir, migrationToolURL)
+	return internal.DownloadAndExtractPackage(ctx, migrationToolsDir, migration.URL)
 }
 
-func NormalizeMigrationToolURL(url string) (string, error) {
-	if !strings.HasSuffix(url, ".tar.gz") { // some old migration list has no full URL template, but just a version
-		url = NormalizeMigrationToolURLPass1(url)
-	}
-
-	panic("implement me")
+// Normalize migraiton tool URL to a standard format which uses `${MIRROR}` as the mirror placeholder
+func NormalizeMigrationToolURL(url string) string {
+	url = NormalizeMigrationToolURLPass1(url)
+	url = NormalizeMigrationToolURLPass2(url)
+	return url
 }
 
 func NormalizeMigrationToolURLPass1(url string) string {
-	panic("implement me")
+	// adapt to an old version of the migration list, where URL is just a version string
+	//
+	// e.g. CasaOS-Gateway/build/scripts/migration/service.d/gateway/migration.list
+	//
+	// LEGACY_WITHOUT_VERSION v0.3.6
+	// v0.3.5 v0.3.6
+	// v0.3.5.1 v0.3.6
+	if _, err := semver.NewVersion(NormalizeVersion(url)); err != nil {
+		return url
+	}
+
+	return fmt.Sprintf("%s/CasaOS/releases/download/%s/linux-%s-casaos-migration-tool-%s.tar.gz", common.MirrorPlaceHolder, url, common.ArchPlaceHolder, url)
+}
+
+func NormalizeMigrationToolURLPass2(url string) string {
+	// adapt to an old version of the migration list, where URL assumes base path is ${DOWNLOAD_DOMAIN}IceWhaleTech
+	//
+	// e.g. CasaOS/build/scripts/migration/service.d/casaos/migration.list
+	//
+	// LEGACY_WITHOUT_VERSION ${DOWNLOAD_DOMAIN}IceWhaleTech/CasaOS/releases/download/v0.3.6/linux-${ARCH}-casaos-migration-tool-v0.3.6.tar.gz
+	// v0.3.5 ${DOWNLOAD_DOMAIN}IceWhaleTech/CasaOS/releases/download/v0.3.6/linux-${ARCH}-casaos-migration-tool-v0.3.6.tar.gz
+	// v0.3.5.1 ${DOWNLOAD_DOMAIN}IceWhaleTech/CasaOS/releases/download/v0.3.6/linux-${ARCH}-casaos-migration-tool-v0.3.6.tar.gz
+	return strings.ReplaceAll(url, "${DOWNLOAD_DOMAIN}IceWhaleTech", common.MirrorPlaceHolder)
 }
 
 func CurrentVersion(module string) (*semver.Version, error) {
