@@ -3,7 +3,9 @@ package service
 import (
 	"bufio"
 	"context"
+	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 
@@ -42,13 +44,13 @@ func DownloadAllMigrationTools(ctx context.Context, release codegen.Release) err
 			return err
 		}
 
-		if !sourceVersion.GreaterThan(&currentVersion) {
+		if !sourceVersion.GreaterThan(currentVersion) {
 			logger.Info("no need to migrate", zap.String("module", module), zap.String("sourceVersion", sourceVersion.String()), zap.String("currentVersion", currentVersion.String()))
 			continue
 		}
 
 		for _, migration := range migrationTools {
-			if migration.version.LessThan(&currentVersion) || migration.version.GreaterThan(sourceVersion) {
+			if migration.version.LessThan(currentVersion) || migration.version.GreaterThan(sourceVersion) {
 				continue
 			}
 
@@ -86,8 +88,46 @@ func NormalizeMigrationToolURLPass1(url string) string {
 	panic("implement me")
 }
 
-func CurrentVersion(module string) (semver.Version, error) {
-	panic("implement me")
+func CurrentVersion(module string) (*semver.Version, error) {
+	reader, writer, err := os.Pipe()
+	if err != nil {
+		return nil, err
+	}
+
+	for _, executablePath := range []string{
+		"/usr/bin/" + module,
+		module,
+	} {
+
+		cmd := exec.Command(executablePath, "-v")
+		if cmd == nil {
+			continue
+		}
+
+		cmd.Stdout = writer
+
+		logger.Info(cmd.String())
+
+		if err := cmd.Run(); err != nil {
+			logger.Info("failed to run command", zap.String("cmd", cmd.String()), zap.Error(err))
+			continue
+		}
+
+		scanner := bufio.NewScanner(reader)
+		for scanner.Scan() {
+			line := scanner.Text()
+			logger.Info(line, zap.String("module", module))
+
+			version, err := semver.NewVersion(NormalizeVersion(line))
+			if err != nil {
+				continue
+			}
+
+			return version, nil
+		}
+	}
+
+	return nil, fmt.Errorf("failed to get current version of %s", module)
 }
 
 func MigrationToolsMap(release codegen.Release) (map[string][]MigrationTool, error) {
