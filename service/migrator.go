@@ -18,8 +18,8 @@ import (
 )
 
 type MigrationTool struct {
-	version semver.Version
-	url     string
+	Version semver.Version
+	URL     string
 }
 
 func DownloadAllMigrationTools(ctx context.Context, release codegen.Release) error {
@@ -50,7 +50,7 @@ func DownloadAllMigrationTools(ctx context.Context, release codegen.Release) err
 		}
 
 		for _, migration := range migrationTools {
-			if migration.version.LessThan(currentVersion) || migration.version.GreaterThan(sourceVersion) {
+			if migration.Version.LessThan(currentVersion) || migration.Version.GreaterThan(sourceVersion) {
 				continue
 			}
 
@@ -66,7 +66,7 @@ func DownloadAllMigrationTools(ctx context.Context, release codegen.Release) err
 }
 
 func DownloadMigrationTool(ctx context.Context, releaseDir string, module string, migration MigrationTool) error {
-	migrationToolURL, err := NormalizeMigrationToolURL(migration.url)
+	migrationToolURL, err := NormalizeMigrationToolURL(migration.URL)
 	if err != nil {
 		return err
 	}
@@ -178,8 +178,8 @@ func MigrationToolsMap(release codegen.Release) (map[string][]MigrationTool, err
 			}
 
 			migrationToolsMap[module.Name] = append(migrationToolsMap[module.Name], MigrationTool{
-				version: *version,
-				url:     parts[1],
+				Version: *version,
+				URL:     parts[1],
 			})
 		}
 

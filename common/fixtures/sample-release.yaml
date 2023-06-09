@@ -5,11 +5,11 @@ mirrors:
   - http://casaos.io/does/not/exist
   - https://github.com/IceWhaleTech
 packages:
-  - path: /get/releases/download/v0.4.4-alpha1/casaos-amd64-v0.4.4-alpha1.tar.gz
+  - path: /get/releases/download/v0.4.4-alpha2/casaos-amd64-v0.4.4-alpha2.tar.gz
     architecture: amd64
-  - path: /get/releases/download/v0.4.4-alpha1/casaos-arm64-v0.4.4-alpha1.tar.gz
+  - path: /get/releases/download/v0.4.4-alpha2/casaos-arm64-v0.4.4-alpha2.tar.gz
     architecture: arm64
-  - path: /get/releases/download/v0.4.4-alpha1/casaos-arm-7-v0.4.4-alpha1.tar.gz
+  - path: /get/releases/download/v0.4.4-alpha2/casaos-arm-7-v0.4.4-alpha2.tar.gz
     architecture: armv7
 modules:
   - name: casaos-gateway
