@@ -31,7 +31,7 @@ func TestGetPackageURLByCurrentArch(t *testing.T) {
 	}
 }
 
-func TestDownloadPackage(t *testing.T) {
+func TestDownloadAndExtractPackage(t *testing.T) {
 	if _, exists := os.LookupEnv("CI"); exists {
 		t.Skip("skipping test in CI environment")
 	}
@@ -49,7 +49,10 @@ func TestDownloadPackage(t *testing.T) {
 	assert.NoError(t, err)
 	defer os.RemoveAll(releaseDir)
 
-	err = internal.DownloadAndExtractPackage(ctx, releaseDir, packageURL)
+	err = internal.DownloadAndExtract(ctx, releaseDir, packageURL)
+	assert.NoError(t, err)
+
+	err = internal.BulkExtract(releaseDir)
 	assert.NoError(t, err)
 
 	expectedFiles := []string{

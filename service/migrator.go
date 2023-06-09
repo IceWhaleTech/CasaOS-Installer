@@ -7,13 +7,16 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
 
 	"github.com/IceWhaleTech/CasaOS-Common/utils/logger"
 	"github.com/IceWhaleTech/CasaOS-Installer/codegen"
 	"github.com/IceWhaleTech/CasaOS-Installer/common"
 	"github.com/IceWhaleTech/CasaOS-Installer/internal"
+	"github.com/IceWhaleTech/CasaOS-Installer/internal/config"
 	"github.com/Masterminds/semver/v3"
+	"github.com/samber/lo"
 	"go.uber.org/zap"
 )
 
@@ -21,6 +24,8 @@ type MigrationTool struct {
 	Version semver.Version
 	URL     string
 }
+
+var MigrationToolsDir = filepath.Join(config.ServerInfo.CachePath, "migration-tools")
 
 func DownloadAllMigrationTools(ctx context.Context, release codegen.Release) error {
 	sourceVersion, err := semver.NewVersion(NormalizeVersion(release.Version))
@@ -36,7 +41,8 @@ func DownloadAllMigrationTools(ctx context.Context, release codegen.Release) err
 	for module, migrationTools := range migrationToolsMap {
 		currentVersion, err := CurrentVersion(module)
 		if err != nil {
-			return err
+			logger.Info("failed to get the current version of module - skipping", zap.Error(err), zap.String("module", module))
+			continue
 		}
 
 		if !sourceVersion.GreaterThan(currentVersion) {
@@ -66,23 +72,29 @@ func DownloadMigrationTool(ctx context.Context, release codegen.Release, module 
 		return err
 	}
 
-	migration.URL = NormalizeMigrationToolURL(migration.URL)
+	template := NormalizeMigrationToolURL(migration.URL)
 
 	migrationToolsDir := filepath.Join(releaseDir, "migration", module)
 
 	for _, mirror := range release.Mirrors {
-		migration.URL = strings.ReplaceAll(migration.URL, common.MirrorPlaceHolder, mirror)
+		url := strings.ReplaceAll(template, common.MirrorPlaceHolder, mirror)
+		if err := internal.DownloadAndExtract(ctx, migrationToolsDir, url); err != nil {
+			logger.Info("error while downloading migration tool - skipping", zap.Error(err), zap.String("url", migration.URL))
+			continue
+		}
+
+		return nil
 	}
 
-	// TODO: fill the URL template, e.g. ${DOWNLOAD_DOMAIN}IceWhaleTech/CasaOS/releases/download/v0.3.6/linux-${ARCH}-casaos-migration-tool-v0.3.6.tar.gz
-
-	return internal.DownloadAndExtractPackage(ctx, migrationToolsDir, migration.URL)
+	return fmt.Errorf("failed to download migration tool %s", migration.URL)
 }
 
 // Normalize migraiton tool URL to a standard format which uses `${MIRROR}` as the mirror placeholder
 func NormalizeMigrationToolURL(url string) string {
 	url = NormalizeMigrationToolURLPass1(url)
 	url = NormalizeMigrationToolURLPass2(url)
+
+	url = strings.ReplaceAll(url, common.ArchPlaceHolder, lo.If(runtime.GOARCH == "arm", "arm-7").Else(runtime.GOARCH))
 	return url
 }
 

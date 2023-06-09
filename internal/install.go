@@ -38,30 +38,34 @@ func GetPackageURLByCurrentArch(release codegen.Release, mirror string) (string,
 	return "", fmt.Errorf("package not found for architecture: %s", arch)
 }
 
-func DownloadAndExtractPackage(ctx context.Context, outDir, packageURL string) error {
+func Download(ctx context.Context, outDir, url string) error {
+	panic("not implemented")
+}
+
+func DownloadAndExtract(ctx context.Context, outDir, url string) error {
 	// download package
-	client := &getter.Client{
+	client := getter.Client{
 		Ctx:   ctx,
 		Dst:   outDir,
 		Mode:  getter.ClientModeDir,
-		Src:   packageURL,
+		Src:   url,
 		Umask: 0x022,
 		Options: []getter.ClientOption{
 			getter.WithProgress(NewTracker(
 				func(downladed, totalSize int64) {
 					// TODO: send progress event to message bus if it exists
-					logger.Info("Downloading package", zap.String("url", packageURL), zap.Int64("downloaded", downladed), zap.Int64("totalSize", totalSize))
+					logger.Info("Downloading package", zap.String("url", url), zap.Int64("downloaded", downladed), zap.Int64("totalSize", totalSize))
 				},
 			)),
 		},
 	}
 
-	if err := client.Get(); err != nil {
-		return err
-	}
+	return client.Get()
+}
 
-	// extract each archive in releaseDir
-	if err := filepath.WalkDir(outDir, func(path string, d os.DirEntry, err error) error {
+func BulkExtract(dir string) error {
+	// extract each archive in dir
+	return filepath.WalkDir(dir, func(path string, d os.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
@@ -71,12 +75,8 @@ func DownloadAndExtractPackage(ctx context.Context, outDir, packageURL string) e
 		}
 
 		decompressor := NewDecompressor(path)
-		return decompressor.Decompress(outDir, path, true, 0o022)
-	}); err != nil {
-		return err
-	}
-
-	return nil
+		return decompressor.Decompress(dir, path, true, 0o022)
+	})
 }
 
 func InstallRelease(ctx context.Context, releaseDir string, sysrootPath string) error {

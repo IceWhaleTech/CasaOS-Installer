@@ -28,7 +28,7 @@ func TestDownloadMigrationTool(t *testing.T) {
 
 	logger.LogInitConsoleOnly()
 
-	version, err := semver.NewVersion("v0.3.5.1")
+	version, err := semver.NewVersion(service.NormalizeVersion("v0.3.5.1"))
 	assert.NoError(t, err)
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -44,5 +44,5 @@ func TestDownloadMigrationTool(t *testing.T) {
 		URL:     "${DOWNLOAD_DOMAIN}IceWhaleTech/CasaOS/releases/download/v0.3.6/linux-${ARCH}-casaos-migration-tool-v0.3.6.tar.gz",
 	})
 
-	assert.Error(t, err)
+	assert.NoError(t, err)
 }

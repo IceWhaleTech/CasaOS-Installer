@@ -76,8 +76,13 @@ func DownloadRelease(ctx context.Context, release codegen.Release) (string, erro
 			continue
 		}
 
-		if err := internal.DownloadAndExtractPackage(ctx, releaseDir, packageURL); err != nil {
+		if err := internal.DownloadAndExtract(ctx, releaseDir, packageURL); err != nil {
 			logger.Info("error while downloading and extracting package - skipping", zap.Error(err), zap.String("package_url", packageURL))
+			continue
+		}
+
+		if err := internal.BulkExtract(releaseDir); err != nil {
+			logger.Info("error while bulk extracting - skipping", zap.Error(err), zap.String("release_dir", releaseDir))
 			continue
 		}
 		break
