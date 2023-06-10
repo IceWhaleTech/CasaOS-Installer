@@ -11,6 +11,10 @@ import (
 	"github.com/Masterminds/semver/v3"
 )
 
+func MigrationToolsDir() string {
+	return filepath.Join(config.ServerInfo.CachePath, "migration-tools")
+}
+
 func ReleaseDir(release codegen.Release) (string, error) {
 	if release.Version == "" {
 		return "", fmt.Errorf("release version is empty")

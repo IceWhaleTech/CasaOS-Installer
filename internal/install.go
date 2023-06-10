@@ -38,8 +38,31 @@ func GetPackageURLByCurrentArch(release codegen.Release, mirror string) (string,
 	return "", fmt.Errorf("package not found for architecture: %s", arch)
 }
 
-func Download(ctx context.Context, outDir, url string) error {
-	panic("not implemented")
+func Download(ctx context.Context, outDir, url string) (string, error) {
+	filename := filepath.Base(url)
+
+	url = url + "?archive=false" // disable automatic archive extraction
+
+	_filepath := filepath.Join(outDir, filename)
+
+	// download package
+	client := getter.Client{
+		Ctx:   ctx,
+		Dst:   _filepath,
+		Mode:  getter.ClientModeFile,
+		Src:   url,
+		Umask: 0x022,
+		Options: []getter.ClientOption{
+			getter.WithProgress(NewTracker(
+				func(downladed, totalSize int64) {
+					// TODO: send progress event to message bus if it exists
+					logger.Info("Downloading package", zap.String("url", url), zap.Int64("downloaded", downladed), zap.Int64("totalSize", totalSize))
+				},
+			)),
+		},
+	}
+
+	return _filepath, client.Get()
 }
 
 func DownloadAndExtract(ctx context.Context, outDir, url string) error {

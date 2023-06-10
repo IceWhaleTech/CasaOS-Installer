@@ -31,7 +31,27 @@ func TestGetPackageURLByCurrentArch(t *testing.T) {
 	}
 }
 
-func TestDownloadAndExtractPackage(t *testing.T) {
+func TestDownload(t *testing.T) {
+	if _, exists := os.LookupEnv("CI"); exists {
+		t.Skip("skipping test in CI environment")
+	}
+
+	defer goleak.VerifyNone(t, goleak.IgnoreTopFunction("go.opencensus.io/stats/view.(*worker).start")) //
+
+	logger.LogInitConsoleOnly()
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	tmpDir, err := os.MkdirTemp("", "casaos-installer-test-*")
+	assert.NoError(t, err)
+	defer os.RemoveAll(tmpDir)
+
+	_, err = internal.Download(ctx, tmpDir, "https://github.com/IceWhaleTech/CasaOS-AppStore/releases/download/v0.4.4-alpha10/linux-all-appstore-v0.4.4-alpha10.tar.gz")
+	assert.NoError(t, err)
+}
+
+func TestDownloadAndExtract(t *testing.T) {
 	if _, exists := os.LookupEnv("CI"); exists {
 		t.Skip("skipping test in CI environment")
 	}

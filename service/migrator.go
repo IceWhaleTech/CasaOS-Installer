@@ -14,7 +14,6 @@ import (
 	"github.com/IceWhaleTech/CasaOS-Installer/codegen"
 	"github.com/IceWhaleTech/CasaOS-Installer/common"
 	"github.com/IceWhaleTech/CasaOS-Installer/internal"
-	"github.com/IceWhaleTech/CasaOS-Installer/internal/config"
 	"github.com/Masterminds/semver/v3"
 	"github.com/samber/lo"
 	"go.uber.org/zap"
@@ -24,8 +23,6 @@ type MigrationTool struct {
 	Version semver.Version
 	URL     string
 }
-
-var MigrationToolsDir = filepath.Join(config.ServerInfo.CachePath, "migration-tools")
 
 func DownloadAllMigrationTools(ctx context.Context, release codegen.Release) error {
 	sourceVersion, err := semver.NewVersion(NormalizeVersion(release.Version))
@@ -67,18 +64,13 @@ func DownloadAllMigrationTools(ctx context.Context, release codegen.Release) err
 }
 
 func DownloadMigrationTool(ctx context.Context, release codegen.Release, module string, migration MigrationTool) error {
-	releaseDir, err := ReleaseDir(release)
-	if err != nil {
-		return err
-	}
-
 	template := NormalizeMigrationToolURL(migration.URL)
 
-	migrationToolsDir := filepath.Join(releaseDir, "migration", module)
+	outDir := filepath.Join(MigrationToolsDir(), module)
 
 	for _, mirror := range release.Mirrors {
 		url := strings.ReplaceAll(template, common.MirrorPlaceHolder, mirror)
-		if err := internal.DownloadAndExtract(ctx, migrationToolsDir, url); err != nil {
+		if _, err := internal.Download(ctx, outDir, url); err != nil {
 			logger.Info("error while downloading migration tool - skipping", zap.Error(err), zap.String("url", migration.URL))
 			continue
 		}
