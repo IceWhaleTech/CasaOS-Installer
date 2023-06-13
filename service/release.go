@@ -70,21 +70,43 @@ func DownloadRelease(ctx context.Context, release codegen.Release) (string, erro
 	var mirror string
 
 	for _, mirror = range release.Mirrors {
-		packageURL, err := internal.GetPackageURLByCurrentArch(release, mirror)
-		if err != nil {
-			logger.Info("error while getting package url - skipping", zap.Error(err), zap.String("mirror", mirror))
-			continue
+		// checksum
+		{
+			checksumURL := internal.GetChecksumURL(release, mirror)
+			checksumFilePath, err := internal.Download(ctx, releaseDir, checksumURL)
+			if err != nil {
+				logger.Info("error while downloading checksum - skipping", zap.Error(err), zap.String("checksum_url", checksumURL))
+				continue
+			}
+
+			_, err = internal.GetChecksum(checksumFilePath)
+			if err != nil {
+				logger.Info("error while getting checksum - skipping", zap.Error(err), zap.String("checksum_file_path", checksumFilePath))
+				continue
+			}
+
+			// TODO: verify checksum
 		}
 
-		if err := internal.DownloadAndExtract(ctx, releaseDir, packageURL); err != nil {
-			logger.Info("error while downloading and extracting package - skipping", zap.Error(err), zap.String("package_url", packageURL))
-			continue
+		// packages
+		{
+			packageURL, err := internal.GetPackageURLByCurrentArch(release, mirror)
+			if err != nil {
+				logger.Info("error while getting package url - skipping", zap.Error(err), zap.String("mirror", mirror))
+				continue
+			}
+
+			if err := internal.DownloadAndExtract(ctx, releaseDir, packageURL); err != nil {
+				logger.Info("error while downloading and extracting package - skipping", zap.Error(err), zap.String("package_url", packageURL))
+				continue
+			}
+
+			if err := internal.BulkExtract(releaseDir); err != nil {
+				logger.Info("error while bulk extracting - skipping", zap.Error(err), zap.String("release_dir", releaseDir))
+				continue
+			}
 		}
 
-		if err := internal.BulkExtract(releaseDir); err != nil {
-			logger.Info("error while bulk extracting - skipping", zap.Error(err), zap.String("release_dir", releaseDir))
-			continue
-		}
 		break
 	}
 

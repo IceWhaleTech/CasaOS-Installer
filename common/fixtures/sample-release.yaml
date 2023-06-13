@@ -11,6 +11,7 @@ packages:
     architecture: arm64
   - path: /get/releases/download/v0.4.4-alpha2/casaos-arm-7-v0.4.4-alpha2.tar.gz
     architecture: armv7
+checksum: /get/releases/download/v0.4.4-alpha2/checksum.txt
 modules:
   - name: casaos-gateway
     short: gateway
