@@ -69,7 +69,10 @@ func TestDownloadAndExtract(t *testing.T) {
 	assert.NoError(t, err)
 	defer os.RemoveAll(releaseDir)
 
-	err = internal.DownloadAndExtract(ctx, releaseDir, packageURL)
+	packageFilepath, err := internal.Download(ctx, releaseDir, packageURL)
+	assert.NoError(t, err)
+
+	err = internal.Extract(packageFilepath, releaseDir)
 	assert.NoError(t, err)
 
 	err = internal.BulkExtract(releaseDir)

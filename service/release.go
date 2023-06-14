@@ -67,9 +67,13 @@ func DownloadRelease(ctx context.Context, release codegen.Release) (string, erro
 		return "", err
 	}
 
+	var packageFilepath string
 	var mirror string
 
 	for _, mirror = range release.Mirrors {
+
+		var checksum map[string]string
+
 		// checksum
 		{
 			checksumURL := internal.GetChecksumURL(release, mirror)
@@ -79,35 +83,64 @@ func DownloadRelease(ctx context.Context, release codegen.Release) (string, erro
 				continue
 			}
 
-			_, err = internal.GetChecksum(checksumFilePath)
+			_checksum, err := internal.GetChecksum(checksumFilePath)
 			if err != nil {
 				logger.Info("error while getting checksum - skipping", zap.Error(err), zap.String("checksum_file_path", checksumFilePath))
 				continue
 			}
 
-			// TODO: verify checksum
+			checksum = _checksum
 		}
 
-		// packages
-		{
-			packageURL, err := internal.GetPackageURLByCurrentArch(release, mirror)
-			if err != nil {
-				logger.Info("error while getting package url - skipping", zap.Error(err), zap.String("mirror", mirror))
-				continue
-			}
+		packageURL, err := internal.GetPackageURLByCurrentArch(release, mirror)
+		if err != nil {
+			logger.Info("error while getting package url - skipping", zap.Error(err), zap.String("mirror", mirror))
+			continue
+		}
 
-			if err := internal.DownloadAndExtract(ctx, releaseDir, packageURL); err != nil {
+		packageFilename := filepath.Base(packageURL)
+		packageChecksum := checksum[packageFilename]
+
+		// check and verify existing packages
+		{
+			packageFilepath = filepath.Join(releaseDir, packageFilename)
+
+			if err := VerifyChecksum(packageFilepath, packageChecksum); err != nil {
+				logger.Info("error while verifying checksum of package already exists - skipping", zap.Error(err), zap.String("package_file_path", packageFilepath))
+			} else {
+				logger.Info("package already exists - skipping", zap.String("package_file_path", packageFilepath))
+				break
+			}
+		}
+
+		// download packages if any of them is missing
+		{
+			packageFilepath, err = internal.Download(ctx, releaseDir, packageURL)
+			if err != nil {
 				logger.Info("error while downloading and extracting package - skipping", zap.Error(err), zap.String("package_url", packageURL))
 				continue
 			}
 
-			if err := internal.BulkExtract(releaseDir); err != nil {
-				logger.Info("error while bulk extracting - skipping", zap.Error(err), zap.String("release_dir", releaseDir))
+			if err := VerifyChecksum(packageFilepath, packageChecksum); err != nil {
+				logger.Info("error while verifying checksum of package just downloaded - skipping", zap.Error(err), zap.String("package_file_path", packageFilepath))
 				continue
 			}
 		}
-
 		break
+	}
+
+	if packageFilepath == "" {
+		return "", fmt.Errorf("package could not be found - there must be a bug")
+	}
+
+	// extract the main package, e.g. casaos-amd64-v0.4.4-alpha2.tar.gz
+	if err := internal.Extract(packageFilepath, releaseDir); err != nil {
+		return "", err
+	}
+
+	// extract individual sub-packages from the main package, e.g. linux-amd64-casaos-app-management-v0.4.4-alpha16.tar.gz
+	if err := internal.BulkExtract(releaseDir); err != nil {
+		return "", err
 	}
 
 	release.Mirrors = []string{mirror}

@@ -65,29 +65,13 @@ func Download(ctx context.Context, outDir, url string) (string, error) {
 	return _filepath, client.Get()
 }
 
-func DownloadAndExtract(ctx context.Context, outDir, url string) error {
-	// download package
-	client := getter.Client{
-		Ctx:   ctx,
-		Dst:   outDir,
-		Mode:  getter.ClientModeDir,
-		Src:   url,
-		Umask: 0x022,
-		Options: []getter.ClientOption{
-			getter.WithProgress(NewTracker(
-				func(downladed, totalSize int64) {
-					// TODO: send progress event to message bus if it exists
-					logger.Info("Downloading package", zap.String("url", url), zap.Int64("downloaded", downladed), zap.Int64("totalSize", totalSize))
-				},
-			)),
-		},
-	}
-
-	return client.Get()
+func Extract(filepath, dir string) error {
+	decompressor := NewDecompressor(filepath)
+	return decompressor.Decompress(dir, filepath, true, 0o022)
 }
 
+// extract each archive in dir
 func BulkExtract(dir string) error {
-	// extract each archive in dir
 	return filepath.WalkDir(dir, func(path string, d os.DirEntry, err error) error {
 		if err != nil {
 			return err
@@ -97,8 +81,7 @@ func BulkExtract(dir string) error {
 			return nil
 		}
 
-		decompressor := NewDecompressor(path)
-		return decompressor.Decompress(dir, path, true, 0o022)
+		return Extract(path, dir)
 	})
 }
 
