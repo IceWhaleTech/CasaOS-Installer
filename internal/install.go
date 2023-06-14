@@ -67,6 +67,10 @@ func Download(ctx context.Context, outDir, url string) (string, error) {
 
 func Extract(filepath, dir string) error {
 	decompressor := NewDecompressor(filepath)
+	if decompressor == nil {
+		return nil
+	}
+
 	return decompressor.Decompress(dir, filepath, true, 0o022)
 }
 

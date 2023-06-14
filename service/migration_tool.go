@@ -55,12 +55,10 @@ func DownloadAllMigrationTools(ctx context.Context, release codegen.Release) err
 			if err := DownloadMigrationTool(ctx, release, module, migration); err != nil {
 				return err
 			}
-
-			// TODO
 		}
 	}
 
-	panic("implement me")
+	return nil
 }
 
 func DownloadMigrationTool(ctx context.Context, release codegen.Release, module string, migration MigrationTool) error {
