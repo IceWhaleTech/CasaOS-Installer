@@ -69,7 +69,7 @@ func (a *api) InstallRelease(ctx echo.Context, params codegen.InstallReleasePara
 		backgroundCtx, cancel := context.WithCancel(context.Background())
 		defer cancel()
 
-		if err := service.InstallRelease(backgroundCtx, *release, "/", false); err != nil {
+		if err := service.InstallRelease(backgroundCtx, *release, "/"); err != nil {
 			logger.Error("error while installing release", zap.Error(err))
 		}
 	}()

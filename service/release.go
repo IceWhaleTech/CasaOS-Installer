@@ -57,7 +57,7 @@ func GetRelease(tag string) (*codegen.Release, error) {
 	return release, nil
 }
 
-func DownloadRelease(ctx context.Context, release codegen.Release) (string, error) {
+func DownloadRelease(ctx context.Context, release codegen.Release, force bool) (string, error) {
 	if release.Mirrors == nil {
 		return "", fmt.Errorf("no mirror found")
 	}
@@ -102,7 +102,7 @@ func DownloadRelease(ctx context.Context, release codegen.Release) (string, erro
 		packageChecksum := checksum[packageFilename]
 
 		// check and verify existing packages
-		{
+		if !force {
 			packageFilepath = filepath.Join(releaseDir, packageFilename)
 
 			if err := VerifyChecksum(packageFilepath, packageChecksum); err != nil {
@@ -155,18 +155,10 @@ func DownloadRelease(ctx context.Context, release codegen.Release) (string, erro
 	return releaseFilePath, os.WriteFile(releaseFilePath, buf, 0o600)
 }
 
-func InstallRelease(ctx context.Context, release codegen.Release, sysrootPath string, tryDownload bool) error {
+func InstallRelease(ctx context.Context, release codegen.Release, sysrootPath string) error {
 	releaseDir, err := ReleaseDir(release)
 	if err != nil {
 		return err
-	}
-
-	releaseFilePath := filepath.Join(releaseDir, common.ReleaseYAMLFileName)
-	if _, err := os.Stat(releaseFilePath); os.IsNotExist(err) && tryDownload {
-		logger.Info("release file not found - downloading...", zap.String("release_file_path", releaseFilePath))
-		if _, err := DownloadRelease(ctx, release); err != nil {
-			return err
-		}
 	}
 
 	backgroundCtx := context.Background()

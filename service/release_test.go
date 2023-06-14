@@ -46,7 +46,7 @@ func TestInstallRelease(t *testing.T) {
 
 	config.ServerInfo.CachePath = filepath.Join(tmpDir, "cache")
 
-	releaseFilePath, err := service.DownloadRelease(ctx, *release)
+	releaseFilePath, err := service.DownloadRelease(ctx, *release, false)
 	assert.NoError(t, err)
 	assert.FileExists(t, releaseFilePath)
 
@@ -55,7 +55,7 @@ func TestInstallRelease(t *testing.T) {
 
 	tmpSysRoot := filepath.Join(tmpDir, "sysroot")
 
-	err = service.InstallRelease(ctx, *release, tmpSysRoot, false)
+	err = service.InstallRelease(ctx, *release, tmpSysRoot)
 	assert.NoError(t, err)
 
 	assert.FileExists(t, filepath.Join(tmpSysRoot, "usr", "bin", "casaos"))
