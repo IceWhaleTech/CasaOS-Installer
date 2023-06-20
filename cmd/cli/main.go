@@ -36,18 +36,26 @@ func main() {
 
 	if *versionFlag {
 		fmt.Printf("v%s\n", common.InstallerVersion)
+		fmt.Println()
+		fmt.Println("git commit:", commit)
+		fmt.Println("build date:", date)
 		os.Exit(0)
 	}
 
-	logger.LogInitWithWriterSyncers(zapcore.AddSync(InternalLogWriter{Color: color.FgDarkGray}))
+	{
+		// CLI logger
+		_logger = NewLogger()
 
-	fmt.Println("git commit:", commit)
-	fmt.Println("build date:", date)
+		// internal logger
+		logger.LogInitWithWriterSyncers(zapcore.AddSync(InternalLogWriter{Color: color.FgDarkGray}))
+	}
 
 	tag := "main"
 	if *tagFlag != "" {
 		tag = *tagFlag
 	}
+
+	_logger.Info("Getting release information...")
 
 	release, err := service.GetRelease(tag)
 	if err != nil {
@@ -60,5 +68,5 @@ func main() {
 		os.Exit(1)
 	}
 
-	_logger.Info("Release: %+v", *release)
+	_logger.Info("Release version: %s", release.Version)
 }
