@@ -1,0 +1,11 @@
+[common]
+RuntimePath = /var/run/casaos
+
+[app]
+LogPath = /var/log/casaos
+LogSaveName = installer
+LogFileExt = log
+
+[server]
+CachePath = /var/cache/casaos
+mirror = https://raw.githubusercontent.com/IceWhaleTech/get

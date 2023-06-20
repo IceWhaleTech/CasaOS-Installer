@@ -1,0 +1,13 @@
+[Unit]
+ConditionFileNotEmpty=/etc/casaos/installer.conf
+Description=CasaOS Installer (and Updater) Service
+
+[Service]
+ExecStartPre=/usr/bin/casaos-installer -v
+ExecStart=/usr/bin/casaos-installer -c /etc/casaos/installer.conf
+PIDFile=/var/run/casaos/installer.pid
+Restart=always
+Type=notify
+
+[Install]
+WantedBy=multi-user.target
