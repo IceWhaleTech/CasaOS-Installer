@@ -182,5 +182,7 @@ func InstallRelease(ctx context.Context, release codegen.Release, sysrootPath st
 		return err
 	}
 
+	// TODO: generate casaos-uninstall script
+
 	return nil
 }

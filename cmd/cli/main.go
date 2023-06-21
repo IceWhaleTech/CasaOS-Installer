@@ -100,4 +100,6 @@ func main() {
 	}
 
 	_logger.Info("🟩 Release installed.")
+
+	// TODO: make sure `casaos-uninstall` script is installed
 }
