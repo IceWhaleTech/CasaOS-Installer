@@ -16,30 +16,26 @@ import (
 var MyService Services
 
 type Services interface {
-	Gateway() external.ManagementService
-	MessageBus() *message_bus.ClientWithResponses
+	Gateway() (external.ManagementService, error)
+	MessageBus() (*message_bus.ClientWithResponses, error)
 }
 
 type services struct {
-	gateway external.ManagementService
+	runtimePath string
 }
 
 func NewService(RuntimePath string) Services {
-	gatewayManagement, err := external.NewManagementService(RuntimePath)
-	if err != nil && len(RuntimePath) > 0 {
-		panic(err)
-	}
 	return &services{
-		gateway: gatewayManagement,
+		runtimePath: RuntimePath,
 	}
 }
 
-func (s *services) Gateway() external.ManagementService {
-	return s.gateway
+func (s *services) Gateway() (external.ManagementService, error) {
+	return external.NewManagementService(s.runtimePath)
 }
 
-func (s *services) MessageBus() *message_bus.ClientWithResponses {
-	client, _ := message_bus.NewClientWithResponses("", func(c *message_bus.Client) error {
+func (s *services) MessageBus() (*message_bus.ClientWithResponses, error) {
+	return message_bus.NewClientWithResponses("", func(c *message_bus.Client) error {
 		// error will never be returned, as we always want to return a client, even with wrong address,
 		// in order to avoid panic.
 		//
@@ -54,13 +50,17 @@ func (s *services) MessageBus() *message_bus.ClientWithResponses {
 		c.Server = messageBusAddress
 		return nil
 	})
-
-	return client
 }
 
 func PublishEventWrapper(ctx context.Context, eventType message_bus.EventType, properties map[string]string) {
 	if MyService == nil {
 		fmt.Println("failed to publish event - messsage bus service not initialized")
+		return
+	}
+
+	messageBus, err := MyService.MessageBus()
+	if err != nil {
+		logger.Error("failed to publish event", zap.Error(err))
 		return
 	}
 
@@ -73,7 +73,7 @@ func PublishEventWrapper(ctx context.Context, eventType message_bus.EventType, p
 		properties[k] = v
 	}
 
-	response, err := MyService.MessageBus().PublishEventWithResponse(ctx, common.InstallerServiceName, eventType.Name, properties)
+	response, err := messageBus.PublishEventWithResponse(ctx, common.InstallerServiceName, eventType.Name, properties)
 	if err != nil {
 		logger.Error("failed to publish event", zap.Error(err))
 		return

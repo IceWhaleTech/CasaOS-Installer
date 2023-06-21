@@ -83,8 +83,10 @@ func main() {
 	defer cancel()
 
 	// register at message bus
-	{
-		response, err := service.MyService.MessageBus().RegisterEventTypesWithResponse(ctx, common.EventTypes)
+	if messageBus, err := service.MyService.MessageBus(); err != nil {
+		logger.Info("error when trying to connect to message bus... skipping", zap.Error(err))
+	} else {
+		response, err := messageBus.RegisterEventTypesWithResponse(ctx, common.EventTypes)
 		if err != nil {
 			logger.Error("error when trying to register one or more event types - some event type will not be discoverable", zap.Error(err))
 		}
@@ -95,21 +97,22 @@ func main() {
 	}
 
 	// initialize routers and register at gateway
-
 	listener, err := net.Listen("tcp", net.JoinHostPort(common.Localhost, "0"))
 	if err != nil {
 		panic(err)
 	}
 
 	// initialize routers and register at gateway
-	{
+	if gateway, err := service.MyService.Gateway(); err != nil {
+		logger.Info("error when trying to connect to gateway... skipping", zap.Error(err))
+	} else {
 		apiPaths := []string{
 			route.V2APIPath,
 			route.V2DocPath,
 		}
 
 		for _, apiPath := range apiPaths {
-			if err := service.MyService.Gateway().CreateRoute(&model.Route{
+			if err := gateway.CreateRoute(&model.Route{
 				Path:   apiPath,
 				Target: "http://" + listener.Addr().String(),
 			}); err != nil {
@@ -118,13 +121,10 @@ func main() {
 		}
 	}
 
-	v2Router := route.InitV2Router()
-	v2DocRouter := route.InitV2DocRouter(_docHTML, _docYAML)
-
 	mux := &util_http.HandlerMultiplexer{
 		HandlerMap: map[string]http.Handler{
-			"v2":  v2Router,
-			"doc": v2DocRouter,
+			"v2":  route.InitV2Router(),
+			"doc": route.InitV2DocRouter(_docHTML, _docYAML),
 		},
 	}
 
