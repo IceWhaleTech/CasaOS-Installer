@@ -1,20 +1,27 @@
 //go:generate bash -c "mkdir -p codegen && go run github.com/deepmap/oapi-codegen/cmd/oapi-codegen@v1.12.4 -generate types,server,spec -package codegen api/openapi.yaml > codegen/api.go"
+//go:generate bash -c "mkdir -p codegen/message_bus && go run github.com/deepmap/oapi-codegen/cmd/oapi-codegen@v1.12.4 -generate types,client -package message_bus https://raw.githubusercontent.com/IceWhaleTech/CasaOS-MessageBus/main/api/message_bus/openapi.yaml > codegen/message_bus/api.go"
 
 package main
 
 import (
 	"context"
+	_ "embed"
 	"flag"
 	"fmt"
+	"net"
 	"net/http"
 	"os"
-	"os/signal"
-	"syscall"
 	"time"
 
+	"github.com/IceWhaleTech/CasaOS-Common/model"
 	"github.com/IceWhaleTech/CasaOS-Common/utils/logger"
+
+	util_http "github.com/IceWhaleTech/CasaOS-Common/utils/http"
+
 	"github.com/IceWhaleTech/CasaOS-Installer/common"
 	"github.com/IceWhaleTech/CasaOS-Installer/internal/config"
+	"github.com/IceWhaleTech/CasaOS-Installer/route"
+	"github.com/IceWhaleTech/CasaOS-Installer/service"
 	"github.com/coreos/go-systemd/daemon"
 	"github.com/robfig/cron/v3"
 	"go.uber.org/zap"
@@ -23,6 +30,12 @@ import (
 var (
 	commit = "private build"
 	date   = "private build"
+
+	//go:embed api/index.html
+	_docHTML string
+
+	//go:embed api/openapi.yaml
+	_docYAML string
 )
 
 func main() {
@@ -42,6 +55,10 @@ func main() {
 		println("build date:", date)
 
 		config.InitSetup(*configFlag)
+
+		logger.LogInit(config.AppInfo.LogPath, config.AppInfo.LogSaveName, config.AppInfo.LogFileExt)
+
+		service.MyService = service.NewService(config.CommonInfo.RuntimePath)
 	}
 
 	// TODO: setup cron to check for new release periodically
@@ -62,7 +79,54 @@ func main() {
 		defer crontab.Stop()
 	}
 
-	apiService, apiServiceError := StartAPIService()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	// register at message bus
+	{
+		response, err := service.MyService.MessageBus().RegisterEventTypesWithResponse(ctx, common.EventTypes)
+		if err != nil {
+			logger.Error("error when trying to register one or more event types - some event type will not be discoverable", zap.Error(err))
+		}
+
+		if response != nil && response.StatusCode() != http.StatusOK {
+			logger.Error("error when trying to register one or more event types - some event type will not be discoverable", zap.String("status", response.Status()), zap.String("body", string(response.Body)))
+		}
+	}
+
+	// initialize routers and register at gateway
+
+	listener, err := net.Listen("tcp", net.JoinHostPort(common.Localhost, "0"))
+	if err != nil {
+		panic(err)
+	}
+
+	// initialize routers and register at gateway
+	{
+		apiPaths := []string{
+			route.V2APIPath,
+			route.V2DocPath,
+		}
+
+		for _, apiPath := range apiPaths {
+			if err := service.MyService.Gateway().CreateRoute(&model.Route{
+				Path:   apiPath,
+				Target: "http://" + listener.Addr().String(),
+			}); err != nil {
+				panic(err)
+			}
+		}
+	}
+
+	v2Router := route.InitV2Router()
+	v2DocRouter := route.InitV2DocRouter(_docHTML, _docYAML)
+
+	mux := &util_http.HandlerMultiplexer{
+		HandlerMap: map[string]http.Handler{
+			"v2":  v2Router,
+			"doc": v2DocRouter,
+		},
+	}
 
 	// notify systemd that we are ready
 	{
@@ -75,32 +139,12 @@ func main() {
 		}
 	}
 
-	// Set up a channel to catch the Ctrl+C signal (SIGINT)
-	{
-		signalChan := make(chan os.Signal, 1)
-		signal.Notify(signalChan, os.Interrupt, syscall.SIGTERM)
-
-		// Wait for the signal or server error
-		select {
-		case <-signalChan:
-			fmt.Println("\nReceived signal, shutting down server...")
-		case err := <-apiServiceError:
-			fmt.Printf("Error starting API service: %s\n", err)
-			if err != http.ErrServerClosed {
-				os.Exit(1)
-			}
-		}
+	s := &http.Server{
+		Handler:           mux,
+		ReadHeaderTimeout: 5 * time.Second, // fix G112: Potential slowloris attack (see https://github.com/securego/gosec)
 	}
 
-	// Create a context with a timeout to allow the server to shut down gracefully
-	{
-		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-		defer cancel()
-
-		// Shutdown the apiService
-		if err := apiService.Shutdown(ctx); err != nil {
-			logger.Error("Failed to shutdown api server", zap.Any("error", err))
-			os.Exit(1)
-		}
+	if err := s.Serve(listener); err != nil {
+		panic(err)
 	}
 }
