@@ -10,7 +10,6 @@ require (
 	github.com/getkin/kin-openapi v0.117.0
 	github.com/hashicorp/go-getter v1.7.1
 	github.com/labstack/echo/v4 v4.10.2
-	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/samber/lo v1.38.1
 	github.com/stretchr/testify v1.8.3
