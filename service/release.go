@@ -6,35 +6,26 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"time"
 
 	"github.com/IceWhaleTech/CasaOS-Common/utils/logger"
 	"github.com/IceWhaleTech/CasaOS-Installer/codegen"
 	"github.com/IceWhaleTech/CasaOS-Installer/common"
 	"github.com/IceWhaleTech/CasaOS-Installer/internal"
 	"github.com/IceWhaleTech/CasaOS-Installer/internal/config"
-	"github.com/patrickmn/go-cache"
 	"go.uber.org/zap"
 	"gopkg.in/yaml.v3"
 )
 
 var (
-	Cache              = cache.New(5*time.Minute, 10*time.Minute)
+	lastRelease        *codegen.Release
 	ErrReleaseNotFound = fmt.Errorf("release not found")
 )
 
 func GetRelease(tag string) (*codegen.Release, error) {
-	cacheKeyPrefix := "release_"
-
-	if cached, ok := Cache.Get(cacheKeyPrefix + tag); ok {
-		if release, ok := cached.(*codegen.Release); ok {
-			return release, nil
-		}
-	}
-
 	var release *codegen.Release
-	for _, baseURL := range config.ServerInfo.Mirrors {
-		releaseURL := fmt.Sprintf("%s/%s/casaos-release", strings.TrimSuffix(baseURL, "/"), tag)
+	var mirror string
+	for _, mirror = range config.ServerInfo.Mirrors {
+		releaseURL := fmt.Sprintf("%s/%s/casaos-release", strings.TrimSuffix(mirror, "/"), tag)
 
 		logger.Info("trying to get release information from url", zap.String("url", releaseURL))
 
@@ -44,15 +35,19 @@ func GetRelease(tag string) (*codegen.Release, error) {
 			continue
 		}
 
+		_release.Mirrors = []string{mirror}
+
 		release = _release
 		break
 	}
 
 	if release == nil {
-		return nil, ErrReleaseNotFound
+		release = lastRelease
 	}
 
-	Cache.Set(cacheKeyPrefix+tag, release, cache.DefaultExpiration)
+	if release == nil {
+		return nil, ErrReleaseNotFound
+	}
 
 	return release, nil
 }

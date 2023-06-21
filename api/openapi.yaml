@@ -101,7 +101,10 @@ components:
               - properties:
                   data:
                     $ref: "#/components/schemas/Release"
-
+                  isUpdateReady:
+                    readOnly: true
+                    type: boolean
+                    example: false
   schemas:
     BaseResponse:
       properties:
@@ -148,6 +151,7 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/Module"
+
     Package:
       readOnly: true
       required:

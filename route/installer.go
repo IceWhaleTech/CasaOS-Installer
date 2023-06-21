@@ -33,7 +33,8 @@ func (a *api) GetRelease(ctx echo.Context, params codegen.GetReleaseParams) erro
 	}
 
 	return ctx.JSON(http.StatusOK, &codegen.ReleaseOK{
-		Data: release,
+		Data:          release,
+		IsUpdateReady: nil, // TODO - add logic here
 	})
 }
 
