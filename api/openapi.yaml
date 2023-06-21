@@ -101,7 +101,7 @@ components:
               - properties:
                   data:
                     $ref: "#/components/schemas/Release"
-                  isUpdateReady:
+                  upgradable:
                     readOnly: true
                     type: boolean
                     example: false

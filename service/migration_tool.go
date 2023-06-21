@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -36,7 +35,7 @@ func DownloadAllMigrationTools(ctx context.Context, release codegen.Release) err
 	}
 
 	for module, migrationTools := range migrationToolsMap {
-		currentVersion, err := CurrentVersion(module)
+		currentVersion, err := CurrentModuleVersion(module)
 		if err != nil {
 			logger.Info("failed to get the current version of module - skipping", zap.Error(err), zap.String("module", module))
 			continue
@@ -112,48 +111,6 @@ func NormalizeMigrationToolURLPass2(url string) string {
 	// v0.3.5 ${DOWNLOAD_DOMAIN}IceWhaleTech/CasaOS/releases/download/v0.3.6/linux-${ARCH}-casaos-migration-tool-v0.3.6.tar.gz
 	// v0.3.5.1 ${DOWNLOAD_DOMAIN}IceWhaleTech/CasaOS/releases/download/v0.3.6/linux-${ARCH}-casaos-migration-tool-v0.3.6.tar.gz
 	return strings.ReplaceAll(url, "${DOWNLOAD_DOMAIN}IceWhaleTech", common.MirrorPlaceHolder)
-}
-
-func CurrentVersion(module string) (*semver.Version, error) {
-	reader, writer, err := os.Pipe()
-	if err != nil {
-		return nil, err
-	}
-
-	for _, executablePath := range []string{
-		"/usr/bin/" + module,
-		module,
-	} {
-
-		cmd := exec.Command(executablePath, "-v")
-		if cmd == nil {
-			continue
-		}
-
-		cmd.Stdout = writer
-
-		logger.Info(cmd.String())
-
-		if err := cmd.Run(); err != nil {
-			logger.Info("failed to run command", zap.String("cmd", cmd.String()), zap.Error(err))
-			continue
-		}
-
-		scanner := bufio.NewScanner(reader)
-		for scanner.Scan() {
-			line := scanner.Text()
-			logger.Info(line, zap.String("module", module))
-
-			version, err := semver.NewVersion(NormalizeVersion(line))
-			if err != nil {
-				continue
-			}
-
-			return version, nil
-		}
-	}
-
-	return nil, fmt.Errorf("failed to get current version of %s", module)
 }
 
 func MigrationToolsMap(release codegen.Release) (map[string][]MigrationTool, error) {

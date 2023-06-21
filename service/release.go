@@ -12,6 +12,7 @@ import (
 	"github.com/IceWhaleTech/CasaOS-Installer/common"
 	"github.com/IceWhaleTech/CasaOS-Installer/internal"
 	"github.com/IceWhaleTech/CasaOS-Installer/internal/config"
+	"github.com/Masterminds/semver/v3"
 	"go.uber.org/zap"
 	"gopkg.in/yaml.v3"
 )
@@ -148,6 +149,26 @@ func DownloadRelease(ctx context.Context, release codegen.Release, force bool) (
 	releaseFilePath := filepath.Join(releaseDir, common.ReleaseYAMLFileName)
 
 	return releaseFilePath, os.WriteFile(releaseFilePath, buf, 0o600)
+}
+
+func IsReleaseUpgradable(release codegen.Release) bool {
+	if release.Version == "" {
+		return false
+	}
+
+	targetVersion, err := semver.NewVersion(NormalizeVersion(release.Version))
+	if err != nil {
+		logger.Info("error while parsing target release version - considered as not upgradable", zap.Error(err), zap.String("release_version", release.Version))
+		return false
+	}
+
+	currentVersion, err := CurrentReleaseVersion()
+	if err != nil {
+		logger.Info("error while getting current release version - considered as not upgradable", zap.Error(err))
+		return false
+	}
+
+	return targetVersion.GreaterThan(currentVersion)
 }
 
 func InstallRelease(ctx context.Context, release codegen.Release, sysrootPath string) error {
