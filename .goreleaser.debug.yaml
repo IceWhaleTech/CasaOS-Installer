@@ -3,10 +3,10 @@
 project_name: casaos-installer
 before:
   hooks:
+    - go generate
+    - go mod tidy -v
     - go run github.com/loeffel-io/ls-lint@latest
     - go run github.com/google/go-licenses@latest check . --disallowed_types=restricted
-    - go generate
-    - go mod tidy
     - go test -race -v ./...
 builds:
   - id: casaos-installer-amd64
