@@ -33,6 +33,7 @@ func (l InternalLogWriter) Write(p []byte) (n int, err error) {
 func main() {
 	tagFlag := flag.String("t", "", "tag")
 	versionFlag := flag.Bool("v", false, "version")
+	downloadOnlyFlag := flag.Bool("d", false, "download only")
 	flag.Parse()
 
 	if *versionFlag {
@@ -43,11 +44,6 @@ func main() {
 		os.Exit(0)
 	}
 
-	if os.Getuid() != 0 {
-		_logger.Info("Root privileges are required to run this program.")
-		os.Exit(1)
-	}
-
 	{
 		// CLI logger
 		_logger = NewLogger()
@@ -56,9 +52,18 @@ func main() {
 		logger.LogInitWithWriterSyncers(zapcore.AddSync(InternalLogWriter{Color: color.FgDarkGray}))
 	}
 
+	if os.Getuid() != 0 {
+		_logger.Info("Root privileges are required to run this program.")
+		os.Exit(1)
+	}
 	tag := "main"
-	if *tagFlag != "" {
+	if tagFlag != nil && *tagFlag != "" {
 		tag = *tagFlag
+	}
+
+	downloadOnly := false
+	if downloadOnlyFlag != nil {
+		downloadOnly = *downloadOnlyFlag
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -89,6 +94,11 @@ func main() {
 	if err := service.DownloadAllMigrationTools(ctx, *release); err != nil {
 		_logger.Error("🟥 Failed to download migration tools: %s", err.Error())
 		os.Exit(1)
+	}
+
+	if downloadOnly {
+		_logger.Info("🟩 Download complete.")
+		os.Exit(0)
 	}
 
 	_logger.Info("🟨 Installing release...")

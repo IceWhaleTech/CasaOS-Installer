@@ -8,6 +8,7 @@ const (
 
 	ReleaseYAMLFileName   = "release.yaml"
 	MigrationListFileName = "migration.list"
+	ChecksumTXTFileName   = "checksum.txt"
 
 	LegacyWithoutVersion = "LEGACY_WITHOUT_VERSION"
 

@@ -2,10 +2,7 @@ package service
 
 import (
 	"bufio"
-	"crypto/sha256"
-	"encoding/hex"
 	"fmt"
-	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -50,27 +47,6 @@ func NormalizeVersion(version string) string {
 	versionNumbers[2] = strings.Replace(versionNumbers[2], ".", "-", 1)
 
 	return strings.Join([]string{versionNumbers[0], versionNumbers[1], versionNumbers[2]}, ".")
-}
-
-// sha256sum
-func VerifyChecksum(filepath, checksum string) error {
-	file, err := os.Open(filepath)
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-
-	hash := sha256.New()
-	if _, err := io.Copy(hash, file); err != nil {
-		return err
-	}
-
-	buf := hash.Sum(nil)[:32]
-	if hex.EncodeToString(buf) != checksum {
-		return fmt.Errorf("checksum mismatch: expected %s, got %s", checksum, hex.EncodeToString(buf))
-	}
-
-	return nil
 }
 
 func CurrentReleaseVersion() (*semver.Version, error) {

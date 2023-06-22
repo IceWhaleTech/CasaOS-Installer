@@ -69,22 +69,19 @@ func DownloadRelease(ctx context.Context, release codegen.Release, force bool) (
 		var checksum map[string]string
 
 		// checksum
-		{
-			checksumURL := internal.GetChecksumURL(release, mirror)
-			checksumFilePath, err := internal.Download(ctx, releaseDir, checksumURL)
-			if err != nil {
-				logger.Info("error while downloading checksum - skipping", zap.Error(err), zap.String("checksum_url", checksumURL))
-				continue
-			}
-
-			_checksum, err := internal.GetChecksum(checksumFilePath)
-			if err != nil {
-				logger.Info("error while getting checksum - skipping", zap.Error(err), zap.String("checksum_file_path", checksumFilePath))
-				continue
-			}
-
-			checksum = _checksum
+		checksumFilePath, err := DownloadChecksum(ctx, release, mirror)
+		if err != nil {
+			logger.Info("error while downloading checksum - skipping", zap.Error(err), zap.Any("release", release))
+			continue
 		}
+
+		_checksum, err := GetChecksum(release)
+		if err != nil {
+			logger.Info("error while getting checksum - skipping", zap.Error(err), zap.String("checksum_file_path", checksumFilePath))
+			continue
+		}
+
+		checksum = _checksum
 
 		packageURL, err := internal.GetPackageURLByCurrentArch(release, mirror)
 		if err != nil {
@@ -189,4 +186,17 @@ func InstallRelease(ctx context.Context, release codegen.Release, sysrootPath st
 	// TODO: make sure `casaos-uninstall` script is installed
 
 	return nil
+}
+
+func VerifyRelease(release codegen.Release) error {
+	// releaseDir, err := ReleaseDir(release)
+	// if err != nil {
+	// 	return err
+	// }
+
+	// TODO - load release.yaml
+
+	// TODO - verify checksum
+
+	panic("implement me") // TODO
 }

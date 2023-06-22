@@ -170,3 +170,7 @@ func MigrationToolsMap(release codegen.Release) (map[string][]MigrationTool, err
 
 	return migrationToolsMap, nil
 }
+
+func VerifyAllMigrationTools(release codegen.Release) error {
+	panic("implement me") // TODO
+}
