@@ -144,6 +144,7 @@ func main() {
 		ReadHeaderTimeout: 5 * time.Second, // fix G112: Potential slowloris attack (see https://github.com/securego/gosec)
 	}
 
+	logger.Info("installer service is listening...", zap.String("address", listener.Addr().String()))
 	if err := s.Serve(listener); err != nil {
 		panic(err)
 	}

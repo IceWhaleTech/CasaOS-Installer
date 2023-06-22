@@ -166,7 +166,13 @@ func IsUpgradable(release codegen.Release) bool {
 		return false
 	}
 
-	return targetVersion.GreaterThan(currentVersion)
+	if !targetVersion.GreaterThan(currentVersion) {
+		return false
+	}
+
+	// TODO: confirm if the packages are already cached.
+
+	return true
 }
 
 func InstallRelease(ctx context.Context, release codegen.Release, sysrootPath string) error {
