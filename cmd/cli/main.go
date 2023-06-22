@@ -61,9 +61,12 @@ func main() {
 		tag = *tagFlag
 	}
 
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	_logger.Info("🟨 Getting release information...")
 
-	release, err := service.GetRelease(tag)
+	release, err := service.GetRelease(ctx, tag)
 	if err != nil {
 		_logger.Error("🟥 Failed to get release: %s", err.Error())
 		os.Exit(1)
@@ -74,12 +77,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	_logger.Info("🟩 Release version: %s", release.Version)
-
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	_logger.Info("🟨 Downloading release...")
+	_logger.Info("🟨 Downloading release %s...", release.Version)
 	releaseFilePath, err := service.DownloadRelease(ctx, *release, false)
 	if err != nil {
 		_logger.Error("Failed to download release: %s", err.Error())

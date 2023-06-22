@@ -19,7 +19,10 @@ func TestInstallRelease(t *testing.T) {
 
 	logger.LogInitConsoleOnly()
 
-	release, err := service.GetRelease("main")
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	release, err := service.GetRelease(ctx, "main")
 	assert.NoError(t, err)
 
 	assert.NotNil(t, release)
@@ -35,9 +38,6 @@ func TestInstallRelease(t *testing.T) {
 
 	assert.NotEmpty(t, release.ReleaseNotes)
 	assert.NotEmpty(t, release.Version)
-
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
 
 	tmpDir, err := os.MkdirTemp("", "casaos-installer-test-*")
 	assert.NoError(t, err)

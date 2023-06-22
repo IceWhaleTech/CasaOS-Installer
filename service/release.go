@@ -22,21 +22,19 @@ var (
 	ErrReleaseNotFound = fmt.Errorf("release not found")
 )
 
-func GetRelease(tag string) (*codegen.Release, error) {
+func GetRelease(ctx context.Context, tag string) (*codegen.Release, error) {
 	var release *codegen.Release
 	var mirror string
 	for _, mirror = range config.ServerInfo.Mirrors {
-		releaseURL := fmt.Sprintf("%s/%s/casaos-release", strings.TrimSuffix(mirror, "/"), tag)
+		releaseURL := fmt.Sprintf("%s/get/%s/casaos-release", strings.TrimSuffix(mirror, "/"), tag)
 
 		logger.Info("trying to get release information from url", zap.String("url", releaseURL))
 
-		_release, err := internal.GetReleaseFrom(releaseURL)
+		_release, err := internal.GetReleaseFrom(ctx, releaseURL)
 		if err != nil {
 			logger.Info("error while getting release information - skipping", zap.Error(err), zap.String("url", releaseURL))
 			continue
 		}
-
-		_release.Mirrors = []string{mirror}
 
 		release = _release
 		break

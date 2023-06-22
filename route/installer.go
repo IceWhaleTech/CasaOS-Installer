@@ -17,7 +17,7 @@ func (a *api) GetRelease(ctx echo.Context, params codegen.GetReleaseParams) erro
 		tag = *params.Version
 	}
 
-	release, err := service.GetRelease(tag)
+	release, err := service.GetRelease(ctx.Request().Context(), tag)
 	if err != nil {
 		message := err.Error()
 
@@ -44,7 +44,7 @@ func (a *api) InstallRelease(ctx echo.Context, params codegen.InstallReleasePara
 		tag = *params.Version
 	}
 
-	release, err := service.GetRelease(tag)
+	release, err := service.GetRelease(ctx.Request().Context(), tag)
 	if err != nil {
 		message := err.Error()
 
