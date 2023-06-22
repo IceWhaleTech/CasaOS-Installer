@@ -149,7 +149,7 @@ func DownloadRelease(ctx context.Context, release codegen.Release, force bool) (
 	return releaseFilePath, os.WriteFile(releaseFilePath, buf, 0o600)
 }
 
-func IsReleaseUpgradable(release codegen.Release) bool {
+func IsUpgradable(release codegen.Release) bool {
 	if release.Version == "" {
 		return false
 	}
