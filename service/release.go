@@ -51,6 +51,7 @@ func GetRelease(ctx context.Context, tag string) (*codegen.Release, error) {
 	return release, nil
 }
 
+// returns releaseFilePath if successful
 func DownloadRelease(ctx context.Context, release codegen.Release, force bool) (string, error) {
 	if release.Mirrors == nil {
 		return "", fmt.Errorf("no mirror found")
@@ -146,7 +147,7 @@ func DownloadRelease(ctx context.Context, release codegen.Release, force bool) (
 	return releaseFilePath, os.WriteFile(releaseFilePath, buf, 0o600)
 }
 
-func IsUpgradable(release codegen.Release) bool {
+func ShoudUpgrade(release codegen.Release) bool {
 	if release.Version == "" {
 		return false
 	}
@@ -167,9 +168,17 @@ func IsUpgradable(release codegen.Release) bool {
 		return false
 	}
 
+	return true
+}
+
+func IsUpgradable(release codegen.Release) bool {
+	if !ShoudUpgrade(release) {
+		return false
+	}
+
 	// TODO: confirm if the packages are already cached.
 
-	return true
+	panic("implement me")
 }
 
 func InstallRelease(ctx context.Context, release codegen.Release, sysrootPath string) error {
@@ -188,7 +197,7 @@ func InstallRelease(ctx context.Context, release codegen.Release, sysrootPath st
 	return nil
 }
 
-func VerifyRelease(release codegen.Release) error {
+func VerifyRelease(release codegen.Release) (bool, error) {
 	// releaseDir, err := ReleaseDir(release)
 	// if err != nil {
 	// 	return err

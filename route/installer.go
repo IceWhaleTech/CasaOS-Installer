@@ -6,13 +6,14 @@ import (
 
 	"github.com/IceWhaleTech/CasaOS-Common/utils/logger"
 	"github.com/IceWhaleTech/CasaOS-Installer/codegen"
+	"github.com/IceWhaleTech/CasaOS-Installer/common"
 	"github.com/IceWhaleTech/CasaOS-Installer/service"
 	"github.com/labstack/echo/v4"
 	"go.uber.org/zap"
 )
 
 func (a *api) GetRelease(ctx echo.Context, params codegen.GetReleaseParams) error {
-	tag := "main"
+	tag := common.MainTag
 	if params.Version != nil && *params.Version != "latest" {
 		tag = *params.Version
 	}

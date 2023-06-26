@@ -14,4 +14,6 @@ const (
 
 	MirrorPlaceHolder = "${MIRROR}"
 	ArchPlaceHolder   = "${ARCH}"
+
+	MainTag = "main"
 )
