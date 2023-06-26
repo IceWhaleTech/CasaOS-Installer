@@ -64,47 +64,12 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	// TODO: setup cron to check for new release periodically
 	{
 		crontab := cron.New(cron.WithSeconds())
 
-		go func() {
-			// TODO: run once at startup
-		}()
+		go cronjob(ctx) // run once immediately
 
-		if _, err := crontab.AddFunc("@every 24h", func() {
-			release, err := service.GetRelease(ctx, common.MainTag)
-			if err != nil {
-				logger.Error("error when trying to get release", zap.Error(err))
-				return
-			}
-
-			if !service.ShoudUpgrade(*release) {
-				logger.Info("no need to upgrade", zap.String("latest version", release.Version))
-				return
-			}
-
-			ok, err := service.VerifyRelease(*release)
-			if err != nil {
-				logger.Error("error when trying to verify release", zap.Error(err))
-				return
-			}
-
-			if ok {
-				logger.Info("latest release exists", zap.String("version", release.Version))
-				return
-			}
-
-			releaseFilePath, err := service.DownloadRelease(ctx, *release, true)
-			if err != nil {
-				logger.Error("error when trying to download release", zap.Error(err))
-				return
-			}
-
-			logger.Info("downloaded release", zap.String("release file path", releaseFilePath))
-
-			// TODO: run every 24 hours
-		}); err != nil {
+		if _, err := crontab.AddFunc("@every 24h", func() { cronjob(ctx) }); err != nil {
 			panic(err)
 		}
 
@@ -178,4 +143,38 @@ func main() {
 	if err := s.Serve(listener); err != nil {
 		panic(err)
 	}
+}
+
+func cronjob(ctx context.Context) {
+	release, err := service.GetRelease(ctx, common.MainTag)
+	if err != nil {
+		logger.Error("error when trying to get release", zap.Error(err))
+		return
+	}
+
+	if !service.ShoudUpgrade(*release) {
+		logger.Info("no need to upgrade", zap.String("latest version", release.Version))
+		return
+	}
+
+	ok, err := service.VerifyRelease(*release)
+	if err != nil {
+		logger.Error("error when trying to verify release", zap.Error(err))
+		return
+	}
+
+	if ok {
+		logger.Info("latest release exists", zap.String("version", release.Version))
+		return
+	}
+
+	releaseFilePath, err := service.DownloadRelease(ctx, *release, true)
+	if err != nil {
+		logger.Error("error when trying to download release", zap.Error(err))
+		return
+	}
+
+	logger.Info("downloaded release", zap.String("release file path", releaseFilePath))
+
+	// TODO - download migration tools
 }
