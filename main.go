@@ -157,24 +157,32 @@ func cronjob(ctx context.Context) {
 		return
 	}
 
-	ok, err := service.VerifyRelease(*release)
-	if err != nil {
-		logger.Error("error when trying to verify release", zap.Error(err))
-		return
+	// cache release packages if not already cached
+	{
+		if service.VerifyRelease(*release) {
+			logger.Info("latest release exists", zap.String("version", release.Version))
+			return
+		}
+
+		releaseFilePath, err := service.DownloadRelease(ctx, *release, true)
+		if err != nil {
+			logger.Error("error when trying to download release", zap.Error(err))
+			return
+		}
+
+		logger.Info("downloaded release", zap.String("release file path", releaseFilePath))
 	}
 
-	if ok {
-		logger.Info("latest release exists", zap.String("version", release.Version))
-		return
+	// cache migration tools if not already cached
+	{
+		if service.VerifyAllMigrationTools(*release) {
+			logger.Info("all migration tools exist", zap.String("version", release.Version))
+			return
+		}
+
+		if err := service.DownloadAllMigrationTools(ctx, *release); err != nil {
+			logger.Error("error when trying to download migration tools", zap.Error(err))
+			return
+		}
 	}
-
-	releaseFilePath, err := service.DownloadRelease(ctx, *release, true)
-	if err != nil {
-		logger.Error("error when trying to download release", zap.Error(err))
-		return
-	}
-
-	logger.Info("downloaded release", zap.String("release file path", releaseFilePath))
-
-	// TODO - download migration tools
 }

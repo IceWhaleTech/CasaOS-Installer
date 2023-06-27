@@ -197,7 +197,8 @@ func InstallRelease(ctx context.Context, release codegen.Release, sysrootPath st
 	return nil
 }
 
-func VerifyRelease(release codegen.Release) (bool, error) {
+// verify packages for a release are already cached
+func VerifyRelease(release codegen.Release) bool {
 	// releaseDir, err := ReleaseDir(release)
 	// if err != nil {
 	// 	return err
