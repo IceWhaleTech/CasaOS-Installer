@@ -25,7 +25,7 @@ func DownloadChecksum(ctx context.Context, release codegen.Release, mirror strin
 }
 
 // sha256sum
-func VerifyChecksum(filepath, checksum string) error {
+func VerifyChecksumByFilePath(filepath, checksum string) error {
 	file, err := os.Open(filepath)
 	if err != nil {
 		return err

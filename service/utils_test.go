@@ -77,10 +77,10 @@ func TestVerifyChecksum(t *testing.T) {
 	checksum := strings.Split(string(out), " ")[0]
 
 	// Test the function
-	err = service.VerifyChecksum(tmpfile.Name(), checksum)
+	err = service.VerifyChecksumByFilePath(tmpfile.Name(), checksum)
 	assert.NoError(t, err)
 
 	// Test the function with wrong checksum
-	err = service.VerifyChecksum(tmpfile.Name(), "wrongchecksum")
+	err = service.VerifyChecksumByFilePath(tmpfile.Name(), "wrongchecksum")
 	assert.Error(t, err)
 }

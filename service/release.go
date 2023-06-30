@@ -66,38 +66,9 @@ func DownloadRelease(ctx context.Context, release codegen.Release, force bool) (
 	var mirror string
 
 	for _, mirror = range release.Mirrors {
-
-		var checksum map[string]string
-
-		// checksum
-		checksumFilePath, err := DownloadChecksum(ctx, release, mirror)
-		if err != nil {
-			logger.Info("error while downloading checksum - skipping", zap.Error(err), zap.Any("release", release))
-			continue
-		}
-
-		_checksum, err := GetChecksum(release)
-		if err != nil {
-			logger.Info("error while getting checksum - skipping", zap.Error(err), zap.String("checksum_file_path", checksumFilePath))
-			continue
-		}
-
-		checksum = _checksum
-
-		packageURL, err := internal.GetPackageURLByCurrentArch(release, mirror)
-		if err != nil {
-			logger.Info("error while getting package url - skipping", zap.Error(err), zap.String("mirror", mirror))
-			continue
-		}
-
-		packageFilename := filepath.Base(packageURL)
-		packageChecksum := checksum[packageFilename]
-
 		// check and verify existing packages
 		if !force {
-			packageFilepath = filepath.Join(releaseDir, packageFilename)
-
-			if err := VerifyChecksum(packageFilepath, packageChecksum); err != nil {
+			if err := VerifyReleaseChecksum(release); err != nil {
 				logger.Info("error while verifying checksum of package already exists - skipping", zap.Error(err), zap.String("package_file_path", packageFilepath))
 			} else {
 				logger.Info("package already exists - skipping", zap.String("package_file_path", packageFilepath))
@@ -107,14 +78,15 @@ func DownloadRelease(ctx context.Context, release codegen.Release, force bool) (
 
 		// download packages if any of them is missing
 		{
-			packageFilepath, err = internal.Download(ctx, releaseDir, packageURL)
+			packageURL, err := internal.GetPackageURLByCurrentArch(release, mirror)
 			if err != nil {
-				logger.Info("error while downloading and extracting package - skipping", zap.Error(err), zap.String("package_url", packageURL))
+				logger.Info("error while getting package url - skipping", zap.Error(err), zap.Any("release", release))
 				continue
 			}
 
-			if err := VerifyChecksum(packageFilepath, packageChecksum); err != nil {
-				logger.Info("error while verifying checksum of package just downloaded - skipping", zap.Error(err), zap.String("package_file_path", packageFilepath))
+			packageFilepath, err = internal.Download(ctx, releaseDir, packageURL)
+			if err != nil {
+				logger.Info("error while downloading and extracting package - skipping", zap.Error(err), zap.String("package_url", packageURL))
 				continue
 			}
 		}
@@ -123,16 +95,6 @@ func DownloadRelease(ctx context.Context, release codegen.Release, force bool) (
 
 	if packageFilepath == "" {
 		return "", fmt.Errorf("package could not be found - there must be a bug")
-	}
-
-	// extract the main package, e.g. casaos-amd64-v0.4.4-alpha2.tar.gz
-	if err := internal.Extract(packageFilepath, releaseDir); err != nil {
-		return "", err
-	}
-
-	// extract individual sub-packages from the main package, e.g. linux-amd64-casaos-app-management-v0.4.4-alpha16.tar.gz
-	if err := internal.BulkExtract(releaseDir); err != nil {
-		return "", err
 	}
 
 	release.Mirrors = []string{mirror}
@@ -197,16 +159,26 @@ func InstallRelease(ctx context.Context, release codegen.Release, sysrootPath st
 	return nil
 }
 
-// verify packages for a release are already cached
-func VerifyRelease(release codegen.Release) bool {
-	// releaseDir, err := ReleaseDir(release)
-	// if err != nil {
-	// 	return err
-	// }
+func VerifyReleaseChecksum(release codegen.Release) error {
+	releaseDir, err := ReleaseDir(release)
+	if err != nil {
+		return err
+	}
 
-	// TODO - load release.yaml
+	checksum, err := GetChecksum(release)
+	if err != nil {
+		return err
+	}
 
-	// TODO - verify checksum
+	packageURL, err := internal.GetPackageURLByCurrentArch(release, "")
+	if err != nil {
+		return err
+	}
 
-	panic("implement me") // TODO
+	packageFilename := filepath.Base(packageURL)
+	packageChecksum := checksum[packageFilename]
+
+	packageFilepath := filepath.Join(releaseDir, packageFilename)
+
+	return VerifyChecksumByFilePath(packageFilepath, packageChecksum)
 }

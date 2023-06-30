@@ -90,9 +90,22 @@ func main() {
 	}
 	_logger.Info("🟩 Release file path: %s", releaseFilePath)
 
+	_logger.Info("🟨 Verifying release...")
+	if err := service.VerifyReleaseChecksum(*release); err != nil {
+		_logger.Error("🟥 Release verification failed: %s", err.Error())
+		os.Exit(1)
+	}
+
 	_logger.Info("🟨 Downloading migration tools...")
 	if err := service.DownloadAllMigrationTools(ctx, *release); err != nil {
 		_logger.Error("🟥 Failed to download migration tools: %s", err.Error())
+		os.Exit(1)
+	}
+	_logger.Info("🟩 Migration tools downloaded.")
+
+	_logger.Info("🟨 Verifying migration tools...")
+	if !service.VerifyAllMigrationTools(*release) {
+		_logger.Error("🟥 Migration tools verification failed")
 		os.Exit(1)
 	}
 
