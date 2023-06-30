@@ -110,11 +110,17 @@ func main() {
 	}
 
 	_logger.Info("🟨 Downloading migration tools...")
-	if err := service.DownloadAllMigrationTools(ctx, *release); err != nil {
+	downloaded, err := service.DownloadAllMigrationTools(ctx, *release)
+	if err != nil {
 		_logger.Error("🟥 Failed to download migration tools: %s", err.Error())
 		os.Exit(1)
 	}
-	_logger.Info("🟩 Migration tools downloaded.")
+
+	if downloaded {
+		_logger.Info("🟩 Migration tools downloaded.")
+	} else {
+		_logger.Info("🟩 No migration tools to download.")
+	}
 
 	_logger.Info("🟨 Verifying migration tools...")
 	if !service.VerifyAllMigrationTools(*release) {

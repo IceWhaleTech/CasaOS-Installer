@@ -23,16 +23,18 @@ type MigrationTool struct {
 	URL     string
 }
 
-func DownloadAllMigrationTools(ctx context.Context, release codegen.Release) error {
+func DownloadAllMigrationTools(ctx context.Context, release codegen.Release) (bool, error) {
 	sourceVersion, err := semver.NewVersion(NormalizeVersion(release.Version))
 	if err != nil {
-		return err
+		return false, err
 	}
 
 	migrationToolsMap, err := MigrationToolsMap(release)
 	if err != nil {
-		return err
+		return false, err
 	}
+
+	downloaded := false
 
 	for module, migrationTools := range migrationToolsMap {
 		currentVersion, err := CurrentModuleVersion(module)
@@ -52,12 +54,14 @@ func DownloadAllMigrationTools(ctx context.Context, release codegen.Release) err
 			}
 
 			if err := DownloadMigrationTool(ctx, release, module, migration); err != nil {
-				return err
+				return false, err
 			}
+
+			downloaded = true
 		}
 	}
 
-	return nil
+	return downloaded, nil
 }
 
 func DownloadMigrationTool(ctx context.Context, release codegen.Release, module string, migration MigrationTool) error {

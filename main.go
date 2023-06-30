@@ -177,7 +177,7 @@ func cronjob(ctx context.Context) {
 			return
 		}
 
-		if err := service.DownloadAllMigrationTools(ctx, *release); err != nil {
+		if _, err := service.DownloadAllMigrationTools(ctx, *release); err != nil {
 			logger.Error("error when trying to download migration tools", zap.Error(err))
 			return
 		}

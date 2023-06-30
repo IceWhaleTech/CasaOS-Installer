@@ -50,8 +50,9 @@ func TestInstallRelease(t *testing.T) {
 	assert.NoError(t, err)
 	assert.FileExists(t, releaseFilePath)
 
-	err = service.DownloadAllMigrationTools(ctx, *release)
+	downloaded, err := service.DownloadAllMigrationTools(ctx, *release)
 	assert.NoError(t, err)
+	assert.True(t, downloaded)
 
 	tmpSysRoot := filepath.Join(tmpDir, "sysroot")
 
