@@ -53,6 +53,16 @@ func GetRelease(ctx context.Context, tag string) (*codegen.Release, error) {
 
 // returns releaseFilePath if successful
 func DownloadRelease(ctx context.Context, release codegen.Release, force bool) (string, error) {
+	// check and verify existing packages
+	if !force {
+		if packageFilePath, err := VerifyRelease(release); err != nil {
+			logger.Info("error while verifying release - continue to download", zap.Error(err))
+		} else {
+			logger.Info("package already exists - skipping")
+			return packageFilePath, nil
+		}
+	}
+
 	if release.Mirrors == nil {
 		return "", fmt.Errorf("no mirror found")
 	}
@@ -62,20 +72,10 @@ func DownloadRelease(ctx context.Context, release codegen.Release, force bool) (
 		return "", err
 	}
 
-	var packageFilepath string
+	var packageFilePath string
 	var mirror string
 
 	for _, mirror = range release.Mirrors {
-		// check and verify existing packages
-		if !force {
-			if err := VerifyReleaseChecksum(release); err != nil {
-				logger.Info("error while verifying checksum of package already exists - skipping", zap.Error(err), zap.String("package_file_path", packageFilepath))
-			} else {
-				logger.Info("package already exists - skipping", zap.String("package_file_path", packageFilepath))
-				break
-			}
-		}
-
 		// download packages if any of them is missing
 		{
 			packageURL, err := internal.GetPackageURLByCurrentArch(release, mirror)
@@ -84,16 +84,25 @@ func DownloadRelease(ctx context.Context, release codegen.Release, force bool) (
 				continue
 			}
 
-			packageFilepath, err = internal.Download(ctx, releaseDir, packageURL)
+			packageFilePath, err = internal.Download(ctx, releaseDir, packageURL)
 			if err != nil {
 				logger.Info("error while downloading and extracting package - skipping", zap.Error(err), zap.String("package_url", packageURL))
+				continue
+			}
+		}
+
+		// download checksum if it's missing
+		{
+			checksumURL := internal.GetChecksumURL(release, mirror)
+			if _, err := internal.Download(ctx, releaseDir, checksumURL); err != nil {
+				logger.Info("error while downloading checksum - skipping", zap.Error(err), zap.String("checksum_url", checksumURL))
 				continue
 			}
 		}
 		break
 	}
 
-	if packageFilepath == "" {
+	if packageFilePath == "" {
 		return "", fmt.Errorf("package could not be found - there must be a bug")
 	}
 
@@ -107,6 +116,19 @@ func DownloadRelease(ctx context.Context, release codegen.Release, force bool) (
 	releaseFilePath := filepath.Join(releaseDir, common.ReleaseYAMLFileName)
 
 	return releaseFilePath, os.WriteFile(releaseFilePath, buf, 0o600)
+}
+
+func ExtractReleasePackages(packageFilepath string, release codegen.Release) error {
+	releaseDir, err := ReleaseDir(release)
+	if err != nil {
+		return err
+	}
+
+	if err := internal.Extract(packageFilepath, releaseDir); err != nil {
+		return err
+	}
+
+	return internal.BulkExtract(releaseDir)
 }
 
 func ShoudUpgrade(release codegen.Release) bool {
@@ -159,26 +181,26 @@ func InstallRelease(ctx context.Context, release codegen.Release, sysrootPath st
 	return nil
 }
 
-func VerifyReleaseChecksum(release codegen.Release) error {
+func VerifyRelease(release codegen.Release) (string, error) {
 	releaseDir, err := ReleaseDir(release)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	checksum, err := GetChecksum(release)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	packageURL, err := internal.GetPackageURLByCurrentArch(release, "")
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	packageFilename := filepath.Base(packageURL)
 	packageChecksum := checksum[packageFilename]
 
-	packageFilepath := filepath.Join(releaseDir, packageFilename)
+	packageFilePath := filepath.Join(releaseDir, packageFilename)
 
-	return VerifyChecksumByFilePath(packageFilepath, packageChecksum)
+	return packageFilePath, VerifyChecksumByFilePath(packageFilePath, packageChecksum)
 }

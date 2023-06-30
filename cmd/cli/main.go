@@ -69,6 +69,7 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
+	// get release information
 	_logger.Info("🟨 Getting release information...")
 
 	release, err := service.GetRelease(ctx, tag)
@@ -82,17 +83,29 @@ func main() {
 		os.Exit(1)
 	}
 
+	_logger.Info("🟩 Release found: %s", release.Version)
+
+	// download release
 	_logger.Info("🟨 Downloading release %s...", release.Version)
 	releaseFilePath, err := service.DownloadRelease(ctx, *release, false)
 	if err != nil {
 		_logger.Error("Failed to download release: %s", err.Error())
 		os.Exit(1)
 	}
-	_logger.Info("🟩 Release file path: %s", releaseFilePath)
+	_logger.Info("🟩 Release downloaded: %s", releaseFilePath)
 
+	// verify release
 	_logger.Info("🟨 Verifying release...")
-	if err := service.VerifyReleaseChecksum(*release); err != nil {
+	if _, err := service.VerifyRelease(*release); err != nil {
 		_logger.Error("🟥 Release verification failed: %s", err.Error())
+		os.Exit(1)
+	}
+	_logger.Info("🟩 Release verified.")
+
+	// extract release packages
+	_logger.Info("🟨 Extracting release packages...")
+	if err := service.ExtractReleasePackages(releaseFilePath, *release); err != nil {
+		_logger.Error("🟥 Failed to extract release packages: %s", err.Error())
 		os.Exit(1)
 	}
 

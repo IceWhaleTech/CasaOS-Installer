@@ -158,11 +158,8 @@ func cronjob(ctx context.Context) {
 	}
 
 	// cache release packages if not already cached
-	{
-		if service.VerifyRelease(*release) {
-			logger.Info("latest release exists", zap.String("version", release.Version))
-			return
-		}
+	if _, err := service.VerifyRelease(*release); err != nil {
+		logger.Info("error while verifying release - continue to download", zap.Error(err))
 
 		releaseFilePath, err := service.DownloadRelease(ctx, *release, true)
 		if err != nil {
