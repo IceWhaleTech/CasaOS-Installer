@@ -40,15 +40,18 @@ func GetPackageURLByCurrentArch(release codegen.Release, mirror string) (string,
 
 func Download(ctx context.Context, outDir, url string) (string, error) {
 	filename := filepath.Base(url)
-
-	url = url + "?archive=false" // disable automatic archive extraction
-
 	_filepath := filepath.Join(outDir, filename)
+
+	return _filepath, DownloadAs(ctx, _filepath, url)
+}
+
+func DownloadAs(ctx context.Context, filepath, url string) error {
+	url = url + "?archive=false" // disable automatic archive extraction
 
 	// download package
 	client := getter.Client{
 		Ctx:   ctx,
-		Dst:   _filepath,
+		Dst:   filepath,
 		Mode:  getter.ClientModeFile,
 		Src:   url,
 		Umask: 0x022,
@@ -62,7 +65,7 @@ func Download(ctx context.Context, outDir, url string) (string, error) {
 		},
 	}
 
-	return _filepath, client.Get()
+	return client.Get()
 }
 
 func Extract(filepath, dir string) error {

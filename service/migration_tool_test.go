@@ -39,7 +39,7 @@ func TestDownloadMigrationTool(t *testing.T) {
 	err = yaml.Unmarshal([]byte(common.SampleReleaseYAML), &release)
 	assert.NoError(t, err)
 
-	err = service.DownloadMigrationTool(ctx, release, "casaos", service.MigrationTool{
+	_, err = service.DownloadMigrationTool(ctx, release, "casaos", service.MigrationTool{
 		Version: *version,
 		URL:     "${DOWNLOAD_DOMAIN}IceWhaleTech/CasaOS/releases/download/v0.3.6/linux-${ARCH}-casaos-migration-tool-v0.3.6.tar.gz",
 	})

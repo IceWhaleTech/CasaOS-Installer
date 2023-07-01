@@ -4,9 +4,7 @@ import (
 	"bufio"
 	"context"
 	"fmt"
-	"net/url"
 	"os"
-	"path"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -55,7 +53,7 @@ func DownloadAllMigrationTools(ctx context.Context, release codegen.Release) (bo
 				continue
 			}
 
-			if err := DownloadMigrationTool(ctx, release, module, migration); err != nil {
+			if _, err := DownloadMigrationTool(ctx, release, module, migration); err != nil {
 				return false, err
 			}
 
@@ -66,36 +64,25 @@ func DownloadAllMigrationTools(ctx context.Context, release codegen.Release) (bo
 	return downloaded, nil
 }
 
-func DownloadMigrationTool(ctx context.Context, release codegen.Release, module string, migration MigrationTool) error {
+func DownloadMigrationTool(ctx context.Context, release codegen.Release, module string, migration MigrationTool) (string, error) {
 	template := NormalizeMigrationToolURL(migration.URL)
 
 	outDir := filepath.Join(MigrationToolsDir(), module)
 
 	for _, mirror := range release.Mirrors {
 		migrationToolURL := strings.ReplaceAll(template, common.MirrorPlaceHolder, mirror)
-		if _, err := internal.Download(ctx, outDir, migrationToolURL); err != nil {
+		migrationToolFilePath, err := internal.Download(ctx, outDir, migrationToolURL)
+		if err != nil {
 			logger.Info("error while downloading migration tool - skipping", zap.Error(err), zap.String("url", migration.URL))
 			continue
 		}
 
-		_url, err := url.Parse(migrationToolURL)
-		if err != nil {
-			logger.Info("error while parsing migration tool url - skipping", zap.Error(err), zap.String("url", migration.URL))
-			continue
-		}
+		// TODO: download checksums.txt and save the checksum for the migration tool to the same directory
 
-		_url.Path = path.Dir(_url.Path)
-
-		checksumsURL := fmt.Sprintf("%s/%s", _url.String(), common.ChecksumsTXTFileName)
-
-		if _, err := internal.Download(ctx, outDir, checksumsURL); err != nil {
-			logger.Info("error while downloading checksums - skipping", zap.Error(err), zap.String("checksums_url", checksumsURL))
-			continue
-		}
-		return nil
+		return migrationToolFilePath, nil
 	}
 
-	return fmt.Errorf("failed to download migration tool %s", migration.URL)
+	return "", fmt.Errorf("failed to download migration tool %s", migration.URL)
 }
 
 // Normalize migraiton tool URL to a standard format which uses `${MIRROR}` as the mirror placeholder
