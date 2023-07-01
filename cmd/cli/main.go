@@ -118,14 +118,15 @@ func main() {
 
 	if downloaded {
 		_logger.Info("🟩 Migration tools downloaded.")
+
+		_logger.Info("🟨 Verifying migration tools...")
+		if !service.VerifyAllMigrationTools(*release) {
+			_logger.Error("🟥 Migration tools verification failed")
+			os.Exit(1)
+		}
+		_logger.Info("🟩 Migration tools verified.")
 	} else {
 		_logger.Info("🟩 No migration tools to download.")
-	}
-
-	_logger.Info("🟨 Verifying migration tools...")
-	if !service.VerifyAllMigrationTools(*release) {
-		_logger.Error("🟥 Migration tools verification failed")
-		os.Exit(1)
 	}
 
 	if downloadOnly {
