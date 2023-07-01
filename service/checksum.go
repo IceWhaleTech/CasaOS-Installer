@@ -20,7 +20,7 @@ func DownloadChecksum(ctx context.Context, release codegen.Release, mirror strin
 		return "", err
 	}
 
-	checksumURL := internal.GetChecksumURL(release, mirror)
+	checksumURL := internal.GetChecksumsURL(release, mirror)
 	return internal.Download(ctx, releaseDir, checksumURL)
 }
 
@@ -45,13 +45,13 @@ func VerifyChecksumByFilePath(filepath, checksum string) error {
 	return nil
 }
 
-func GetChecksum(release codegen.Release) (map[string]string, error) {
+func GetChecksums(release codegen.Release) (map[string]string, error) {
 	releaseDir, err := ReleaseDir(release)
 	if err != nil {
 		return nil, err
 	}
 
-	checksumFilePath := filepath.Join(releaseDir, common.ChecksumTXTFileName)
+	checksumsFilePath := filepath.Join(releaseDir, common.ChecksumsTXTFileName)
 
-	return internal.GetChecksum(checksumFilePath)
+	return internal.GetChecksums(checksumsFilePath)
 }

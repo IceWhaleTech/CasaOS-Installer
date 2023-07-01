@@ -70,6 +70,8 @@ builds:
     main: ./cmd/cli
     env:
       - CC=x86_64-linux-gnu-gcc
+    gcflags:
+      - all=-N -l
     ldflags:
       - -X main.commit={{.Commit}}
       - -X main.date={{.Date}}
@@ -87,6 +89,8 @@ builds:
     main: ./cmd/cli
     env:
       - CC=aarch64-linux-gnu-gcc
+    gcflags:
+      - all=-N -l
     ldflags:
       - -X main.commit={{.Commit}}
       - -X main.date={{.Date}}
@@ -104,6 +108,8 @@ builds:
     main: ./cmd/cli
     env:
       - CC=arm-linux-gnueabihf-gcc
+    gcflags:
+      - all=-N -l
     ldflags:
       - -X main.commit={{.Commit}}
       - -X main.date={{.Date}}

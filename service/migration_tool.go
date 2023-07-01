@@ -4,7 +4,9 @@ import (
 	"bufio"
 	"context"
 	"fmt"
+	"net/url"
 	"os"
+	"path"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -70,12 +72,26 @@ func DownloadMigrationTool(ctx context.Context, release codegen.Release, module 
 	outDir := filepath.Join(MigrationToolsDir(), module)
 
 	for _, mirror := range release.Mirrors {
-		url := strings.ReplaceAll(template, common.MirrorPlaceHolder, mirror)
-		if _, err := internal.Download(ctx, outDir, url); err != nil {
+		migrationToolURL := strings.ReplaceAll(template, common.MirrorPlaceHolder, mirror)
+		if _, err := internal.Download(ctx, outDir, migrationToolURL); err != nil {
 			logger.Info("error while downloading migration tool - skipping", zap.Error(err), zap.String("url", migration.URL))
 			continue
 		}
 
+		_url, err := url.Parse(migrationToolURL)
+		if err != nil {
+			logger.Info("error while parsing migration tool url - skipping", zap.Error(err), zap.String("url", migration.URL))
+			continue
+		}
+
+		_url.Path = path.Dir(_url.Path)
+
+		checksumsURL := fmt.Sprintf("%s/%s", _url.String(), common.ChecksumsTXTFileName)
+
+		if _, err := internal.Download(ctx, outDir, checksumsURL); err != nil {
+			logger.Info("error while downloading checksums - skipping", zap.Error(err), zap.String("checksums_url", checksumsURL))
+			continue
+		}
 		return nil
 	}
 

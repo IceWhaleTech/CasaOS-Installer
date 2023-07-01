@@ -120,7 +120,7 @@ components:
         - release_notes
         - mirrors
         - packages
-        - checksum
+        - checksums
         - modules
       properties:
         version:
@@ -144,9 +144,9 @@ components:
           minItems: 3
           items:
             $ref: "#/components/schemas/Package"
-        checksum:
+        checksums:
           type: string
-          example: /get/releases/download/v0.4.4-alpha2/checksum.txt
+          example: /get/releases/download/v0.4.4-alpha2/checksums.txt
         modules:
           type: array
           items:

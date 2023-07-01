@@ -44,7 +44,7 @@ func GetReleaseFrom(ctx context.Context, releaseURL string) (*codegen.Release, e
 	return &release, nil
 }
 
-func GetChecksum(filepath string) (map[string]string, error) {
+func GetChecksums(filepath string) (map[string]string, error) {
 	file, err := os.Open(filepath)
 	if err != nil {
 		return nil, err
@@ -74,6 +74,6 @@ func GetChecksum(filepath string) (map[string]string, error) {
 	return checksums, nil
 }
 
-func GetChecksumURL(release codegen.Release, mirror string) string {
-	return strings.TrimSuffix(mirror, "/") + release.Checksum
+func GetChecksumsURL(release codegen.Release, mirror string) string {
+	return strings.TrimSuffix(mirror, "/") + release.Checksums
 }

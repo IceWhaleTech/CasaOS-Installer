@@ -32,7 +32,7 @@ badc0ffee0ddf00d filename2.txt
 	}
 
 	// Call the function with the path to the temporary file.
-	checksums, err := internal.GetChecksum(tmpfile.Name())
+	checksums, err := internal.GetChecksums(tmpfile.Name())
 
 	// Assert that the function did not return an error.
 	assert.NoError(t, err)

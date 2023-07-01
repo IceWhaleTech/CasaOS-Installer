@@ -91,11 +91,11 @@ func DownloadRelease(ctx context.Context, release codegen.Release, force bool) (
 			}
 		}
 
-		// download checksum if it's missing
+		// download checksums.txt if it's missing
 		{
-			checksumURL := internal.GetChecksumURL(release, mirror)
-			if _, err := internal.Download(ctx, releaseDir, checksumURL); err != nil {
-				logger.Info("error while downloading checksum - skipping", zap.Error(err), zap.String("checksum_url", checksumURL))
+			checksumsURL := internal.GetChecksumsURL(release, mirror)
+			if _, err := internal.Download(ctx, releaseDir, checksumsURL); err != nil {
+				logger.Info("error while downloading checksums - skipping", zap.Error(err), zap.String("checksums_url", checksumsURL))
 				continue
 			}
 		}
@@ -187,7 +187,7 @@ func VerifyRelease(release codegen.Release) (string, error) {
 		return "", err
 	}
 
-	checksum, err := GetChecksum(release)
+	checksums, err := GetChecksums(release)
 	if err != nil {
 		return "", err
 	}
@@ -198,7 +198,7 @@ func VerifyRelease(release codegen.Release) (string, error) {
 	}
 
 	packageFilename := filepath.Base(packageURL)
-	packageChecksum := checksum[packageFilename]
+	packageChecksum := checksums[packageFilename]
 
 	packageFilePath := filepath.Join(releaseDir, packageFilename)
 
