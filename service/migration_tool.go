@@ -53,7 +53,7 @@ func DownloadAllMigrationTools(ctx context.Context, release codegen.Release) (bo
 				continue
 			}
 
-			if _, err := DownloadMigrationTool(ctx, release, module, migration); err != nil {
+			if _, err := DownloadMigrationTool(ctx, release, module, migration, false); err != nil {
 				return false, err
 			}
 
@@ -64,7 +64,15 @@ func DownloadAllMigrationTools(ctx context.Context, release codegen.Release) (bo
 	return downloaded, nil
 }
 
-func DownloadMigrationTool(ctx context.Context, release codegen.Release, module string, migration MigrationTool) (string, error) {
+func DownloadMigrationTool(ctx context.Context, release codegen.Release, module string, migration MigrationTool, force bool) (string, error) {
+	if !force {
+		if migrationToolFilePath, err := VerifyMigrationTool(); err != nil {
+			logger.Info("error while verifying migration tool - continue to download", zap.Error(err))
+		} else {
+			return migrationToolFilePath, nil
+		}
+	}
+
 	template := NormalizeMigrationToolURL(migration.URL)
 
 	outDir := filepath.Join(MigrationToolsDir(), module)
@@ -181,4 +189,8 @@ func MigrationToolsMap(release codegen.Release) (map[string][]MigrationTool, err
 // verify migration tools for a release are already cached
 func VerifyAllMigrationTools(release codegen.Release) bool {
 	panic("implement me") // TODO
+}
+
+func VerifyMigrationTool() (string, error) {
+	panic("implement me") // TODO - verify existance and size only.
 }

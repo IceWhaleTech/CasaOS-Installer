@@ -42,7 +42,7 @@ func TestDownloadMigrationTool(t *testing.T) {
 	_, err = service.DownloadMigrationTool(ctx, release, "casaos", service.MigrationTool{
 		Version: *version,
 		URL:     "${DOWNLOAD_DOMAIN}IceWhaleTech/CasaOS/releases/download/v0.3.6/linux-${ARCH}-casaos-migration-tool-v0.3.6.tar.gz",
-	})
+	}, false)
 
 	assert.NoError(t, err)
 }
