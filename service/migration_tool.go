@@ -192,5 +192,5 @@ func VerifyAllMigrationTools(release codegen.Release) bool {
 }
 
 func VerifyMigrationTool() (string, error) {
-	panic("implement me") // TODO - verify existance and size only.
+	panic("implement me") // TODO - verify existance and size only - continue here
 }
