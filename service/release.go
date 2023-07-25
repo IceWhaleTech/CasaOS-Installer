@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/IceWhaleTech/CasaOS-Common/utils/file"
 	"github.com/IceWhaleTech/CasaOS-Common/utils/logger"
 	"github.com/IceWhaleTech/CasaOS-Installer/codegen"
 	"github.com/IceWhaleTech/CasaOS-Installer/common"
@@ -203,4 +204,10 @@ func VerifyRelease(release codegen.Release) (string, error) {
 	packageFilePath := filepath.Join(releaseDir, packageFilename)
 
 	return packageFilePath, VerifyChecksumByFilePath(packageFilePath, packageChecksum)
+}
+
+func VerifyUninstallScript() bool {
+	// to check the present of file
+	// how to do the test? the uninstall is always in the same place?
+	return file.CheckNotExist("/usr/bin/casaos-uninstall")
 }

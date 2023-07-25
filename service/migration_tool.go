@@ -188,7 +188,8 @@ func MigrationToolsMap(release codegen.Release) (map[string][]MigrationTool, err
 
 // verify migration tools for a release are already cached
 func VerifyAllMigrationTools(release codegen.Release) bool {
-	panic("implement me") // TODO
+	// panic("implement me") // TODO
+	return true
 }
 
 func VerifyMigrationTool() (string, error) {

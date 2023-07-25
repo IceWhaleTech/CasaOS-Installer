@@ -142,5 +142,9 @@ func main() {
 
 	_logger.Info("🟩 Release installed.")
 
-	// TODO: make sure `casaos-uninstall` script is installed
+	if service.VerifyUninstallScript() {
+		_logger.Info("🟨 uninstall script is installed")
+	} else {
+		panic("🟥 uninstall script is not installed")
+	}
 }
