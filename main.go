@@ -152,7 +152,7 @@ func cronjob(ctx context.Context) {
 		return
 	}
 
-	if !service.ShoudUpgrade(*release) {
+	if !service.ShouldUpgrade(*release) {
 		logger.Info("no need to upgrade", zap.String("latest version", release.Version))
 		return
 	}

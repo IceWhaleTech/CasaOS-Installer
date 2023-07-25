@@ -132,7 +132,7 @@ func ExtractReleasePackages(packageFilepath string, release codegen.Release) err
 	return internal.BulkExtract(releaseDir)
 }
 
-func ShoudUpgrade(release codegen.Release) bool {
+func ShouldUpgrade(release codegen.Release) bool {
 	if release.Version == "" {
 		return false
 	}
@@ -157,7 +157,7 @@ func ShoudUpgrade(release codegen.Release) bool {
 }
 
 func IsUpgradable(release codegen.Release) bool {
-	if !ShoudUpgrade(release) {
+	if !ShouldUpgrade(release) {
 		return false
 	}
 
