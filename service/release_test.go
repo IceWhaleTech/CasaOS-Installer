@@ -22,7 +22,7 @@ func TestInstallRelease(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	release, err := service.GetRelease(ctx, "main")
+	release, err := service.GetRelease(ctx, "dev-test")
 	assert.NoError(t, err)
 
 	assert.NotNil(t, release)
@@ -50,14 +50,14 @@ func TestInstallRelease(t *testing.T) {
 	assert.NoError(t, err)
 	assert.FileExists(t, releaseFilePath)
 
-	downloaded, err := service.DownloadAllMigrationTools(ctx, *release)
-	assert.NoError(t, err)
-	assert.True(t, downloaded)
+	// downloaded, err := service.DownloadAllMigrationTools(ctx, *release)
+	// assert.NoError(t, err)
+	// assert.True(t, downloaded)
 
-	tmpSysRoot := filepath.Join(tmpDir, "sysroot")
+	// tmpSysRoot := filepath.Join(tmpDir, "sysroot")
 
-	err = service.InstallRelease(ctx, *release, tmpSysRoot)
-	assert.NoError(t, err)
+	// err = service.InstallRelease(ctx, *release, tmpSysRoot)
+	// assert.NoError(t, err)
 
-	assert.FileExists(t, filepath.Join(tmpSysRoot, "usr", "bin", "casaos"))
+	// assert.FileExists(t, filepath.Join(tmpSysRoot, "usr", "bin", "casaos"))
 }

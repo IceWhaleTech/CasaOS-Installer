@@ -60,7 +60,7 @@ func TestDownloadAndExtract(t *testing.T) {
 
 	logger.LogInitConsoleOnly()
 
-	packageURL := "https://github.com/IceWhaleTech/get/releases/download/v0.4.4-alpha1/casaos-amd64-v0.4.4-alpha1.tar.gz"
+	packageURL := "https://github.com/IceWhaleTech/get/releases/download/v0.4.4-alpha3/casaos-amd64-v0.4.4-alpha3.tar.gz"
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
