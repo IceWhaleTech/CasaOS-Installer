@@ -61,6 +61,9 @@ func CurrentModuleVersion(module string) (*semver.Version, error) {
 	}
 
 	for _, executablePath := range []string{
+		// TODO the path should be configurable
+		// in test environment, the executable is in the same directory as the test binary
+		// in production environment, the executable is in /usr/bin
 		"/usr/bin/" + module,
 		module,
 	} {

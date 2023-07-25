@@ -156,14 +156,15 @@ func ShouldUpgrade(release codegen.Release) bool {
 	return true
 }
 
+// to check the new version is upgradable and packages are already cached(download)
 func IsUpgradable(release codegen.Release) bool {
 	if !ShouldUpgrade(release) {
 		return false
 	}
 
 	// TODO: confirm if the packages are already cached.
-
-	panic("implement me")
+	_, err := VerifyRelease(release)
+	return err == nil
 }
 
 func InstallRelease(ctx context.Context, release codegen.Release, sysrootPath string) error {
@@ -178,6 +179,9 @@ func InstallRelease(ctx context.Context, release codegen.Release, sysrootPath st
 	}
 
 	// TODO: make sure `casaos-uninstall` script is installed
+	if !VerifyUninstallScript() {
+		return fmt.Errorf("uninstall script is not installed")
+	}
 
 	return nil
 }
