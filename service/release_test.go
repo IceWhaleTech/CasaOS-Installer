@@ -2,7 +2,6 @@ package service_test
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
@@ -60,11 +59,11 @@ func TestInstallRelease(t *testing.T) {
 	err = service.ExtractReleasePackages(releaseFilePath+"/linux*", *release)
 	assert.NoError(t, err)
 
+	// TODO: download migration tools
 	// downloaded, err := service.DownloadAllMigrationTools(ctx, *release)
 	// assert.NoError(t, err)
 	// assert.True(t, downloaded)
 
-	fmt.Println("下载到", releaseFilePath)
 	tmpSysRoot := filepath.Join(tmpDir, "sysroot")
 
 	err = service.InstallRelease(ctx, *release, tmpSysRoot)

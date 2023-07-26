@@ -91,7 +91,6 @@ func BulkExtract(dir string) error {
 }
 
 func InstallRelease(ctx context.Context, releaseDir string, sysrootPath string) error {
-	fmt.Println("releaseDir 是", releaseDir)
 	srcSysroot := filepath.Join(releaseDir, "build", "sysroot") + "/"
 	if _, err := os.Stat(srcSysroot); err != nil {
 		return err
