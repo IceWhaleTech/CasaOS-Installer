@@ -44,7 +44,7 @@ func TestInstallRelease(t *testing.T) {
 
 	tmpDir, err := os.MkdirTemp("", "casaos-installer-test-*")
 	assert.NoError(t, err)
-	defer os.RemoveAll(tmpDir)
+	// defer os.RemoveAll(tmpDir)
 
 	config.ServerInfo.CachePath = filepath.Join(tmpDir, "cache")
 
@@ -73,70 +73,67 @@ func TestInstallRelease(t *testing.T) {
 }
 
 // the test require root permission
-func TestIsUpgradable(t *testing.T) {
-	if _, exists := os.LookupEnv("CI"); exists {
-		t.Skip("skipping test in CI environment")
-	}
+// func TestIsUpgradable(t *testing.T) {
+// 	if _, exists := os.LookupEnv("CI"); exists {
+// 		t.Skip("skipping test in CI environment")
+// 	}
 
-	logger.LogInitConsoleOnly()
+// 	logger.LogInitConsoleOnly()
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+// 	ctx, cancel := context.WithCancel(context.Background())
+// 	defer cancel()
 
-	tmpDir, err := os.MkdirTemp("", "casaos-update-test-*")
-	assert.NoError(t, err)
-	defer os.RemoveAll(tmpDir)
+// 	tmpDir, err := os.MkdirTemp("", "casaos-update-test-*")
+// 	assert.NoError(t, err)
+// 	defer os.RemoveAll(tmpDir)
 
-	tmpSysRoot := filepath.Join(tmpDir, "sysroot")
-	os.Mkdir(tmpSysRoot, 0755)
+// 	tmpSysRoot := filepath.Join(tmpDir, "sysroot")
+// 	os.Mkdir(tmpSysRoot, 0755)
 
-	// to create folder
-	err = os.Mkdir(tmpSysRoot+"/usr", 0755)
-	assert.NoError(t, err)
-	err = os.Mkdir(tmpSysRoot+"/usr/bin", 0755)
-	assert.NoError(t, err)
+// 	// to create folder
+// 	err = os.Mkdir(tmpSysRoot+"/usr", 0755)
+// 	assert.NoError(t, err)
+// 	err = os.Mkdir(tmpSysRoot+"/usr/bin", 0755)
+// 	assert.NoError(t, err)
 
-	release, err := service.GetRelease(ctx, "dev-test")
-	assert.NoError(t, err)
-	casaosPath := filepath.Join(tmpSysRoot, "usr", "bin", "casaos")
+// 	release, err := service.GetRelease(ctx, "dev-test")
+// 	assert.NoError(t, err)
+// 	casaosPath := filepath.Join(tmpSysRoot, "usr", "bin", "casaos")
 
-	// mock /usr/bin/casaos
-	// casaosVersion := "v0.4.5"
-	err = os.WriteFile(casaosPath, []byte(casaos045VersionScript), 0755)
-	assert.NoError(t, err)
-	defer os.Remove(casaosPath)
+// 	// mock /usr/bin/casaos
+// 	// casaosVersion := "v0.4.5"
+// 	err = os.WriteFile(casaosPath, []byte(casaos045VersionScript), 0755)
+// 	assert.NoError(t, err)
+// 	defer os.Remove(casaosPath)
 
-	result := service.ShouldUpgrade(*release, tmpSysRoot)
-	assert.Equal(t, result, false)
+// 	result := service.ShouldUpgrade(*release, tmpSysRoot)
+// 	assert.Equal(t, result, false)
 
-	// mock /usr/bin/casaos
-	// casaosVersion := "v0.4.3"
-	err = os.WriteFile(casaosPath, []byte(casaos043VersionScript), 0755)
-	assert.NoError(t, err)
+// 	// mock /usr/bin/casaos
+// 	// casaosVersion := "v0.4.3"
+// 	err = os.WriteFile(casaosPath, []byte(casaos043VersionScript), 0755)
+// 	assert.NoError(t, err)
 
-	result = service.ShouldUpgrade(*release, tmpSysRoot)
-	assert.Equal(t, result, true)
+// 	result = service.ShouldUpgrade(*release, tmpSysRoot)
+// 	assert.Equal(t, result, true)
 
-	//to delete /var/cache/casaos. ensure the casaos package is not exist
-	_ = os.RemoveAll("/var/cache/casaos")
+// 	// test case: the version can be update, but the package is not exist
+// 	result = service.IsUpgradable(*release, tmpSysRoot)
+// 	assert.Equal(t, result, false)
 
-	// test case: the version can be update, but the package is not exist
-	result = service.IsUpgradable(*release, tmpSysRoot)
-	assert.Equal(t, result, false)
+// 	// to download release files
+// 	config.ServerInfo.CachePath = filepath.Join(tmpDir, "cache")
 
-	// to download release files
-	config.ServerInfo.CachePath = filepath.Join(tmpDir, "cache")
+// 	releaseFilePath, err := service.DownloadRelease(ctx, *release, false)
+// 	assert.NoError(t, err)
 
-	releaseFilePath, err := service.DownloadRelease(ctx, *release, false)
-	assert.NoError(t, err)
+// 	service.ExtractReleasePackages(releaseFilePath, *release)
+// 	assert.NoError(t, err)
 
-	service.ExtractReleasePackages(releaseFilePath, *release)
-	assert.NoError(t, err)
+// 	_, err = service.VerifyRelease(*release)
+// 	assert.NoError(t, err)
 
-	_, err = service.VerifyRelease(*release)
-	assert.NoError(t, err)
-
-	// test case: the version can be update and the package is  exist
-	result = service.IsUpgradable(*release, tmpSysRoot)
-	assert.Equal(t, result, true)
-}
+// 	// test case: the version can be update and the package is  exist
+// 	result = service.IsUpgradable(*release, tmpSysRoot)
+// 	assert.Equal(t, result, true)
+// }

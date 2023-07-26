@@ -52,7 +52,7 @@ func DownloadAs(ctx context.Context, filepath, url string) error {
 		Dst:   filepath,
 		Mode:  getter.ClientModeFile,
 		Src:   url,
-		Umask: 0x022,
+		Umask: 0o022,
 		Options: []getter.ClientOption{
 			getter.WithProgress(NewTracker(
 				func(downladed, totalSize int64) {

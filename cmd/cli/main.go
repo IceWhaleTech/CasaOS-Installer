@@ -56,7 +56,7 @@ func main() {
 		_logger.Info("Root privileges are required to run this program.")
 		os.Exit(1)
 	}
-	tag := "main"
+	tag := "dev-test"
 	if tagFlag != nil && *tagFlag != "" {
 		tag = *tagFlag
 	}
@@ -110,7 +110,7 @@ func main() {
 	}
 
 	_logger.Info("🟨 Downloading migration tools...")
-	downloaded, err := service.DownloadAllMigrationTools(ctx, *release)
+	downloaded, err := service.DownloadAllMigrationTools(ctx, *release, "")
 	if err != nil {
 		_logger.Error("🟥 Failed to download migration tools: %s", err.Error())
 		os.Exit(1)

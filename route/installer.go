@@ -33,7 +33,7 @@ func (a *api) GetRelease(ctx echo.Context, params codegen.GetReleaseParams) erro
 		})
 	}
 
-	upgradable := service.IsUpgradable(*release)
+	upgradable := service.IsUpgradable(*release, "")
 
 	return ctx.JSON(http.StatusOK, &codegen.ReleaseOK{
 		Data:       release,

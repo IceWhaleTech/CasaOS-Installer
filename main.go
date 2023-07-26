@@ -152,7 +152,7 @@ func cronjob(ctx context.Context) {
 		return
 	}
 
-	if !service.ShouldUpgrade(*release) {
+	if !service.ShouldUpgrade(*release, "") {
 		logger.Info("no need to upgrade", zap.String("latest version", release.Version))
 		return
 	}
@@ -177,7 +177,7 @@ func cronjob(ctx context.Context) {
 			return
 		}
 
-		if _, err := service.DownloadAllMigrationTools(ctx, *release); err != nil {
+		if _, err := service.DownloadAllMigrationTools(ctx, *release, ""); err != nil {
 			logger.Error("error when trying to download migration tools", zap.Error(err))
 			return
 		}
