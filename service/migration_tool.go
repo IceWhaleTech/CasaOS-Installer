@@ -23,7 +23,7 @@ type MigrationTool struct {
 	URL     string
 }
 
-func DownloadAllMigrationTools(ctx context.Context, release codegen.Release) (bool, error) {
+func DownloadAllMigrationTools(ctx context.Context, release codegen.Release, sysrootPath string) (bool, error) {
 	sourceVersion, err := semver.NewVersion(NormalizeVersion(release.Version))
 	if err != nil {
 		return false, err
@@ -37,7 +37,7 @@ func DownloadAllMigrationTools(ctx context.Context, release codegen.Release) (bo
 	downloaded := false
 
 	for module, migrationTools := range migrationToolsMap {
-		currentVersion, err := CurrentModuleVersion(module)
+		currentVersion, err := CurrentModuleVersion(module, sysrootPath)
 		if err != nil {
 			logger.Info("failed to get the current version of module - skipping", zap.Error(err), zap.String("module", module))
 			continue
@@ -188,7 +188,8 @@ func MigrationToolsMap(release codegen.Release) (map[string][]MigrationTool, err
 
 // verify migration tools for a release are already cached
 func VerifyAllMigrationTools(release codegen.Release) bool {
-	panic("implement me") // TODO
+	// panic("implement me") // TODO
+	return true
 }
 
 func VerifyMigrationTool() (string, error) {

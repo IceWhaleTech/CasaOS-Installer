@@ -49,19 +49,21 @@ func NormalizeVersion(version string) string {
 	return strings.Join([]string{versionNumbers[0], versionNumbers[1], versionNumbers[2]}, ".")
 }
 
-func CurrentReleaseVersion() (*semver.Version, error) {
+func CurrentReleaseVersion(sysrootPath string) (*semver.Version, error) {
 	// TODO: look for the release info first before looking for the binary version (legacy)
-	return CurrentModuleVersion("casaos")
+	return CurrentModuleVersion("casaos", sysrootPath)
 }
 
-func CurrentModuleVersion(module string) (*semver.Version, error) {
+func CurrentModuleVersion(module string, sysrootPath string) (*semver.Version, error) {
 	reader, writer, err := os.Pipe()
 	if err != nil {
 		return nil, err
 	}
 
 	for _, executablePath := range []string{
-		"/usr/bin/" + module,
+		// in test environment, sysrootPath is in tmp like `/tmp/casaos-installer-test-*`
+		// in production environment, the sysrootPath should be ``, abd the executable is /usr/bin
+		sysrootPath + "/usr/bin/" + module,
 		module,
 	} {
 

@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/IceWhaleTech/CasaOS-Common/utils/file"
 	"github.com/IceWhaleTech/CasaOS-Common/utils/logger"
 	"github.com/IceWhaleTech/CasaOS-Installer/codegen"
 	"github.com/IceWhaleTech/CasaOS-Installer/common"
@@ -131,7 +132,7 @@ func ExtractReleasePackages(packageFilepath string, release codegen.Release) err
 	return internal.BulkExtract(releaseDir)
 }
 
-func ShoudUpgrade(release codegen.Release) bool {
+func ShouldUpgrade(release codegen.Release, sysrootPath string) bool {
 	if release.Version == "" {
 		return false
 	}
@@ -142,7 +143,7 @@ func ShoudUpgrade(release codegen.Release) bool {
 		return false
 	}
 
-	currentVersion, err := CurrentReleaseVersion()
+	currentVersion, err := CurrentReleaseVersion(sysrootPath)
 	if err != nil {
 		logger.Info("error while getting current release version - considered as not upgradable", zap.Error(err))
 		return false
@@ -155,14 +156,14 @@ func ShoudUpgrade(release codegen.Release) bool {
 	return true
 }
 
-func IsUpgradable(release codegen.Release) bool {
-	if !ShoudUpgrade(release) {
+// to check the new version is upgradable and packages are already cached(download)
+func IsUpgradable(release codegen.Release, sysrootPath string) bool {
+	if !ShouldUpgrade(release, sysrootPath) {
 		return false
 	}
 
-	// TODO: confirm if the packages are already cached.
-
-	panic("implement me")
+	_, err := VerifyRelease(release)
+	return err == nil
 }
 
 func InstallRelease(ctx context.Context, release codegen.Release, sysrootPath string) error {
@@ -176,7 +177,11 @@ func InstallRelease(ctx context.Context, release codegen.Release, sysrootPath st
 		return err
 	}
 
-	// TODO: make sure `casaos-uninstall` script is installed
+	// // TODO: the check is execute twice
+	// // TODO: add uninstall to the release
+	// if !VerifyUninstallScript() {
+	// 	return fmt.Errorf("uninstall script is not installed")
+	// }
 
 	return nil
 }
@@ -203,4 +208,10 @@ func VerifyRelease(release codegen.Release) (string, error) {
 	packageFilePath := filepath.Join(releaseDir, packageFilename)
 
 	return packageFilePath, VerifyChecksumByFilePath(packageFilePath, packageChecksum)
+}
+
+func VerifyUninstallScript() bool {
+	// to check the present of file
+	// how to do the test? the uninstall is always in the same place?
+	return !file.CheckNotExist("/usr/bin/casaos-uninstall")
 }

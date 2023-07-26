@@ -10,10 +10,8 @@ import (
 
 	"github.com/hashicorp/go-getter"
 	"github.com/samber/lo"
-	"go.uber.org/zap"
 
 	"github.com/IceWhaleTech/CasaOS-Common/utils/file"
-	"github.com/IceWhaleTech/CasaOS-Common/utils/logger"
 	"github.com/IceWhaleTech/CasaOS-Installer/codegen"
 )
 
@@ -54,12 +52,12 @@ func DownloadAs(ctx context.Context, filepath, url string) error {
 		Dst:   filepath,
 		Mode:  getter.ClientModeFile,
 		Src:   url,
-		Umask: 0x022,
+		Umask: 0o022,
 		Options: []getter.ClientOption{
 			getter.WithProgress(NewTracker(
 				func(downladed, totalSize int64) {
 					// TODO: send progress event to message bus if it exists
-					logger.Info("Downloading package", zap.String("url", url), zap.Int64("downloaded", downladed), zap.Int64("totalSize", totalSize))
+					// logger.Info("Downloading package", zap.String("url", url), zap.Int64("downloaded", downladed), zap.Int64("totalSize", totalSize))
 				},
 			)),
 		},
@@ -97,7 +95,8 @@ func InstallRelease(ctx context.Context, releaseDir string, sysrootPath string) 
 	if _, err := os.Stat(srcSysroot); err != nil {
 		return err
 	}
-
+	fmt.Println(srcSysroot)
+	fmt.Println(sysrootPath)
 	return file.CopyDir(srcSysroot, sysrootPath, "")
 }
 
