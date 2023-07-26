@@ -61,9 +61,8 @@ func CurrentModuleVersion(module string, sysrootPath string) (*semver.Version, e
 	}
 
 	for _, executablePath := range []string{
-		// TODO the path should be configurable
-		// in test environment, the executable is in the same directory as the test binary
-		// in production environment, the executable is in /usr/bin
+		// in test environment, sysrootPath is in tmp like `/tmp/casaos-installer-test-*`
+		// in production environment, the sysrootPath should be ``, abd the executable is /usr/bin
 		sysrootPath + "/usr/bin/" + module,
 		module,
 	} {
