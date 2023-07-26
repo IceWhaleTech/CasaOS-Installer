@@ -2,7 +2,6 @@ package service_test
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
@@ -76,10 +75,18 @@ func TestIsUpgradable(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
+	if _, err := os.Stat("/tmp/usr/bin"); os.IsNotExist(err) {
+		// to create folder
+		err := os.Mkdir("/tmp/usr", 0755)
+		assert.NoError(t, err)
+		err = os.Mkdir("/tmp/usr/bin", 0755)
+		assert.NoError(t, err)
+	}
+
 	release, err := service.GetRelease(ctx, "dev-test")
 	assert.NoError(t, err)
 	// TODO - to for more easy to test. such config casaos position
-	casaosPath := filepath.Join("/usr", "bin", "casaos")
+	casaosPath := filepath.Join("/tmp", "usr", "bin", "casaos")
 
 	// mock /usr/bin/casaos
 	// casaosVersion := "v0.4.5"
@@ -97,6 +104,9 @@ func TestIsUpgradable(t *testing.T) {
 	result = service.ShouldUpgrade(*release)
 	assert.Equal(t, result, true)
 
+	//to delete /var/cache/casaos
+	_ = os.RemoveAll("/var/cache/casaos")
+
 	result = service.IsUpgradable(*release)
 	assert.Equal(t, result, false)
 
@@ -105,16 +115,20 @@ func TestIsUpgradable(t *testing.T) {
 	assert.NoError(t, err)
 	defer os.RemoveAll(tmpDir)
 
+	if _, err := os.Stat("/var/cache/casaos"); os.IsNotExist(err) {
+		err = os.Mkdir("/var/cache/casaos", 0755)
+		assert.NoError(t, err)
+	}
+
 	releaseFilePath, err := service.DownloadRelease(ctx, *release, false)
 	assert.NoError(t, err)
 
 	service.ExtractReleasePackages(releaseFilePath, *release)
 	assert.NoError(t, err)
 
-	path, err := service.VerifyRelease(*release)
-	fmt.Println(path)
+	_, err = service.VerifyRelease(*release)
 	assert.NoError(t, err)
 
-	// result = service.IsUpgradable(*release)
-	// assert.Equal(t, result, true)
+	result = service.IsUpgradable(*release)
+	assert.Equal(t, result, true)
 }
