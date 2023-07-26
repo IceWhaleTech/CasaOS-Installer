@@ -17,8 +17,9 @@ import (
 var (
 	_logger *Logger
 
-	commit = "private build"
-	date   = "private build"
+	commit  = "private build"
+	date    = "private build"
+	sysRoot = "/"
 )
 
 type InternalLogWriter struct {
@@ -108,9 +109,17 @@ func main() {
 		_logger.Error("🟥 Failed to extract release packages: %s", err.Error())
 		os.Exit(1)
 	}
+	// extract modules packages
+	_logger.Info("🟨 Extracting modules packages...")
+	if err := service.ExtractReleasePackages(releaseFilePath+"/linux*", *release); err != nil {
+		_logger.Error("🟥 Failed to extract release packages: %s", err.Error())
+		os.Exit(1)
+	}
+
+	_logger.Info("🟩 Release packages extracted.")
 
 	_logger.Info("🟨 Downloading migration tools...")
-	downloaded, err := service.DownloadAllMigrationTools(ctx, *release, "")
+	downloaded, err := service.DownloadAllMigrationTools(ctx, *release, sysRoot)
 	if err != nil {
 		_logger.Error("🟥 Failed to download migration tools: %s", err.Error())
 		os.Exit(1)
@@ -135,16 +144,16 @@ func main() {
 	}
 
 	_logger.Info("🟨 Installing release...")
-	if err := service.InstallRelease(ctx, *release, "/"); err != nil {
+	if err := service.InstallRelease(ctx, *release, sysRoot); err != nil {
 		_logger.Error("🟥 Failed to install release: %s", err.Error())
 		os.Exit(1)
 	}
 
 	_logger.Info("🟩 Release installed.")
 
-	if service.VerifyUninstallScript() {
-		_logger.Info("🟨 uninstall script is installed")
-	} else {
-		panic("🟥 uninstall script is not installed")
-	}
+	// if service.VerifyUninstallScript() {
+	// 	_logger.Info("🟨 uninstall script is installed")
+	// } else {
+	// 	panic("🟥 uninstall script is not installed")
+	// }
 }

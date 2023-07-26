@@ -177,9 +177,11 @@ func InstallRelease(ctx context.Context, release codegen.Release, sysrootPath st
 		return err
 	}
 
-	if !VerifyUninstallScript() {
-		return fmt.Errorf("uninstall script is not installed")
-	}
+	// // TODO: the check is execute twice
+	// // TODO: add uninstall to the release
+	// if !VerifyUninstallScript() {
+	// 	return fmt.Errorf("uninstall script is not installed")
+	// }
 
 	return nil
 }
@@ -211,5 +213,5 @@ func VerifyRelease(release codegen.Release) (string, error) {
 func VerifyUninstallScript() bool {
 	// to check the present of file
 	// how to do the test? the uninstall is always in the same place?
-	return file.CheckNotExist("/usr/bin/casaos-uninstall")
+	return !file.CheckNotExist("/usr/bin/casaos-uninstall")
 }

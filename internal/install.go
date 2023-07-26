@@ -95,7 +95,8 @@ func InstallRelease(ctx context.Context, releaseDir string, sysrootPath string) 
 	if _, err := os.Stat(srcSysroot); err != nil {
 		return err
 	}
-
+	fmt.Println(srcSysroot)
+	fmt.Println(sysrootPath)
 	return file.CopyDir(srcSysroot, sysrootPath, "")
 }
 
