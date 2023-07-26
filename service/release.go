@@ -162,7 +162,6 @@ func IsUpgradable(release codegen.Release) bool {
 		return false
 	}
 
-	// TODO: confirm if the packages are already cached.
 	_, err := VerifyRelease(release)
 	return err == nil
 }
@@ -178,7 +177,6 @@ func InstallRelease(ctx context.Context, release codegen.Release, sysrootPath st
 		return err
 	}
 
-	// TODO: make sure `casaos-uninstall` script is installed
 	if !VerifyUninstallScript() {
 		return fmt.Errorf("uninstall script is not installed")
 	}

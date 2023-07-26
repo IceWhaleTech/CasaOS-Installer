@@ -2,6 +2,7 @@ package service_test
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
@@ -44,7 +45,6 @@ func TestInstallRelease(t *testing.T) {
 
 	tmpDir, err := os.MkdirTemp("", "casaos-installer-test-*")
 	assert.NoError(t, err)
-
 	defer os.RemoveAll(tmpDir)
 
 	config.ServerInfo.CachePath = filepath.Join(tmpDir, "cache")
@@ -53,18 +53,27 @@ func TestInstallRelease(t *testing.T) {
 	assert.NoError(t, err)
 	assert.FileExists(t, releaseFilePath)
 
+	err = service.ExtractReleasePackages(releaseFilePath, *release)
+	assert.NoError(t, err)
+
+	// extract very module package that the name is like linux*.tar.gz
+	err = service.ExtractReleasePackages(releaseFilePath+"/linux*", *release)
+	assert.NoError(t, err)
+
 	// downloaded, err := service.DownloadAllMigrationTools(ctx, *release)
 	// assert.NoError(t, err)
 	// assert.True(t, downloaded)
 
-	// tmpSysRoot := filepath.Join(tmpDir, "sysroot")
+	fmt.Println("下载到", releaseFilePath)
+	tmpSysRoot := filepath.Join(tmpDir, "sysroot")
 
-	// err = service.InstallRelease(ctx, *release, tmpSysRoot)
-	// assert.NoError(t, err)
+	err = service.InstallRelease(ctx, *release, tmpSysRoot)
+	assert.NoError(t, err)
 
-	// assert.FileExists(t, filepath.Join(tmpSysRoot, "usr", "bin", "casaos"))
+	assert.FileExists(t, filepath.Join(tmpSysRoot, "usr", "bin", "casaos"))
 }
 
+// the test require root permission
 func TestIsUpgradable(t *testing.T) {
 	if _, exists := os.LookupEnv("CI"); exists {
 		t.Skip("skipping test in CI environment")
@@ -92,6 +101,7 @@ func TestIsUpgradable(t *testing.T) {
 	// casaosVersion := "v0.4.5"
 	err = os.WriteFile(casaosPath, []byte(casaos045VersionScript), 0755)
 	assert.NoError(t, err)
+	defer os.Remove(casaosPath)
 
 	result := service.ShouldUpgrade(*release)
 	assert.Equal(t, result, false)
@@ -104,7 +114,7 @@ func TestIsUpgradable(t *testing.T) {
 	result = service.ShouldUpgrade(*release)
 	assert.Equal(t, result, true)
 
-	//to delete /var/cache/casaos
+	//to delete /var/cache/casaos. ensure the casaos package is not exist
 	_ = os.RemoveAll("/var/cache/casaos")
 
 	result = service.IsUpgradable(*release)
@@ -117,6 +127,7 @@ func TestIsUpgradable(t *testing.T) {
 
 	if _, err := os.Stat("/var/cache/casaos"); os.IsNotExist(err) {
 		err = os.Mkdir("/var/cache/casaos", 0755)
+		defer os.RemoveAll("/var/cache/casaos")
 		assert.NoError(t, err)
 	}
 
