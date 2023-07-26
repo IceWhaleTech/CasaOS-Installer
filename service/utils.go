@@ -49,12 +49,12 @@ func NormalizeVersion(version string) string {
 	return strings.Join([]string{versionNumbers[0], versionNumbers[1], versionNumbers[2]}, ".")
 }
 
-func CurrentReleaseVersion() (*semver.Version, error) {
+func CurrentReleaseVersion(sysrootPath string) (*semver.Version, error) {
 	// TODO: look for the release info first before looking for the binary version (legacy)
-	return CurrentModuleVersion("casaos")
+	return CurrentModuleVersion("casaos", sysrootPath)
 }
 
-func CurrentModuleVersion(module string) (*semver.Version, error) {
+func CurrentModuleVersion(module string, sysrootPath string) (*semver.Version, error) {
 	reader, writer, err := os.Pipe()
 	if err != nil {
 		return nil, err
@@ -64,7 +64,7 @@ func CurrentModuleVersion(module string) (*semver.Version, error) {
 		// TODO the path should be configurable
 		// in test environment, the executable is in the same directory as the test binary
 		// in production environment, the executable is in /usr/bin
-		"/tmp" + "/usr/bin/" + module,
+		sysrootPath + "/usr/bin/" + module,
 		module,
 	} {
 

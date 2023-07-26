@@ -132,7 +132,7 @@ func ExtractReleasePackages(packageFilepath string, release codegen.Release) err
 	return internal.BulkExtract(releaseDir)
 }
 
-func ShouldUpgrade(release codegen.Release) bool {
+func ShouldUpgrade(release codegen.Release, sysrootPath string) bool {
 	if release.Version == "" {
 		return false
 	}
@@ -143,7 +143,7 @@ func ShouldUpgrade(release codegen.Release) bool {
 		return false
 	}
 
-	currentVersion, err := CurrentReleaseVersion()
+	currentVersion, err := CurrentReleaseVersion(sysrootPath)
 	if err != nil {
 		logger.Info("error while getting current release version - considered as not upgradable", zap.Error(err))
 		return false
@@ -157,8 +157,8 @@ func ShouldUpgrade(release codegen.Release) bool {
 }
 
 // to check the new version is upgradable and packages are already cached(download)
-func IsUpgradable(release codegen.Release) bool {
-	if !ShouldUpgrade(release) {
+func IsUpgradable(release codegen.Release, sysrootPath string) bool {
+	if !ShouldUpgrade(release, sysrootPath) {
 		return false
 	}
 
