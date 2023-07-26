@@ -31,7 +31,27 @@ func TestGetPackageURLByCurrentArch(t *testing.T) {
 	}
 }
 
-func TestDownloadPackage(t *testing.T) {
+func TestDownload(t *testing.T) {
+	if _, exists := os.LookupEnv("CI"); exists {
+		t.Skip("skipping test in CI environment")
+	}
+
+	defer goleak.VerifyNone(t, goleak.IgnoreTopFunction("go.opencensus.io/stats/view.(*worker).start")) //
+
+	logger.LogInitConsoleOnly()
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	tmpDir, err := os.MkdirTemp("", "casaos-installer-test-*")
+	assert.NoError(t, err)
+	defer os.RemoveAll(tmpDir)
+
+	_, err = internal.Download(ctx, tmpDir, "https://github.com/IceWhaleTech/CasaOS-AppStore/releases/download/v0.4.4-alpha10/linux-all-appstore-v0.4.4-alpha10.tar.gz")
+	assert.NoError(t, err)
+}
+
+func TestDownloadAndExtract(t *testing.T) {
 	if _, exists := os.LookupEnv("CI"); exists {
 		t.Skip("skipping test in CI environment")
 	}
@@ -40,7 +60,7 @@ func TestDownloadPackage(t *testing.T) {
 
 	logger.LogInitConsoleOnly()
 
-	packageURL := "https://github.com/IceWhaleTech/get/releases/download/v0.4.4-alpha1/casaos-amd64-v0.4.4-alpha1.tar.gz"
+	packageURL := "https://github.com/IceWhaleTech/get/releases/download/v0.4.4-alpha3/casaos-amd64-v0.4.4-alpha3.tar.gz"
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -49,7 +69,13 @@ func TestDownloadPackage(t *testing.T) {
 	assert.NoError(t, err)
 	defer os.RemoveAll(releaseDir)
 
-	err = internal.DownloadAndExtractPackage(ctx, releaseDir, packageURL)
+	packageFilepath, err := internal.Download(ctx, releaseDir, packageURL)
+	assert.NoError(t, err)
+
+	err = internal.Extract(packageFilepath, releaseDir)
+	assert.NoError(t, err)
+
+	err = internal.BulkExtract(releaseDir)
 	assert.NoError(t, err)
 
 	expectedFiles := []string{

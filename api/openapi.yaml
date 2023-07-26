@@ -101,7 +101,10 @@ components:
               - properties:
                   data:
                     $ref: "#/components/schemas/Release"
-
+                  upgradable:
+                    readOnly: true
+                    type: boolean
+                    example: false
   schemas:
     BaseResponse:
       properties:
@@ -117,6 +120,7 @@ components:
         - release_notes
         - mirrors
         - packages
+        - checksums
         - modules
       properties:
         version:
@@ -140,10 +144,14 @@ components:
           minItems: 3
           items:
             $ref: "#/components/schemas/Package"
+        checksums:
+          type: string
+          example: /get/releases/download/v0.4.4-alpha2/checksums.txt
         modules:
           type: array
           items:
             $ref: "#/components/schemas/Module"
+
     Package:
       readOnly: true
       required:

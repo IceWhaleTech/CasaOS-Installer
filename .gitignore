@@ -21,4 +21,7 @@
 go.work
 
 __debug_bin
+
+codegen/
 dist/
+.vscode/

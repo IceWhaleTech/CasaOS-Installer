@@ -10,10 +10,8 @@ import (
 
 	"github.com/hashicorp/go-getter"
 	"github.com/samber/lo"
-	"go.uber.org/zap"
 
 	"github.com/IceWhaleTech/CasaOS-Common/utils/file"
-	"github.com/IceWhaleTech/CasaOS-Common/utils/logger"
 	"github.com/IceWhaleTech/CasaOS-Installer/codegen"
 )
 
@@ -38,30 +36,48 @@ func GetPackageURLByCurrentArch(release codegen.Release, mirror string) (string,
 	return "", fmt.Errorf("package not found for architecture: %s", arch)
 }
 
-func DownloadAndExtractPackage(ctx context.Context, releaseDir, packageURL string) error {
+func Download(ctx context.Context, outDir, url string) (string, error) {
+	filename := filepath.Base(url)
+	_filepath := filepath.Join(outDir, filename)
+
+	return _filepath, DownloadAs(ctx, _filepath, url)
+}
+
+func DownloadAs(ctx context.Context, filepath, url string) error {
+	url = url + "?archive=false" // disable automatic archive extraction
+
 	// download package
-	client := &getter.Client{
+	client := getter.Client{
 		Ctx:   ctx,
-		Dst:   releaseDir,
-		Mode:  getter.ClientModeDir,
-		Src:   packageURL,
-		Umask: 0x022,
+		Dst:   filepath,
+		Mode:  getter.ClientModeFile,
+		Src:   url,
+		Umask: 0o022,
 		Options: []getter.ClientOption{
 			getter.WithProgress(NewTracker(
 				func(downladed, totalSize int64) {
 					// TODO: send progress event to message bus if it exists
-					logger.Info("Downloading package", zap.String("url", packageURL), zap.Int64("downloaded", downladed), zap.Int64("totalSize", totalSize))
+					// logger.Info("Downloading package", zap.String("url", url), zap.Int64("downloaded", downladed), zap.Int64("totalSize", totalSize))
 				},
 			)),
 		},
 	}
 
-	if err := client.Get(); err != nil {
-		return err
+	return client.Get()
+}
+
+func Extract(filepath, dir string) error {
+	decompressor := NewDecompressor(filepath)
+	if decompressor == nil {
+		return nil
 	}
 
-	// extract each archive in releaseDir
-	if err := filepath.WalkDir(releaseDir, func(path string, d os.DirEntry, err error) error {
+	return decompressor.Decompress(dir, filepath, true, 0o022)
+}
+
+// extract each archive in dir
+func BulkExtract(dir string) error {
+	return filepath.WalkDir(dir, func(path string, d os.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
@@ -70,13 +86,8 @@ func DownloadAndExtractPackage(ctx context.Context, releaseDir, packageURL strin
 			return nil
 		}
 
-		decompressor := NewDecompressor(path)
-		return decompressor.Decompress(releaseDir, path, true, 0o022)
-	}); err != nil {
-		return err
-	}
-
-	return nil
+		return Extract(path, dir)
+	})
 }
 
 func InstallRelease(ctx context.Context, releaseDir string, sysrootPath string) error {
@@ -84,7 +95,8 @@ func InstallRelease(ctx context.Context, releaseDir string, sysrootPath string) 
 	if _, err := os.Stat(srcSysroot); err != nil {
 		return err
 	}
-
+	fmt.Println(srcSysroot)
+	fmt.Println(sysrootPath)
 	return file.CopyDir(srcSysroot, sysrootPath, "")
 }
 

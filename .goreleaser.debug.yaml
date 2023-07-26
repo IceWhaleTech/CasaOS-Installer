@@ -3,10 +3,10 @@
 project_name: casaos-installer
 before:
   hooks:
+    - go generate
+    - go mod tidy -v
     - go run github.com/loeffel-io/ls-lint@latest
     - go run github.com/google/go-licenses@latest check . --disallowed_types=restricted
-    - go generate
-    - go mod tidy
     - go test -race -v ./...
 builds:
   - id: casaos-installer-amd64
@@ -16,6 +16,8 @@ builds:
     gcflags:
       - all=-N -l
     ldflags:
+      - -X main.commit={{.Commit}}
+      - -X main.date={{.Date}}
       - -extldflags "-static"
     tags:
       - musl
@@ -32,6 +34,8 @@ builds:
     gcflags:
       - all=-N -l
     ldflags:
+      - -X main.commit={{.Commit}}
+      - -X main.date={{.Date}}
       - -extldflags "-static"
     tags:
       - musl
@@ -48,6 +52,67 @@ builds:
     gcflags:
       - all=-N -l
     ldflags:
+      - -X main.commit={{.Commit}}
+      - -X main.date={{.Date}}
+      - -extldflags "-static"
+    tags:
+      - musl
+      - netgo
+      - osusergo
+    goos:
+      - linux
+    goarch:
+      - arm
+    goarm:
+      - "7"
+  - id: casaos-installer-cli-amd64
+    binary: build/sysroot/usr/bin/casaos-installer-cli
+    main: ./cmd/cli
+    env:
+      - CC=x86_64-linux-gnu-gcc
+    gcflags:
+      - all=-N -l
+    ldflags:
+      - -X main.commit={{.Commit}}
+      - -X main.date={{.Date}}
+      - -extldflags "-static"
+    tags:
+      - musl
+      - netgo
+      - osusergo
+    goos:
+      - linux
+    goarch:
+      - amd64
+  - id: casaos-installer-cli-arm64
+    binary: build/sysroot/usr/bin/casaos-installer-cli
+    main: ./cmd/cli
+    env:
+      - CC=aarch64-linux-gnu-gcc
+    gcflags:
+      - all=-N -l
+    ldflags:
+      - -X main.commit={{.Commit}}
+      - -X main.date={{.Date}}
+      - -extldflags "-static"
+    tags:
+      - musl
+      - netgo
+      - osusergo
+    goos:
+      - linux
+    goarch:
+      - arm64
+  - id: casaos-installer-cli-arm-7
+    binary: build/sysroot/usr/bin/casaos-installer-cli
+    main: ./cmd/cli
+    env:
+      - CC=arm-linux-gnueabihf-gcc
+    gcflags:
+      - all=-N -l
+    ldflags:
+      - -X main.commit={{.Commit}}
+      - -X main.date={{.Date}}
       - -extldflags "-static"
     tags:
       - musl

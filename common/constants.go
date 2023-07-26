@@ -6,5 +6,14 @@ const (
 	InstallerVersion     = "0.4.5"
 	InstallerServiceName = "installer"
 
-	ReleaseYAMLFilename = "release.yaml"
+	ReleaseYAMLFileName   = "release.yaml"
+	MigrationListFileName = "migration.list"
+	ChecksumsTXTFileName  = "checksums.txt"
+
+	LegacyWithoutVersion = "LEGACY_WITHOUT_VERSION"
+
+	MirrorPlaceHolder = "${MIRROR}"
+	ArchPlaceHolder   = "${ARCH}"
+
+	MainTag = "main"
 )
