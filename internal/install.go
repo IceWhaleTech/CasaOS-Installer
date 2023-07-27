@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -66,13 +67,12 @@ func DownloadAs(ctx context.Context, filepath, url string) error {
 	return client.Get()
 }
 
-func Extract(filepath, dir string) error {
-	decompressor := NewDecompressor(filepath)
-	if decompressor == nil {
-		return nil
+func Extract(tarFilePath, destinationFolder string) error {
+	// to check tarFilePath is a tar.gz file and destinationFolder is a folder
+	if strings.HasSuffix(tarFilePath, ".tar.gz") {
+		exec.Command("tar", "-xzf", tarFilePath, "-C", destinationFolder).Run()
 	}
-
-	return decompressor.Decompress(dir, filepath, true, 0o022)
+	return nil
 }
 
 // extract each archive in dir
@@ -95,8 +95,6 @@ func InstallRelease(ctx context.Context, releaseDir string, sysrootPath string) 
 	if _, err := os.Stat(srcSysroot); err != nil {
 		return err
 	}
-	fmt.Println(srcSysroot)
-	fmt.Println(sysrootPath)
 	return file.CopyDir(srcSysroot, sysrootPath, "")
 }
 

@@ -21,6 +21,8 @@ require (
 
 require (
 	github.com/benbjohnson/clock v1.3.0 // indirect
+	github.com/coreos/go-systemd/v22 v22.5.0 // indirect
+	github.com/godbus/dbus/v5 v5.1.0 // indirect
 	github.com/golang-jwt/jwt v3.2.2+incompatible // indirect
 	github.com/gorilla/mux v1.8.0 // indirect
 	github.com/kr/pretty v0.3.1 // indirect

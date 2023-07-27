@@ -151,9 +151,32 @@ func main() {
 
 	_logger.Info("🟩 Release installed.")
 
-	// if service.VerifyUninstallScript() {
-	// 	_logger.Info("🟨 uninstall script is installed")
-	// } else {
-	// 	panic("🟥 uninstall script is not installed")
-	// }
+	_logger.Info("🟨 Installing modules...")
+	if err := service.ExecuteModuleInstallScript(releaseFilePath, *release); err != nil {
+		_logger.Error("🟥 Failed to install modules: %s", err.Error())
+		os.Exit(1)
+	}
+	_logger.Info("🟩 Modules installed.")
+
+	_logger.Info("🟨 Enable services...")
+	if err := service.SetStartUpAndLaunchModule(*release); err != nil {
+		_logger.Error("🟥 Failed to enable services: %s", err.Error())
+		os.Exit(1)
+	}
+	_logger.Info("🟩 Services enabled.")
+
+	// download uninstall script
+	_logger.Info("🟨 Downloading uninstall script ...")
+	_, err = service.DownloadUninstallScript(ctx, sysRoot)
+	if err != nil {
+		_logger.Error("Downloading uninstall script: %s", err.Error())
+		os.Exit(1)
+	}
+	_logger.Info("🟩 Uninstall script Downloaded")
+
+	if service.VerifyUninstallScript() {
+		_logger.Info("🟨 uninstall script is installed")
+	} else {
+		panic("🟥 uninstall script is not installed")
+	}
 }
