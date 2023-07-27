@@ -151,6 +151,20 @@ func main() {
 
 	_logger.Info("🟩 Release installed.")
 
+	_logger.Info("🟨 Installing modules...")
+	if err := service.ExecuteModuleInstallScript(releaseFilePath, *release); err != nil {
+		_logger.Error("🟥 Failed to install modules: %s", err.Error())
+		os.Exit(1)
+	}
+	_logger.Info("🟩 Modules installed.")
+
+	_logger.Info("🟨 Enable services...")
+	if err := service.SetStartUpAndLaunchModule(*release); err != nil {
+		_logger.Error("🟥 Failed to enable services: %s", err.Error())
+		os.Exit(1)
+	}
+	_logger.Info("🟩 Services enabled.")
+
 	// if service.VerifyUninstallScript() {
 	// 	_logger.Info("🟨 uninstall script is installed")
 	// } else {

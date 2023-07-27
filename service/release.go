@@ -4,11 +4,13 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 
 	"github.com/IceWhaleTech/CasaOS-Common/utils/file"
 	"github.com/IceWhaleTech/CasaOS-Common/utils/logger"
+	"github.com/IceWhaleTech/CasaOS-Common/utils/systemctl"
 	"github.com/IceWhaleTech/CasaOS-Installer/codegen"
 	"github.com/IceWhaleTech/CasaOS-Installer/common"
 	"github.com/IceWhaleTech/CasaOS-Installer/internal"
@@ -214,4 +216,70 @@ func VerifyUninstallScript() bool {
 	// to check the present of file
 	// how to do the test? the uninstall is always in the same place?
 	return !file.CheckNotExist("/usr/bin/casaos-uninstall")
+}
+
+// func checkAndCopyConf(ConfigName string, sysRoot string) error {
+// 	// to check sysRoot + "/etc/casaos/" + ConfigName + ".conf" is exist
+// 	if !file.CheckNotExist(sysRoot + "/etc/casaos/" + ConfigName + ".conf") {
+// 		// to copy the file to sysRoot + "/etc/casaos/" + ConfigName + ".conf"
+// 		if err := file.CopyFile(sysRoot+"/etc/casaos/"+ConfigName+".conf.sample", "./conf/"+ConfigName+".conf", ""); err != nil {
+// 			return err
+// 		}
+// 	}
+// 	return nil
+// }
+
+// func InstallConfFile(release codegen.Release, sysRoot string) error {
+// 	for _, module := range release.Modules {
+// 		if err := checkAndCopyConf(module.Name, sysRoot); err != nil {
+// 			return err
+// 		}
+// 	}
+// 	return nil
+// }
+
+func ExecuteModuleInstallScript(releaseFilePath string, release codegen.Release) error {
+	// run setup script
+	scriptFolderPath := filepath.Join(releaseFilePath, "..", "build/scripts/setup/script.d")
+	// to get the script file name from scriptFolderPath
+	// to execute the script in name order
+	filepath.WalkDir(scriptFolderPath, func(path string, d os.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+
+		if d.IsDir() {
+			return nil
+		}
+
+		cmd := exec.Command(path)
+		err = cmd.Run()
+		return err
+	})
+
+	// // run service script
+	// serviceScriptFolderPath := filepath.Join(releaseFilePath, "..", "build/scripts/setup/service.d")
+	// for _, module := range release.Modules {
+	// 	moduleServiceScriptFolderPath := filepath.Join(serviceScriptFolderPath, module.Name)
+	// }
+
+	return nil
+}
+
+func enableAndStartSystemdService(serviceName string) error {
+	// if err := systemctl.EnableService(fmt.Sprintf("%s.service", serviceName)); err != nil {
+	// 	return err
+	// }
+	if err := systemctl.StartService(fmt.Sprintf("%s.service", serviceName)); err != nil {
+		return err
+	}
+	return nil
+}
+func SetStartUpAndLaunchModule(release codegen.Release) error {
+	for _, module := range release.Modules {
+		if err := enableAndStartSystemdService(module.Name); err != nil {
+			return err
+		}
+	}
+	return nil
 }
