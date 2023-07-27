@@ -15,5 +15,5 @@ const (
 	MirrorPlaceHolder = "${MIRROR}"
 	ArchPlaceHolder   = "${ARCH}"
 
-	MainTag = "main"
+	MainTag = "dev-test"
 )

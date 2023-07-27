@@ -36,6 +36,7 @@ var (
 
 	//go:embed api/openapi.yaml
 	_docYAML string
+	sysRoot  = "/"
 )
 
 func main() {
@@ -70,6 +71,12 @@ func main() {
 		go cronjob(ctx) // run once immediately
 
 		if _, err := crontab.AddFunc("@every 24h", func() { cronjob(ctx) }); err != nil {
+			panic(err)
+		}
+
+		// every 10 seconds for debug
+		if _, err := crontab.AddFunc("@every 1s", func() {
+		}); err != nil {
 			panic(err)
 		}
 
@@ -152,7 +159,7 @@ func cronjob(ctx context.Context) {
 		return
 	}
 
-	if !service.ShouldUpgrade(*release, "") {
+	if !service.ShouldUpgrade(*release, sysRoot) {
 		logger.Info("no need to upgrade", zap.String("latest version", release.Version))
 		return
 	}
@@ -177,7 +184,7 @@ func cronjob(ctx context.Context) {
 			return
 		}
 
-		if _, err := service.DownloadAllMigrationTools(ctx, *release, ""); err != nil {
+		if _, err := service.DownloadAllMigrationTools(ctx, *release, sysRoot); err != nil {
 			logger.Error("error when trying to download migration tools", zap.Error(err))
 			return
 		}
