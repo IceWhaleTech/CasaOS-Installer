@@ -54,6 +54,31 @@ func GetRelease(ctx context.Context, tag string) (*codegen.Release, error) {
 	return release, nil
 }
 
+func DownloadUninstallScript(ctx context.Context, sysRoot string) (string, error) {
+	CASA_UNINSTALL_URL := "https://get.casaos.io/uninstall/v0.4.0"
+	CASA_UNINSTALL_PATH := filepath.Join(sysRoot, "/usr/bin/casaos-uninstall")
+	// to delete the old uninstall script when the script is exsit
+	if _, err := os.Stat(CASA_UNINSTALL_PATH); err == nil {
+		// 删除文件
+		err := os.Remove(CASA_UNINSTALL_PATH)
+		if err != nil {
+			fmt.Println(err)
+		} else {
+			fmt.Println("Old uninstall script deleted successfully")
+		}
+	} else if os.IsNotExist(err) {
+		fmt.Println("Old uninstall script does not exist")
+		// to download the new uninstall script
+		if _, err := internal.Download(ctx, CASA_UNINSTALL_PATH, CASA_UNINSTALL_URL); err != nil {
+			return CASA_UNINSTALL_PATH, err
+		}
+	} else {
+		fmt.Println(err)
+	}
+
+	return "", nil
+}
+
 // returns releaseFilePath if successful
 func DownloadRelease(ctx context.Context, release codegen.Release, force bool) (string, error) {
 	// check and verify existing packages
@@ -217,26 +242,6 @@ func VerifyUninstallScript() bool {
 	// how to do the test? the uninstall is always in the same place?
 	return !file.CheckNotExist("/usr/bin/casaos-uninstall")
 }
-
-// func checkAndCopyConf(ConfigName string, sysRoot string) error {
-// 	// to check sysRoot + "/etc/casaos/" + ConfigName + ".conf" is exist
-// 	if !file.CheckNotExist(sysRoot + "/etc/casaos/" + ConfigName + ".conf") {
-// 		// to copy the file to sysRoot + "/etc/casaos/" + ConfigName + ".conf"
-// 		if err := file.CopyFile(sysRoot+"/etc/casaos/"+ConfigName+".conf.sample", "./conf/"+ConfigName+".conf", ""); err != nil {
-// 			return err
-// 		}
-// 	}
-// 	return nil
-// }
-
-// func InstallConfFile(release codegen.Release, sysRoot string) error {
-// 	for _, module := range release.Modules {
-// 		if err := checkAndCopyConf(module.Name, sysRoot); err != nil {
-// 			return err
-// 		}
-// 	}
-// 	return nil
-// }
 
 func ExecuteModuleInstallScript(releaseFilePath string, release codegen.Release) error {
 	// run setup script

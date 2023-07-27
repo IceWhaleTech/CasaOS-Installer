@@ -165,9 +165,18 @@ func main() {
 	}
 	_logger.Info("🟩 Services enabled.")
 
-	// if service.VerifyUninstallScript() {
-	// 	_logger.Info("🟨 uninstall script is installed")
-	// } else {
-	// 	panic("🟥 uninstall script is not installed")
-	// }
+	// download uninstall script
+	_logger.Info("🟨 Downloading uninstall script ...")
+	_, err = service.DownloadUninstallScript(ctx, sysRoot)
+	if err != nil {
+		_logger.Error("Downloading uninstall script: %s", err.Error())
+		os.Exit(1)
+	}
+	_logger.Info("🟩 Uninstall script Downloaded")
+
+	if service.VerifyUninstallScript() {
+		_logger.Info("🟨 uninstall script is installed")
+	} else {
+		panic("🟥 uninstall script is not installed")
+	}
 }
