@@ -66,14 +66,15 @@ func DownloadUninstallScript(ctx context.Context, sysRoot string) (string, error
 		} else {
 			fmt.Println("Old uninstall script deleted successfully")
 		}
-	} else if os.IsNotExist(err) {
-		fmt.Println("Old uninstall script does not exist")
-		// to download the new uninstall script
-		if _, err := internal.Download(ctx, CASA_UNINSTALL_PATH, CASA_UNINSTALL_URL); err != nil {
-			return CASA_UNINSTALL_PATH, err
-		}
-	} else {
-		fmt.Println(err)
+	}
+
+	// to download the new uninstall script
+	if err := internal.DownloadAs(ctx, CASA_UNINSTALL_PATH, CASA_UNINSTALL_URL); err != nil {
+		return CASA_UNINSTALL_PATH, err
+	}
+	// change the permission of the uninstall script
+	if err := os.Chmod(CASA_UNINSTALL_PATH, 0o755); err != nil {
+		return CASA_UNINSTALL_PATH, err
 	}
 
 	return "", nil
@@ -203,12 +204,6 @@ func InstallRelease(ctx context.Context, release codegen.Release, sysrootPath st
 	if err := internal.InstallRelease(backgroundCtx, releaseDir, sysrootPath); err != nil {
 		return err
 	}
-
-	// // TODO: the check is execute twice
-	// // TODO: add uninstall to the release
-	// if !VerifyUninstallScript() {
-	// 	return fmt.Errorf("uninstall script is not installed")
-	// }
 
 	return nil
 }

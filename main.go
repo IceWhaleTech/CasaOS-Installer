@@ -173,7 +173,7 @@ func cronjob(ctx context.Context) {
 			logger.Error("error when trying to download release", zap.Error(err))
 			return
 		}
-
+		service.ReleaseFilePath = releaseFilePath
 		logger.Info("downloaded release", zap.String("release file path", releaseFilePath))
 	}
 
