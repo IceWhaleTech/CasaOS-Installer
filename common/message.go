@@ -1,6 +1,9 @@
 package common
 
-import "github.com/IceWhaleTech/CasaOS-Installer/codegen/message_bus"
+import (
+	"github.com/IceWhaleTech/CasaOS-Common/utils"
+	"github.com/IceWhaleTech/CasaOS-Installer/codegen/message_bus"
+)
 
 var EventTypes = []message_bus.EventType{
 	// check update
@@ -12,6 +15,21 @@ var EventTypes = []message_bus.EventType{
 	// install update
 	EventTypeInstallUpdateBegin, EventTypeInstallUpdateEnd, EventTypeInstallUpdateError,
 }
+
+var (
+	PropertyTypeAppName = message_bus.PropertyType{
+		Name:        "app:name",
+		Description: utils.Ptr("name of the app which could be a container image name including version, a snap name or the name of any other forms of app"),
+		Example:     utils.Ptr("hello-world:latest (this is the name of a container image"),
+	}
+)
+
+var (
+	PropertyTypeMessage = message_bus.PropertyType{
+		Name:        "message",
+		Description: utils.Ptr("message at different levels, typically for error"),
+	}
+)
 
 var (
 	EventTypeCheckUpdateBegin = message_bus.EventType{
@@ -41,9 +59,12 @@ var (
 		PropertyTypeList: []message_bus.PropertyType{},
 	}
 	EventTypeDownloadUpdateError = message_bus.EventType{
-		SourceID:         InstallerServiceName,
-		Name:             "installer:download-update-error",
-		PropertyTypeList: []message_bus.PropertyType{},
+		SourceID: InstallerServiceName,
+		Name:     "installer:download-update-error",
+		PropertyTypeList: []message_bus.PropertyType{
+			PropertyTypeAppName,
+			PropertyTypeMessage,
+		},
 	}
 
 	EventTypeInstallUpdateBegin = message_bus.EventType{
