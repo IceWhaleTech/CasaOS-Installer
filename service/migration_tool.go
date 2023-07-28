@@ -53,7 +53,8 @@ func DownloadAllMigrationTools(ctx context.Context, release codegen.Release, sys
 				continue
 			}
 
-			if _, err := DownloadMigrationTool(ctx, release, module, migration, false); err != nil {
+			if path, err := DownloadMigrationTool(ctx, release, module, migration, false); err != nil {
+				fmt.Println("下载完成", path)
 				return false, err
 			}
 
@@ -66,7 +67,7 @@ func DownloadAllMigrationTools(ctx context.Context, release codegen.Release, sys
 
 func DownloadMigrationTool(ctx context.Context, release codegen.Release, module string, migration MigrationTool, force bool) (string, error) {
 	if !force {
-		if migrationToolFilePath, err := VerifyMigrationTool(); err != nil {
+		if migrationToolFilePath, err := VerifyMigrationTool(module, filepath.Base(migration.URL)); err != nil {
 			logger.Info("error while verifying migration tool - continue to download", zap.Error(err))
 		} else {
 			return migrationToolFilePath, nil
@@ -186,12 +187,48 @@ func MigrationToolsMap(release codegen.Release) (map[string][]MigrationTool, err
 	return migrationToolsMap, nil
 }
 
+func GetMigrationPath(module string, release codegen.Release, migrationToolMap map[string][]MigrationTool, sysRoot string) ([]string, error) {
+	sourceVersion, err := semver.NewVersion(NormalizeVersion(release.Version))
+	if err != nil {
+		return []string{}, err
+	}
+	currentVersion, err := CurrentModuleVersion(module, sysRoot)
+	if err != nil {
+		return []string{}, err
+	}
+
+	PathArray := []string{}
+
+	modulePath := migrationToolMap[module]
+	for _, migration := range modulePath {
+		if migration.Version.LessThan(sourceVersion) && (migration.Version.GreaterThan(currentVersion) || migration.Version.Equal(currentVersion)) {
+			PathArray = append(PathArray, migration.URL)
+			// return migration.URL
+		}
+	}
+	return RemoveDuplication(PathArray), nil
+}
+
+func ExecuteMigrationTool(module string, release codegen.Release, migrationToolMap map[string][]MigrationTool, sysRoot string) error {
+	return nil
+}
+
 // verify migration tools for a release are already cached
 func VerifyAllMigrationTools(release codegen.Release) bool {
 	// panic("implement me") // TODO
 	return true
 }
 
-func VerifyMigrationTool() (string, error) {
-	panic("implement me") // TODO - verify existance and size only - continue here
+func VerifyMigrationTool(module string, fileName string) (string, error) {
+	migrationToolDir := filepath.Join(MigrationToolsDir(), module)
+
+	packageFilePath := filepath.Join(migrationToolDir, fileName)
+
+	// to check if the migration tool is already downloaded, we need to check if the file exists and its size
+	if _, err := os.Stat(packageFilePath); err != nil {
+		// TODO - verify the hash
+		return "", fmt.Errorf("migration tool %s not found", packageFilePath)
+	}
+
+	return packageFilePath, nil
 }

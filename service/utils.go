@@ -66,8 +66,8 @@ func CurrentModuleVersion(module string, sysrootPath string) (*semver.Version, e
 		sysrootPath + "/usr/bin/" + module,
 		module,
 	} {
-
 		cmd := exec.Command(executablePath, "-v")
+		fmt.Println("cmd", executablePath)
 		if cmd == nil {
 			continue
 		}
@@ -96,4 +96,27 @@ func CurrentModuleVersion(module string, sysrootPath string) (*semver.Version, e
 	}
 
 	return nil, fmt.Errorf("failed to get current version of %s", module)
+}
+
+func RemoveDuplication(arr []string) []string {
+	length := len(arr)
+	if length == 0 {
+		return arr
+	}
+
+	j := 0
+	for i := 1; i < length; i++ {
+		if arr[i] != arr[j] {
+			j++
+			if j < i {
+				swap(arr, i, j)
+			}
+		}
+	}
+
+	return arr[:j+1]
+}
+
+func swap(arr []string, a, b int) {
+	arr[a], arr[b] = arr[b], arr[a]
 }
