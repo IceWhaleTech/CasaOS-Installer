@@ -98,7 +98,7 @@ func CurrentModuleVersion(module string, sysrootPath string) (*semver.Version, e
 	return nil, fmt.Errorf("failed to get current version of %s", module)
 }
 
-func RemoveDuplication(arr []string) []string {
+func RemoveDuplication(arr []MigrationTool) []MigrationTool {
 	length := len(arr)
 	if length == 0 {
 		return arr
@@ -106,7 +106,7 @@ func RemoveDuplication(arr []string) []string {
 
 	j := 0
 	for i := 1; i < length; i++ {
-		if arr[i] != arr[j] {
+		if arr[i].URL != arr[j].URL {
 			j++
 			if j < i {
 				swap(arr, i, j)
@@ -117,6 +117,6 @@ func RemoveDuplication(arr []string) []string {
 	return arr[:j+1]
 }
 
-func swap(arr []string, a, b int) {
+func swap(arr []MigrationTool, a, b int) {
 	arr[a], arr[b] = arr[b], arr[a]
 }

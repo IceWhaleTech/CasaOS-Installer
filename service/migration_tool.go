@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -82,7 +83,7 @@ func DownloadMigrationTool(ctx context.Context, release codegen.Release, module 
 		migrationToolURL := strings.ReplaceAll(template, common.MirrorPlaceHolder, mirror)
 		migrationToolFilePath, err := internal.Download(ctx, outDir, migrationToolURL)
 		if err != nil {
-			logger.Info("error while downloading migration tool - skipping", zap.Error(err), zap.String("url", migration.URL))
+			logger.Info("error while downloading migration tool - skipping", zap.Error(err), zap.String("url", migrationToolURL))
 			continue
 		}
 
@@ -187,29 +188,56 @@ func MigrationToolsMap(release codegen.Release) (map[string][]MigrationTool, err
 	return migrationToolsMap, nil
 }
 
-func GetMigrationPath(module string, release codegen.Release, migrationToolMap map[string][]MigrationTool, sysRoot string) ([]string, error) {
+func GetMigrationPath(module string, release codegen.Release, migrationToolMap map[string][]MigrationTool, sysRoot string) ([]MigrationTool, error) {
 	sourceVersion, err := semver.NewVersion(NormalizeVersion(release.Version))
 	if err != nil {
-		return []string{}, err
+		return []MigrationTool{}, err
 	}
 	currentVersion, err := CurrentModuleVersion(module, sysRoot)
 	if err != nil {
-		return []string{}, err
+		return []MigrationTool{}, err
 	}
 
-	PathArray := []string{}
+	PathArray := []MigrationTool{}
 
 	modulePath := migrationToolMap[module]
 	for _, migration := range modulePath {
 		if migration.Version.LessThan(sourceVersion) && (migration.Version.GreaterThan(currentVersion) || migration.Version.Equal(currentVersion)) {
-			PathArray = append(PathArray, migration.URL)
+			PathArray = append(PathArray, migration)
 			// return migration.URL
 		}
 	}
 	return RemoveDuplication(PathArray), nil
 }
 
-func ExecuteMigrationTool(module string, release codegen.Release, migrationToolMap map[string][]MigrationTool, sysRoot string) error {
+func ExecuteMigrationTool(module string, migrationFilePath string, sysRoot string) error {
+	// to extract the migration tool
+	err := internal.Extract(migrationFilePath, MigrationToolsDir())
+	if err != nil {
+		return err
+	}
+
+	// err = systemctl.StopService(module)
+	// if err != nil {
+	// 	return err
+	// }
+
+	// to execute the migration tool
+	migrationToolPath := filepath.Join(MigrationToolsDir(), "build", "sysroot", "usr", "bin", module+"-migration-tool")
+	// to chmod file permission
+	err = os.Chmod(migrationToolPath, 0755)
+	if err != nil {
+		return err
+	}
+	// to execute the migration tool
+	// force to execute the migration tool. otherwise, it require to stop the service
+	cmd := exec.Command(migrationToolPath, "-f")
+	fmt.Println(cmd)
+	err = cmd.Run()
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 

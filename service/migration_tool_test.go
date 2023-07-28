@@ -155,3 +155,53 @@ func TestMigrationPath(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, len(migrationPath), 2)
 }
+
+func TestDownloadAndInstallMigrateion(t *testing.T) {
+	if _, exists := os.LookupEnv("CI"); exists {
+		t.Skip("skipping test in CI environment")
+	}
+	logger.LogInitConsoleOnly()
+
+	tmpDir, err := os.MkdirTemp("", "casaos-migration-test-*")
+	assert.NoError(t, err)
+	// defer os.RemoveAll(tmpDir)
+
+	tmpSysRoot := filepath.Join(tmpDir, "sysroot")
+	os.Mkdir(tmpSysRoot, 0755)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	config.ServerInfo.CachePath = filepath.Join(tmpDir, "cache")
+
+	release, err := service.GetRelease(ctx, "dev-test")
+	assert.NoError(t, err)
+
+	releaseFilePath, err := service.DownloadRelease(ctx, *release, false)
+	assert.NoError(t, err)
+	assert.FileExists(t, releaseFilePath)
+
+	err = service.ExtractReleasePackages(releaseFilePath, *release)
+	assert.NoError(t, err)
+
+	// extract very module package that the name is like linux*.tar.gz
+	err = service.ExtractReleasePackages(releaseFilePath+"/linux*", *release)
+	assert.NoError(t, err)
+
+	migrationToolMap, err := service.MigrationToolsMap(*release)
+	assert.NoError(t, err)
+
+	module := "casaos-local-storage"
+	fixtures.SetCasaOSVersion(tmpSysRoot, module, "v0.3.5")
+	migrationPath, err := service.GetMigrationPath(module, *release, migrationToolMap, tmpSysRoot)
+	assert.NoError(t, err)
+	assert.Equal(t, len(migrationPath), 1)
+
+	for _, migration := range migrationPath {
+		migrationPath, err := service.DownloadMigrationTool(ctx, *release, module, migration, false)
+		assert.NoError(t, err)
+		err = service.ExecuteMigrationTool(module, migrationPath, tmpSysRoot)
+		// because MigrationTool require root permission, so it will return exit status 1
+		assert.Equal(t, err.Error(), "exit status 1")
+	}
+}
