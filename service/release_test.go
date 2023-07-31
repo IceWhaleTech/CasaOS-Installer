@@ -23,7 +23,7 @@ func TestInstallRelease(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	release, err := service.GetRelease(ctx, "dev-test")
+	release, err := service.GetRelease(ctx, "unit-test-release-0.4.4-1")
 	assert.NoError(t, err)
 
 	assert.NotNil(t, release)
@@ -84,7 +84,7 @@ func TestIsUpgradable(t *testing.T) {
 
 	tmpSysRoot := filepath.Join(tmpDir, "sysroot")
 
-	release, err := service.GetRelease(ctx, "dev-test")
+	release, err := service.GetRelease(ctx, "unit-test-release-0.4.4-1")
 	assert.NoError(t, err)
 
 	fixtures.SetCasaOSVersion(tmpSysRoot, "casaos", "v0.4.5")

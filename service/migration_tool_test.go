@@ -23,7 +23,7 @@ func TestDownloadMigrationTool(t *testing.T) {
 		t.Skip("skipping test in CI environment")
 	}
 
-	tmpDir, err := os.MkdirTemp("", "casaos-migration-test-*")
+	tmpDir, err := os.MkdirTemp("", "casaos-download-migration-test-*")
 	assert.NoError(t, err)
 	defer os.RemoveAll(tmpDir)
 
@@ -70,7 +70,7 @@ func TestMigrationToolsMap(t *testing.T) {
 	}
 	logger.LogInitConsoleOnly()
 
-	tmpDir, err := os.MkdirTemp("", "casaos-migration-test-*")
+	tmpDir, err := os.MkdirTemp("", "casaos-migration-map-test-*")
 	assert.NoError(t, err)
 	defer os.RemoveAll(tmpDir)
 
@@ -81,7 +81,7 @@ func TestMigrationToolsMap(t *testing.T) {
 
 	config.ServerInfo.CachePath = filepath.Join(tmpDir, "cache")
 
-	release, err := service.GetRelease(ctx, "dev-test")
+	release, err := service.GetRelease(ctx, "unit-test-release-0.4.4-1")
 	assert.NoError(t, err)
 
 	releaseFilePath, err := service.DownloadRelease(ctx, *release, false)
@@ -117,7 +117,7 @@ func TestMigrationPath(t *testing.T) {
 	}
 	logger.LogInitConsoleOnly()
 
-	tmpDir, err := os.MkdirTemp("", "casaos-migration-test-*")
+	tmpDir, err := os.MkdirTemp("", "casaos-migration-path-test-*")
 	assert.NoError(t, err)
 	defer os.RemoveAll(tmpDir)
 
@@ -128,7 +128,7 @@ func TestMigrationPath(t *testing.T) {
 
 	config.ServerInfo.CachePath = filepath.Join(tmpDir, "cache")
 
-	release, err := service.GetRelease(ctx, "dev-test")
+	release, err := service.GetRelease(ctx, "unit-test-release-0.4.4-1")
 	assert.NoError(t, err)
 
 	module := "casaos-local-storage"
@@ -162,7 +162,7 @@ func TestDownloadAndInstallMigrateion(t *testing.T) {
 	}
 	logger.LogInitConsoleOnly()
 
-	tmpDir, err := os.MkdirTemp("", "casaos-migration-test-*")
+	tmpDir, err := os.MkdirTemp("", "casaos-execute-migration-test-*")
 	assert.NoError(t, err)
 	// defer os.RemoveAll(tmpDir)
 
@@ -174,7 +174,7 @@ func TestDownloadAndInstallMigrateion(t *testing.T) {
 
 	config.ServerInfo.CachePath = filepath.Join(tmpDir, "cache")
 
-	release, err := service.GetRelease(ctx, "dev-test")
+	release, err := service.GetRelease(ctx, "unit-test-release-0.4.4-1")
 	assert.NoError(t, err)
 
 	releaseFilePath, err := service.DownloadRelease(ctx, *release, false)

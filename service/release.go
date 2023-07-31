@@ -25,6 +25,23 @@ var (
 	ErrReleaseNotFound = fmt.Errorf("release not found")
 )
 
+func GetReleaseFromLocal(ctx context.Context, releasePath string, tag string) (*codegen.Release, error) {
+	// open the yaml file
+	f, err := os.Open(releasePath)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+
+	// decode the yaml file
+	var release codegen.Release
+	decoder := yaml.NewDecoder(f)
+	if err := decoder.Decode(&release); err != nil {
+		return nil, err
+	}
+	return &release, nil
+}
+
 func GetRelease(ctx context.Context, tag string) (*codegen.Release, error) {
 	var release *codegen.Release
 	var mirror string

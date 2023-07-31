@@ -24,8 +24,39 @@ type MigrationTool struct {
 	URL     string
 }
 
+func StartMigration(sysRoot string) error {
+	// check if migration is needed
+	// current version
+	currentVersion, err := CurrentModuleVersion("casaos", sysRoot)
+	if err != nil {
+		return err
+	}
+
+	// target version
+	targetVersion, err := semver.NewVersion(NormalizeVersion("v0.4.5"))
+	if err != nil {
+		return err
+	}
+
+	if currentVersion.GreaterThan(targetVersion) || currentVersion.Equal(targetVersion) {
+		// no need to migrate
+		return nil
+	}
+
+	// TODO: how to handle migration if the module of target version is more thatn the current version
+
+	// start migration
+	// 1. download migration tools
+	// for all modules of current release
+
+	// 2. run migration tools
+
+	// post migration
+	return nil
+}
+
 func DownloadAllMigrationTools(ctx context.Context, release codegen.Release, sysrootPath string) (bool, error) {
-	sourceVersion, err := semver.NewVersion(NormalizeVersion(release.Version))
+	targetVersion, err := semver.NewVersion(NormalizeVersion(release.Version))
 	if err != nil {
 		return false, err
 	}
@@ -44,13 +75,13 @@ func DownloadAllMigrationTools(ctx context.Context, release codegen.Release, sys
 			continue
 		}
 
-		if !sourceVersion.GreaterThan(currentVersion) {
-			logger.Info("no need to migrate", zap.String("module", module), zap.String("sourceVersion", sourceVersion.String()), zap.String("currentVersion", currentVersion.String()))
+		if !targetVersion.GreaterThan(currentVersion) {
+			logger.Info("no need to migrate", zap.String("module", module), zap.String("targetVersion", targetVersion.String()), zap.String("currentVersion", currentVersion.String()))
 			continue
 		}
 
 		for _, migration := range migrationTools {
-			if migration.Version.LessThan(currentVersion) || migration.Version.GreaterThan(sourceVersion) {
+			if migration.Version.LessThan(currentVersion) || migration.Version.GreaterThan(targetVersion) {
 				continue
 			}
 
