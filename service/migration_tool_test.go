@@ -18,6 +18,68 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+var (
+	// TODO NOTE! there is a bug, the url after v0.3.5-1 didn't download the migration tool
+	appManagementMigrationList = `v0.3.5 ${DOWNLOAD_DOMAIN}IceWhaleTech/CasaOS-AppManagement/releases/download/v0.4.0/linux-${ARCH}-casaos-app-management-migration-tool-v0.4.0.tar.gz
+v0.3.6 ${DOWNLOAD_DOMAIN}IceWhaleTech/CasaOS-AppManagement/releases/download/v0.4.1-alpha1/linux-${ARCH}-casaos-app-management-migration-tool-v0.4.1-alpha1.tar.gz
+v0.3.7 ${DOWNLOAD_DOMAIN}IceWhaleTech/CasaOS-AppManagement/releases/download/v0.4.2-1/linux-${ARCH}-casaos-app-management-migration-tool-v0.4.2-1.tar.gz
+v0.3.8 ${DOWNLOAD_DOMAIN}IceWhaleTech/CasaOS-AppManagement/releases/download/v0.4.3/linux-${ARCH}-casaos-app-management-migration-tool-v0.4.3.tar.gz
+v0.3.9 ${DOWNLOAD_DOMAIN}IceWhaleTech/CasaOS-AppManagement/releases/download/v0.4.3/linux-${ARCH}-casaos-app-management-migration-tool-v0.4.3.tar.gz`
+)
+
+// NOTE! the test will cost very long time(1 min)(decided by network speed). So we should timeout it longer than another.
+func TestDownloadAllMigrationTools(t *testing.T) {
+	if _, exists := os.LookupEnv("CI"); exists {
+		t.Skip("skipping test in CI environment")
+	}
+
+	tmpDir, err := os.MkdirTemp("", "casaos-download-all-migration-test-*")
+	assert.NoError(t, err)
+	// defer os.RemoveAll(tmpDir)
+
+	config.ServerInfo.CachePath = tmpDir
+
+	logger.LogInitConsoleOnly()
+
+	targetVersionRelease, err := service.GetRelease(context.Background(), "unit-test-release-0.4.4-1")
+	assert.NoError(t, err)
+
+	tmpSysRoot := filepath.Join(tmpDir, "sysroot")
+	os.Mkdir(tmpSysRoot, 0755)
+
+	fixtures.SetCasaOSVersion(tmpSysRoot, "casaos", "v0.3.5")
+	fixtures.SetCasaOSVersion(tmpSysRoot, "casaos-app-management", "v0.3.5")
+
+	// to construct a fake migration map
+	releaseDir, err := service.ReleaseDir(*targetVersionRelease)
+	assert.NoError(t, err)
+	migrationListDir := filepath.Join(releaseDir, "build/scripts/migration/service.d")
+	for _, module := range targetVersionRelease.Modules {
+		migrationListFile := filepath.Join(migrationListDir, module.Short, common.MigrationListFileName)
+		err = os.MkdirAll(filepath.Dir(migrationListFile), 0755)
+		fmt.Println(filepath.Dir(migrationListFile))
+		assert.NoError(t, err)
+		// to write a fake migration list file
+		err = os.WriteFile(migrationListFile, []byte(appManagementMigrationList), 0644)
+		assert.NoError(t, err)
+	}
+
+	_, err = service.DownloadAllMigrationTools(context.Background(), *targetVersionRelease, tmpSysRoot)
+	assert.NoError(t, err)
+
+	// to check if all migration tools are downloaded
+	// it should be 4 migration tools
+
+	AppManagementOutDir := filepath.Join(service.MigrationToolsDir(), "casaos-app-management")
+	fmt.Println(AppManagementOutDir)
+
+	assert.DirExists(t, AppManagementOutDir)
+	// find out the files in the directory
+	files, err := os.ReadDir(AppManagementOutDir)
+	assert.NoError(t, err)
+	assert.Equal(t, 4, len(files))
+}
+
 func TestDownloadMigrationTool(t *testing.T) {
 	if _, exists := os.LookupEnv("CI"); exists {
 		t.Skip("skipping test in CI environment")
