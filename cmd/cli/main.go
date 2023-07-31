@@ -167,8 +167,7 @@ func main() {
 
 	// download uninstall script
 	_logger.Info("🟨 Downloading uninstall script ...")
-	_, err = service.DownloadUninstallScript(ctx, sysRoot)
-	if err != nil {
+	if _, err = service.DownloadUninstallScript(ctx, sysRoot); err != nil {
 		_logger.Error("Downloading uninstall script: %s", err.Error())
 		os.Exit(1)
 	}

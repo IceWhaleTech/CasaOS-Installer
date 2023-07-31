@@ -66,14 +66,15 @@ func DownloadUninstallScript(ctx context.Context, sysRoot string) (string, error
 		} else {
 			fmt.Println("Old uninstall script deleted successfully")
 		}
-	} else if os.IsNotExist(err) {
-		fmt.Println("Old uninstall script does not exist")
-		// to download the new uninstall script
-		if _, err := internal.Download(ctx, CASA_UNINSTALL_PATH, CASA_UNINSTALL_URL); err != nil {
-			return CASA_UNINSTALL_PATH, err
-		}
-	} else {
-		fmt.Println(err)
+	}
+
+	// to download the new uninstall script
+	if err := internal.DownloadAs(ctx, CASA_UNINSTALL_PATH, CASA_UNINSTALL_URL); err != nil {
+		return CASA_UNINSTALL_PATH, err
+	}
+	// change the permission of the uninstall script
+	if err := os.Chmod(CASA_UNINSTALL_PATH, 0o755); err != nil {
+		return CASA_UNINSTALL_PATH, err
 	}
 
 	return "", nil
@@ -81,6 +82,10 @@ func DownloadUninstallScript(ctx context.Context, sysRoot string) (string, error
 
 // returns releaseFilePath if successful
 func DownloadRelease(ctx context.Context, release codegen.Release, force bool) (string, error) {
+
+	go PublishEventWrapper(ctx, common.EventTypeDownloadUpdateBegin, nil)
+	defer PublishEventWrapper(ctx, common.EventTypeDownloadUpdateEnd, nil)
+
 	// check and verify existing packages
 	if !force {
 		if packageFilePath, err := VerifyRelease(release); err != nil {
@@ -92,11 +97,17 @@ func DownloadRelease(ctx context.Context, release codegen.Release, force bool) (
 	}
 
 	if release.Mirrors == nil {
+		go PublishEventWrapper(ctx, common.EventTypeDownloadUpdateError, map[string]string{
+			common.PropertyTypeMessage.Name: "no mirror found",
+		})
 		return "", fmt.Errorf("no mirror found")
 	}
 
 	releaseDir, err := ReleaseDir(release)
 	if err != nil {
+		go PublishEventWrapper(ctx, common.EventTypeDownloadUpdateError, map[string]string{
+			common.PropertyTypeMessage.Name: err.Error(),
+		})
 		return "", err
 	}
 
@@ -109,12 +120,18 @@ func DownloadRelease(ctx context.Context, release codegen.Release, force bool) (
 			packageURL, err := internal.GetPackageURLByCurrentArch(release, mirror)
 			if err != nil {
 				logger.Info("error while getting package url - skipping", zap.Error(err), zap.Any("release", release))
+				go PublishEventWrapper(ctx, common.EventTypeDownloadUpdateError, map[string]string{
+					common.PropertyTypeMessage.Name: err.Error(),
+				})
 				continue
 			}
 
 			packageFilePath, err = internal.Download(ctx, releaseDir, packageURL)
 			if err != nil {
 				logger.Info("error while downloading and extracting package - skipping", zap.Error(err), zap.String("package_url", packageURL))
+				go PublishEventWrapper(ctx, common.EventTypeDownloadUpdateError, map[string]string{
+					common.PropertyTypeMessage.Name: err.Error(),
+				})
 				continue
 			}
 		}
@@ -124,6 +141,9 @@ func DownloadRelease(ctx context.Context, release codegen.Release, force bool) (
 			checksumsURL := internal.GetChecksumsURL(release, mirror)
 			if _, err := internal.Download(ctx, releaseDir, checksumsURL); err != nil {
 				logger.Info("error while downloading checksums - skipping", zap.Error(err), zap.String("checksums_url", checksumsURL))
+				go PublishEventWrapper(ctx, common.EventTypeDownloadUpdateError, map[string]string{
+					common.PropertyTypeMessage.Name: err.Error(),
+				})
 				continue
 			}
 		}
@@ -131,6 +151,9 @@ func DownloadRelease(ctx context.Context, release codegen.Release, force bool) (
 	}
 
 	if packageFilePath == "" {
+		go PublishEventWrapper(ctx, common.EventTypeDownloadUpdateError, map[string]string{
+			common.PropertyTypeMessage.Name: "package could not be found - there must be a bug",
+		})
 		return "", fmt.Errorf("package could not be found - there must be a bug")
 	}
 
@@ -203,12 +226,6 @@ func InstallRelease(ctx context.Context, release codegen.Release, sysrootPath st
 	if err := internal.InstallRelease(backgroundCtx, releaseDir, sysrootPath); err != nil {
 		return err
 	}
-
-	// // TODO: the check is execute twice
-	// // TODO: add uninstall to the release
-	// if !VerifyUninstallScript() {
-	// 	return fmt.Errorf("uninstall script is not installed")
-	// }
 
 	return nil
 }
