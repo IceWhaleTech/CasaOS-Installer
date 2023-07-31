@@ -38,6 +38,9 @@ func StartMigration(sysRoot string) error {
 		return err
 	}
 
+	currentRelease, err := GetReleaseFromLocal("")
+	targetRelease, err := GetReleaseFromLocal("")
+
 	if currentVersion.GreaterThan(targetVersion) || currentVersion.Equal(targetVersion) {
 		// no need to migrate
 		return nil
@@ -47,11 +50,32 @@ func StartMigration(sysRoot string) error {
 
 	// start migration
 	// 1. download migration tools
+	// the migration tools should be downloaded when install release
+	// So there is no need to download the migration tools again
+	DownloadAllMigrationTools(context.Background(), *targetRelease, sysRoot)
 	// for all modules of current release
 
 	// 2. run migration tools
+	migrationToolMap, err := MigrationToolsMap(*targetRelease)
+
+	for _, module := range currentRelease.Modules {
+		migrationPath, err := GetMigrationPath(module.Short, *targetRelease, migrationToolMap, sysRoot)
+
+		for _, migration := range migrationPath {
+			// the migration tool should be downloaded when install release
+			migrationPath, err := DownloadMigrationTool(context.Background(), *targetRelease, module.Short, migration, false)
+
+			err = ExecuteMigrationTool(module.Short, migrationPath, sysRoot)
+			// because MigrationTool require root permission, so it will return exit status 1
+		}
+	}
 
 	// post migration
+	return nil
+}
+
+func PostMigration(sysRoot string) error {
+	// TODO: post migration. e.g. move target-relase to relase yaml
 	return nil
 }
 

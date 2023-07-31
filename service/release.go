@@ -25,7 +25,7 @@ var (
 	ErrReleaseNotFound = fmt.Errorf("release not found")
 )
 
-func GetReleaseFromLocal(ctx context.Context, releasePath string, tag string) (*codegen.Release, error) {
+func GetReleaseFromLocal(releasePath string) (*codegen.Release, error) {
 	// open the yaml file
 	f, err := os.Open(releasePath)
 	if err != nil {
