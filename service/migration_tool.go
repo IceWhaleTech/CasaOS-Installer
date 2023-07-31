@@ -38,8 +38,14 @@ func StartMigration(sysRoot string) error {
 		return err
 	}
 
-	currentRelease, err := GetReleaseFromLocal("")
-	targetRelease, err := GetReleaseFromLocal("")
+	currentRelease, err := GetReleaseFromLocal("/etc/casaos/release.yaml")
+	if err != nil {
+		return err
+	}
+	targetRelease, err := GetReleaseFromLocal("/etc/casaos/release.yaml")
+	if err != nil {
+		return err
+	}
 
 	if currentVersion.GreaterThan(targetVersion) || currentVersion.Equal(targetVersion) {
 		// no need to migrate
@@ -57,16 +63,26 @@ func StartMigration(sysRoot string) error {
 
 	// 2. run migration tools
 	migrationToolMap, err := MigrationToolsMap(*targetRelease)
+	if err != nil {
+		return err
+	}
 
 	for _, module := range currentRelease.Modules {
-		migrationPath, err := GetMigrationPath(module.Short, *targetRelease, migrationToolMap, sysRoot)
+		migrationPath, err := GetMigrationPath(module, *targetRelease, migrationToolMap, sysRoot)
+		if err != nil {
+			return err
+		}
 
 		for _, migration := range migrationPath {
 			// the migration tool should be downloaded when install release
 			migrationPath, err := DownloadMigrationTool(context.Background(), *targetRelease, module.Short, migration, false)
-
+			if err != nil {
+				return err
+			}
 			err = ExecuteMigrationTool(module.Short, migrationPath, sysRoot)
-			// because MigrationTool require root permission, so it will return exit status 1
+			if err != nil {
+				return err
+			}
 		}
 	}
 
@@ -243,19 +259,19 @@ func MigrationToolsMap(release codegen.Release) (map[string][]MigrationTool, err
 	return migrationToolsMap, nil
 }
 
-func GetMigrationPath(module string, release codegen.Release, migrationToolMap map[string][]MigrationTool, sysRoot string) ([]MigrationTool, error) {
+func GetMigrationPath(module codegen.Module, release codegen.Release, migrationToolMap map[string][]MigrationTool, sysRoot string) ([]MigrationTool, error) {
 	sourceVersion, err := semver.NewVersion(NormalizeVersion(release.Version))
 	if err != nil {
 		return []MigrationTool{}, err
 	}
-	currentVersion, err := CurrentModuleVersion(module, sysRoot)
+	currentVersion, err := CurrentModuleVersion(module.Name, sysRoot)
 	if err != nil {
 		return []MigrationTool{}, err
 	}
 
 	PathArray := []MigrationTool{}
 
-	modulePath := migrationToolMap[module]
+	modulePath := migrationToolMap[module.Short]
 	for _, migration := range modulePath {
 		if migration.Version.LessThan(sourceVersion) && (migration.Version.GreaterThan(currentVersion) || migration.Version.Equal(currentVersion)) {
 			PathArray = append(PathArray, migration)
@@ -297,8 +313,37 @@ func ExecuteMigrationTool(module string, migrationFilePath string, sysRoot strin
 }
 
 // verify migration tools for a release are already cached
-func VerifyAllMigrationTools(release codegen.Release) bool {
-	// panic("implement me") // TODO
+func VerifyAllMigrationTools(targetRelease codegen.Release, sysRoot string) bool {
+	// get all migration tool
+	currentRelease, err := GetReleaseFromLocal("/etc/casaos/release.yaml")
+	if err != nil {
+		fmt.Println("获取release.yaml失败", currentRelease)
+		return false
+	}
+
+	migrationToolMap, err := MigrationToolsMap(targetRelease)
+	if err != nil {
+		fmt.Println("获取migration map失败")
+
+		return false
+	}
+
+	for _, module := range currentRelease.Modules {
+		migrationPath, err := GetMigrationPath(module, targetRelease, migrationToolMap, sysRoot)
+		if err != nil {
+			fmt.Println("获取migration path失败", err)
+			return false
+		}
+
+		for _, migration := range migrationPath {
+			// the migration tool should be downloaded when install release
+			_, err := VerifyMigrationTool(module.Short, NormalizeMigrationToolURL(filepath.Base(migration.URL)))
+			if err != nil {
+				return false
+			}
+		}
+	}
+
 	return true
 }
 

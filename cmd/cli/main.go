@@ -129,7 +129,7 @@ func main() {
 		_logger.Info("🟩 Migration tools downloaded.")
 
 		_logger.Info("🟨 Verifying migration tools...")
-		if !service.VerifyAllMigrationTools(*release) {
+		if !service.VerifyAllMigrationTools(*release, sysRoot) {
 			_logger.Error("🟥 Migration tools verification failed")
 			os.Exit(1)
 		}

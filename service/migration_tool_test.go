@@ -163,12 +163,18 @@ func TestMigrationToolsMap(t *testing.T) {
 
 	module := "casaos-local-storage"
 	fixtures.SetCasaOSVersion(tmpSysRoot, module, "v0.4.3")
-	migrationPath, err := service.GetMigrationPath(module, *release, migrationToolMap, tmpSysRoot)
+	migrationPath, err := service.GetMigrationPath(codegen.Module{
+		Short: module,
+		Name:  module,
+	}, *release, migrationToolMap, tmpSysRoot)
 	assert.NoError(t, err)
 	assert.Equal(t, len(migrationPath), 0)
 
 	fixtures.SetCasaOSVersion(tmpSysRoot, module, "v0.3.5")
-	migrationPath, err = service.GetMigrationPath(module, *release, migrationToolMap, tmpSysRoot)
+	migrationPath, err = service.GetMigrationPath(codegen.Module{
+		Short: module,
+		Name:  module,
+	}, *release, migrationToolMap, tmpSysRoot)
 	assert.NoError(t, err)
 	assert.Equal(t, len(migrationPath), 1)
 }
@@ -213,7 +219,10 @@ func TestMigrationPath(t *testing.T) {
 
 	fixtures.SetCasaOSVersion(tmpSysRoot, module, "v0.3.0")
 
-	migrationPath, err := service.GetMigrationPath(module, *release, migrationToolMap, tmpSysRoot)
+	migrationPath, err := service.GetMigrationPath(codegen.Module{
+		Short: module,
+		Name:  module,
+	}, *release, migrationToolMap, tmpSysRoot)
 	assert.NoError(t, err)
 	assert.Equal(t, len(migrationPath), 2)
 }
@@ -255,7 +264,10 @@ func TestDownloadAndInstallMigrateion(t *testing.T) {
 
 	module := "casaos-local-storage"
 	fixtures.SetCasaOSVersion(tmpSysRoot, module, "v0.3.5")
-	migrationPath, err := service.GetMigrationPath(module, *release, migrationToolMap, tmpSysRoot)
+	migrationPath, err := service.GetMigrationPath(codegen.Module{
+		Short: module,
+		Name:  module,
+	}, *release, migrationToolMap, tmpSysRoot)
 	assert.NoError(t, err)
 	assert.Equal(t, len(migrationPath), 1)
 

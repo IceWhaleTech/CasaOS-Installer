@@ -173,7 +173,7 @@ func cronjob(ctx context.Context) {
 
 	// cache migration tools if not already cached
 	{
-		if service.VerifyAllMigrationTools(*release) {
+		if service.VerifyAllMigrationTools(*release, sysRoot) {
 			logger.Info("all migration tools exist", zap.String("version", release.Version))
 			return
 		}
