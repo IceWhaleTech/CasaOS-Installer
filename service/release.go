@@ -230,6 +230,7 @@ func InstallRelease(ctx context.Context, release codegen.Release, sysrootPath st
 
 	return nil
 }
+
 func InstallDependencies(ctx context.Context, release codegen.Release, sysrootPath string) error {
 	internal.InstallDependencies()
 	return nil
