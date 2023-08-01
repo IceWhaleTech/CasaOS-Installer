@@ -26,7 +26,7 @@ type MigrationTool struct {
 
 var (
 	currentReleaseLocalPath = "/etc/casaos/release.yaml"
-	targetReleaseLocalPath  = "/etc/casaos/release.yaml"
+	targetReleaseLocalPath  = "/etc/casaos/target-release.yaml"
 )
 
 func StartMigration(sysRoot string) error {

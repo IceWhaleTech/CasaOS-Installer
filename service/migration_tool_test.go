@@ -37,7 +37,7 @@ func TestDownloadAllMigrationTools(t *testing.T) {
 
 	tmpDir, err := os.MkdirTemp("", "casaos-download-all-migration-test-*")
 	assert.NoError(t, err)
-	// defer os.RemoveAll(tmpDir)
+	defer os.RemoveAll(tmpDir)
 
 	config.ServerInfo.CachePath = tmpDir
 

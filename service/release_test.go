@@ -42,7 +42,7 @@ func TestInstallRelease(t *testing.T) {
 
 	tmpDir, err := os.MkdirTemp("", "casaos-installer-test-*")
 	assert.NoError(t, err)
-	// defer os.RemoveAll(tmpDir)
+	defer os.RemoveAll(tmpDir)
 
 	config.ServerInfo.CachePath = filepath.Join(tmpDir, "cache")
 
@@ -63,6 +63,30 @@ func TestInstallRelease(t *testing.T) {
 	assert.NoError(t, err)
 
 	assert.FileExists(t, filepath.Join(tmpSysRoot, "usr", "bin", "casaos"))
+}
+
+func TestPostReleaseInsall(t *testing.T) {
+	logger.LogInitConsoleOnly()
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	tmpDir, err := os.MkdirTemp("", "casaos-installer-test-*")
+	// defer os.RemoveAll(tmpDir)
+
+	assert.NoError(t, err)
+	tmpSysRoot := filepath.Join(tmpDir, "sysroot")
+	os.MkdirAll(tmpSysRoot, 0755)
+	os.MkdirAll(filepath.Join(tmpSysRoot, "etc", "casaos"), 0755)
+
+	release, err := service.GetRelease(ctx, "unit-test-release-0.4.4-1")
+	assert.NoError(t, err)
+
+	err = service.PostReleaseInstall(ctx, *release, tmpSysRoot)
+	assert.NoError(t, err)
+
+	// to check the target file is exist
+	assert.FileExists(t, filepath.Join(tmpSysRoot, "etc", "casaos", "target-release.yaml"))
 }
 
 func TestIsUpgradable(t *testing.T) {

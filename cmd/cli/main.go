@@ -118,6 +118,15 @@ func main() {
 
 	_logger.Info("🟩 Release packages extracted.")
 
+	// post install release
+	_logger.Info("🟨 Handle Post Release Install ...")
+	if err := service.PostReleaseInstall(ctx, *release, sysRoot); err != nil {
+		_logger.Error("🟥 Failed to Handle Post Release Install: %s", err.Error())
+		os.Exit(1)
+	}
+
+	_logger.Info("🟩 Handle Post Release Install completed")
+
 	_logger.Info("🟨 Downloading migration tools...")
 	downloaded, err := service.DownloadAllMigrationTools(ctx, *release, sysRoot)
 	if err != nil {
