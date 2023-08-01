@@ -230,6 +230,35 @@ func InstallRelease(ctx context.Context, release codegen.Release, sysrootPath st
 	return nil
 }
 
+func PostReleaseInstall(ctx context.Context, release codegen.Release, sysrootPath string) error {
+	// post release install script
+	// work list
+	// 1. overwrite target release
+	targetReleaseLocalPath = filepath.Join(sysrootPath, "etc", "casaos", targetReleaseLocalPath)
+	targetReleaseContent, err := yaml.Marshal(release)
+	if err != nil {
+		return err
+	}
+	if err := os.WriteFile(targetReleaseLocalPath, targetReleaseContent, 0o666); err != nil {
+		return err
+	}
+
+	// 2. if current release is not exist, create it( using current release version )
+	// if current release is exist, It mean the casaos is old casaos that install by shell
+	// So It should update to casaos v0.4.4 and we didn't need to migrate it.
+	currentReleaseLocalPath = filepath.Join(sysrootPath, "etc", "casaos", currentReleaseLocalPath)
+	if _, err := os.Stat(currentReleaseLocalPath); os.IsNotExist(err) {
+		currentReleaseContent, err := yaml.Marshal(release)
+		if err != nil {
+			return err
+		}
+		if err := os.WriteFile(currentReleaseLocalPath, currentReleaseContent, 0o666); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func VerifyRelease(release codegen.Release) (string, error) {
 	releaseDir, err := ReleaseDir(release)
 	if err != nil {

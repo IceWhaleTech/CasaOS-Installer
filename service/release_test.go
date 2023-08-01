@@ -87,14 +87,16 @@ func TestIsUpgradable(t *testing.T) {
 	release, err := service.GetRelease(ctx, "unit-test-release-0.4.4-1")
 	assert.NoError(t, err)
 
-	fixtures.SetCasaOSVersion(tmpSysRoot, "casaos", "v0.4.5")
+	fixtures.SetLocalRelease(tmpSysRoot, "v0.4.5")
+	// fixtures.SetCasaOSVersion(tmpSysRoot, "casaos", "v0.4.5")
 
 	result := service.ShouldUpgrade(*release, tmpSysRoot)
 	assert.Equal(t, result, false)
 
 	// mock /usr/bin/casaos
 	// casaosVersion := "v0.4.3"
-	fixtures.SetCasaOSVersion(tmpSysRoot, "casaos", "v0.4.3")
+	fixtures.SetLocalRelease(tmpSysRoot, "v0.4.3")
+	// fixtures.SetCasaOSVersion(tmpSysRoot, "casaos", "v0.4.3")
 
 	result = service.ShouldUpgrade(*release, tmpSysRoot)
 	assert.Equal(t, result, true)
