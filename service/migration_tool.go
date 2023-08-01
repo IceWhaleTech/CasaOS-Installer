@@ -270,6 +270,7 @@ func GetMigrationPath(module codegen.Module, release codegen.Release, migrationT
 		return []MigrationTool{}, err
 	}
 	currentVersion, err := CurrentReleaseVersion(sysRoot)
+	fmt.Println("currentVersion:::::", currentVersion)
 	if err != nil {
 		return []MigrationTool{}, err
 	}

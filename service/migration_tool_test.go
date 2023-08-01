@@ -28,6 +28,8 @@ v0.3.9 ${DOWNLOAD_DOMAIN}IceWhaleTech/CasaOS-AppManagement/releases/download/v0.
 )
 
 // NOTE! the test will cost very long time(1 min)(decided by network speed). So we should timeout it longer than another.
+//
+//	/usr/local/go/bin/go test -timeout 290s -run ^TestDownloadAllMigrationTools$ github.com/IceWhaleTech/CasaOS-Installer/service
 func TestDownloadAllMigrationTools(t *testing.T) {
 	if _, exists := os.LookupEnv("CI"); exists {
 		t.Skip("skipping test in CI environment")
@@ -47,8 +49,9 @@ func TestDownloadAllMigrationTools(t *testing.T) {
 	tmpSysRoot := filepath.Join(tmpDir, "sysroot")
 	os.Mkdir(tmpSysRoot, 0755)
 
-	fixtures.SetCasaOSVersion(tmpSysRoot, "casaos", "v0.3.5")
-	fixtures.SetCasaOSVersion(tmpSysRoot, "casaos-app-management", "v0.3.5")
+	fixtures.SetLocalRelease(tmpSysRoot, "v0.3.5")
+	// fixtures.SetCasaOSVersion(tmpSysRoot, "casaos", "v0.3.5")
+	// fixtures.SetCasaOSVersion(tmpSysRoot, "casaos-app-management", "v0.3.5")
 
 	// to construct a fake migration map
 	releaseDir, err := service.ReleaseDir(*targetVersionRelease)
@@ -162,7 +165,8 @@ func TestMigrationToolsMap(t *testing.T) {
 	fmt.Println(migrationToolMap)
 
 	module := "casaos-local-storage"
-	fixtures.SetCasaOSVersion(tmpSysRoot, module, "v0.4.3")
+	fixtures.SetLocalRelease(tmpSysRoot, "v0.4.3")
+	// fixtures.SetCasaOSVersion(tmpSysRoot, module, "v0.4.3")
 	migrationPath, err := service.GetMigrationPath(codegen.Module{
 		Short: module,
 		Name:  module,
@@ -170,7 +174,8 @@ func TestMigrationToolsMap(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, len(migrationPath), 0)
 
-	fixtures.SetCasaOSVersion(tmpSysRoot, module, "v0.3.5")
+	fixtures.SetLocalRelease(tmpSysRoot, "v0.3.5")
+	// fixtures.SetCasaOSVersion(tmpSysRoot, module, "v0.3.5")
 	migrationPath, err = service.GetMigrationPath(codegen.Module{
 		Short: module,
 		Name:  module,
@@ -187,7 +192,7 @@ func TestMigrationPath(t *testing.T) {
 
 	tmpDir, err := os.MkdirTemp("", "casaos-migration-path-test-*")
 	assert.NoError(t, err)
-	defer os.RemoveAll(tmpDir)
+	// defer os.RemoveAll(tmpDir)
 
 	tmpSysRoot := filepath.Join(tmpDir, "sysroot")
 
@@ -217,7 +222,9 @@ func TestMigrationPath(t *testing.T) {
 		},
 	}
 
-	fixtures.SetCasaOSVersion(tmpSysRoot, module, "v0.3.0")
+	fixtures.SetLocalRelease(tmpSysRoot, "v0.3.0")
+	// fixtures.SetCasaOSVersion(tmpSysRoot, "casaos", "v0.3.0")
+	// fixtures.SetCasaOSVersion(tmpSysRoot, module, "v0.3.0")
 
 	migrationPath, err := service.GetMigrationPath(codegen.Module{
 		Short: module,
@@ -263,6 +270,7 @@ func TestDownloadAndInstallMigrateion(t *testing.T) {
 	assert.NoError(t, err)
 
 	module := "casaos-local-storage"
+	fixtures.SetLocalRelease(tmpSysRoot, "v0.3.5")
 	fixtures.SetCasaOSVersion(tmpSysRoot, module, "v0.3.5")
 	migrationPath, err := service.GetMigrationPath(codegen.Module{
 		Short: module,
