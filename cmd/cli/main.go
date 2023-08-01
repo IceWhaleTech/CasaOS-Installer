@@ -86,6 +86,16 @@ func main() {
 
 	_logger.Info("🟩 Release found: %s", release.Version)
 
+	// install dep
+	_logger.Info("🟨 Install dependencies...")
+	err = service.InstallDependencies(ctx, *release, sysRoot)
+	if err != nil {
+		_logger.Error("🟥 Failed to install dependencies: %s", err.Error())
+		os.Exit(1)
+	}
+
+	_logger.Info("🟩 Dependencies Installed.")
+
 	// download release
 	_logger.Info("🟨 Downloading release %s...", release.Version)
 	releaseFilePath, err := service.DownloadRelease(ctx, *release, false)
