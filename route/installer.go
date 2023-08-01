@@ -99,7 +99,7 @@ func (a *api) InstallRelease(ctx echo.Context, params codegen.InstallReleasePara
 			return
 		}
 
-		if err := service.SetStartUpAndLaunchModule(*release); err != nil {
+		if err := service.LaunchModule(*release); err != nil {
 			logger.Error("error while enable services: %s", zap.Error(err))
 			return
 		}
