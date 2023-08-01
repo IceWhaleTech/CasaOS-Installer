@@ -7,6 +7,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/IceWhaleTech/CasaOS-Common/utils/file"
 	"github.com/IceWhaleTech/CasaOS-Common/utils/logger"
@@ -238,6 +239,10 @@ func PostReleaseInstall(ctx context.Context, release codegen.Release, sysrootPat
 	// post release install script
 	// work list
 	// 1. overwrite target release
+
+	// if casaos folder is exist, create casaos folder
+	os.MkdirAll(filepath.Join(sysrootPath, "etc", "casaos"), 0o755)
+
 	targetReleaseLocalPath = filepath.Join(sysrootPath, targetReleaseLocalPath)
 	targetReleaseContent, err := yaml.Marshal(release)
 	if err != nil {
@@ -307,6 +312,7 @@ func ExecuteModuleInstallScript(releaseFilePath string, release codegen.Release)
 			return nil
 		}
 
+		fmt.Println("执行: ", path)
 		cmd := exec.Command(path)
 		err = cmd.Run()
 		return err
@@ -332,9 +338,12 @@ func enableAndStartSystemdService(serviceName string) error {
 }
 func SetStartUpAndLaunchModule(release codegen.Release) error {
 	for _, module := range release.Modules {
+		fmt.Println("启动: ", module.Name)
 		if err := enableAndStartSystemdService(module.Name); err != nil {
 			return err
 		}
+		// to sleep 1s
+		time.Sleep(1 * time.Second)
 	}
 	return nil
 }
