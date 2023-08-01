@@ -24,10 +24,15 @@ type MigrationTool struct {
 	URL     string
 }
 
+var (
+	currentReleaseLocalPath = "/etc/casaos/release.yaml"
+	targetReleaseLocalPath  = "/etc/casaos/release.yaml"
+)
+
 func StartMigration(sysRoot string) error {
 	// check if migration is needed
 	// current version
-	currentVersion, err := CurrentModuleVersion("casaos", sysRoot)
+	currentVersion, err := CurrentReleaseVersion(sysRoot)
 	if err != nil {
 		return err
 	}
@@ -38,11 +43,11 @@ func StartMigration(sysRoot string) error {
 		return err
 	}
 
-	currentRelease, err := GetReleaseFromLocal("/etc/casaos/release.yaml")
+	currentRelease, err := internal.GetReleaseFromLocal(currentReleaseLocalPath)
 	if err != nil {
 		return err
 	}
-	targetRelease, err := GetReleaseFromLocal("/etc/casaos/release.yaml")
+	targetRelease, err := internal.GetReleaseFromLocal(targetReleaseLocalPath)
 	if err != nil {
 		return err
 	}
@@ -109,7 +114,7 @@ func DownloadAllMigrationTools(ctx context.Context, release codegen.Release, sys
 	downloaded := false
 
 	for module, migrationTools := range migrationToolsMap {
-		currentVersion, err := CurrentModuleVersion(module, sysrootPath)
+		currentVersion, err := CurrentReleaseVersion(sysrootPath)
 		if err != nil {
 			logger.Info("failed to get the current version of module - skipping", zap.Error(err), zap.String("module", module))
 			continue
@@ -264,7 +269,7 @@ func GetMigrationPath(module codegen.Module, release codegen.Release, migrationT
 	if err != nil {
 		return []MigrationTool{}, err
 	}
-	currentVersion, err := CurrentModuleVersion(module.Name, sysRoot)
+	currentVersion, err := CurrentReleaseVersion(sysRoot)
 	if err != nil {
 		return []MigrationTool{}, err
 	}
@@ -315,7 +320,7 @@ func ExecuteMigrationTool(module string, migrationFilePath string, sysRoot strin
 // verify migration tools for a release are already cached
 func VerifyAllMigrationTools(targetRelease codegen.Release, sysRoot string) bool {
 	// get all migration tool
-	currentRelease, err := GetReleaseFromLocal("/etc/casaos/release.yaml")
+	currentRelease, err := internal.GetReleaseFromLocal(targetReleaseLocalPath)
 	if err != nil {
 		fmt.Println("获取release.yaml失败", currentRelease)
 		return false

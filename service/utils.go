@@ -11,6 +11,7 @@ import (
 	"github.com/IceWhaleTech/CasaOS-Common/utils/logger"
 	"github.com/IceWhaleTech/CasaOS-Installer/codegen"
 	"github.com/IceWhaleTech/CasaOS-Installer/common"
+	"github.com/IceWhaleTech/CasaOS-Installer/internal"
 	"github.com/IceWhaleTech/CasaOS-Installer/internal/config"
 	"github.com/Masterminds/semver/v3"
 	"go.uber.org/zap"
@@ -50,8 +51,13 @@ func NormalizeVersion(version string) string {
 }
 
 func CurrentReleaseVersion(sysrootPath string) (*semver.Version, error) {
-	// TODO: look for the release info first before looking for the binary version (legacy)
-	return CurrentModuleVersion("casaos", sysrootPath)
+	// get version from local release file, if not exist, get version from local casaos
+	currentRelease, err := internal.GetReleaseFromLocal(currentReleaseLocalPath)
+	if err != nil {
+		return CurrentModuleVersion("casaos", sysrootPath)
+	} else {
+		return semver.NewVersion(currentRelease.Version)
+	}
 }
 
 func CurrentModuleVersion(module string, sysrootPath string) (*semver.Version, error) {
