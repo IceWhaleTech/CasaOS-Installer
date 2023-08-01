@@ -109,3 +109,21 @@ func NewDecompressor(filepath string) getter.Decompressor {
 	}
 	return getter.Decompressors[archiveV]
 }
+
+func InstallDependencies() error {
+	CASA_DEPANDS_PACKAGE := []string{"curl", "smartmontools", "parted", "ntfs-3g", "net-tools", "udevil", "samba", "cifs-utils", "rclone"}
+	Output, err := exec.Command("apt", "update").Output()
+	fmt.Println(string(Output))
+	if err != nil {
+		return err
+	}
+
+	for _, depName := range CASA_DEPANDS_PACKAGE {
+		Output, err := exec.Command("apt", "install", "-y", depName).Output()
+		fmt.Println(string(Output))
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}

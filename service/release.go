@@ -7,6 +7,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/IceWhaleTech/CasaOS-Common/utils/file"
 	"github.com/IceWhaleTech/CasaOS-Common/utils/logger"
@@ -230,6 +231,44 @@ func InstallRelease(ctx context.Context, release codegen.Release, sysrootPath st
 	return nil
 }
 
+func InstallDependencies(ctx context.Context, release codegen.Release, sysrootPath string) error {
+	internal.InstallDependencies()
+	return nil
+}
+
+func PostReleaseInstall(ctx context.Context, release codegen.Release, sysrootPath string) error {
+	// post release install script
+	// work list
+	// 1. overwrite target release
+
+	// if casaos folder is exist, create casaos folder
+	os.MkdirAll(filepath.Join(sysrootPath, "etc", "casaos"), 0o755)
+
+	targetReleaseLocalPath = filepath.Join(sysrootPath, targetReleaseLocalPath)
+	targetReleaseContent, err := yaml.Marshal(release)
+	if err != nil {
+		return err
+	}
+	if err := os.WriteFile(targetReleaseLocalPath, targetReleaseContent, 0o666); err != nil {
+		return err
+	}
+
+	// 2. if current release is not exist, create it( using current release version )
+	// if current release is exist, It mean the casaos is old casaos that install by shell
+	// So It should update to casaos v0.4.4 and we didn't need to migrate it.
+	currentReleaseLocalPath = filepath.Join(sysrootPath, currentReleaseLocalPath)
+	if _, err := os.Stat(currentReleaseLocalPath); os.IsNotExist(err) {
+		currentReleaseContent, err := yaml.Marshal(release)
+		if err != nil {
+			return err
+		}
+		if err := os.WriteFile(currentReleaseLocalPath, currentReleaseContent, 0o666); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func VerifyRelease(release codegen.Release) (string, error) {
 	releaseDir, err := ReleaseDir(release)
 	if err != nil {
@@ -274,6 +313,7 @@ func ExecuteModuleInstallScript(releaseFilePath string, release codegen.Release)
 			return nil
 		}
 
+		fmt.Println("执行: ", path)
 		cmd := exec.Command(path)
 		err = cmd.Run()
 		return err
@@ -299,9 +339,12 @@ func enableAndStartSystemdService(serviceName string) error {
 }
 func SetStartUpAndLaunchModule(release codegen.Release) error {
 	for _, module := range release.Modules {
+		fmt.Println("启动: ", module.Name)
 		if err := enableAndStartSystemdService(module.Name); err != nil {
 			return err
 		}
+		// to sleep 1s
+		time.Sleep(1 * time.Second)
 	}
 	return nil
 }

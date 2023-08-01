@@ -86,6 +86,16 @@ func main() {
 
 	_logger.Info("🟩 Release found: %s", release.Version)
 
+	// install dep
+	_logger.Info("🟨 Install dependencies...")
+	err = service.InstallDependencies(ctx, *release, sysRoot)
+	if err != nil {
+		_logger.Error("🟥 Failed to install dependencies: %s", err.Error())
+		os.Exit(1)
+	}
+
+	_logger.Info("🟩 Dependencies Installed.")
+
 	// download release
 	_logger.Info("🟨 Downloading release %s...", release.Version)
 	releaseFilePath, err := service.DownloadRelease(ctx, *release, false)
@@ -118,6 +128,15 @@ func main() {
 
 	_logger.Info("🟩 Release packages extracted.")
 
+	// post install release
+	_logger.Info("🟨 Handle Post Release Install ...")
+	if err := service.PostReleaseInstall(ctx, *release, sysRoot); err != nil {
+		_logger.Error("🟥 Failed to Handle Post Release Install: %s", err.Error())
+		os.Exit(1)
+	}
+
+	_logger.Info("🟩 Handle Post Release Install completed")
+
 	_logger.Info("🟨 Downloading migration tools...")
 	downloaded, err := service.DownloadAllMigrationTools(ctx, *release, sysRoot)
 	if err != nil {
@@ -129,7 +148,7 @@ func main() {
 		_logger.Info("🟩 Migration tools downloaded.")
 
 		_logger.Info("🟨 Verifying migration tools...")
-		if !service.VerifyAllMigrationTools(*release) {
+		if !service.VerifyAllMigrationTools(*release, sysRoot) {
 			_logger.Error("🟥 Migration tools verification failed")
 			os.Exit(1)
 		}

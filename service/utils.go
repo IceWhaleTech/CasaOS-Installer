@@ -11,6 +11,7 @@ import (
 	"github.com/IceWhaleTech/CasaOS-Common/utils/logger"
 	"github.com/IceWhaleTech/CasaOS-Installer/codegen"
 	"github.com/IceWhaleTech/CasaOS-Installer/common"
+	"github.com/IceWhaleTech/CasaOS-Installer/internal"
 	"github.com/IceWhaleTech/CasaOS-Installer/internal/config"
 	"github.com/Masterminds/semver/v3"
 	"go.uber.org/zap"
@@ -50,8 +51,13 @@ func NormalizeVersion(version string) string {
 }
 
 func CurrentReleaseVersion(sysrootPath string) (*semver.Version, error) {
-	// TODO: look for the release info first before looking for the binary version (legacy)
-	return CurrentModuleVersion("casaos", sysrootPath)
+	// get version from local release file, if not exist, get version from local casaos
+	currentRelease, err := internal.GetReleaseFromLocal(filepath.Join(sysrootPath, currentReleaseLocalPath))
+	if err != nil {
+		return CurrentModuleVersion("casaos", sysrootPath)
+	} else {
+		return semver.NewVersion(currentRelease.Version)
+	}
 }
 
 func CurrentModuleVersion(module string, sysrootPath string) (*semver.Version, error) {
@@ -66,8 +72,8 @@ func CurrentModuleVersion(module string, sysrootPath string) (*semver.Version, e
 		sysrootPath + "/usr/bin/" + module,
 		module,
 	} {
-
 		cmd := exec.Command(executablePath, "-v")
+		fmt.Println("cmd", executablePath)
 		if cmd == nil {
 			continue
 		}
@@ -96,4 +102,27 @@ func CurrentModuleVersion(module string, sysrootPath string) (*semver.Version, e
 	}
 
 	return nil, fmt.Errorf("failed to get current version of %s", module)
+}
+
+func RemoveDuplication(arr []MigrationTool) []MigrationTool {
+	length := len(arr)
+	if length == 0 {
+		return arr
+	}
+
+	j := 0
+	for i := 1; i < length; i++ {
+		if arr[i].URL != arr[j].URL {
+			j++
+			if j < i {
+				swap(arr, i, j)
+			}
+		}
+	}
+
+	return arr[:j+1]
+}
+
+func swap(arr []MigrationTool, a, b int) {
+	arr[a], arr[b] = arr[b], arr[a]
 }

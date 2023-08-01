@@ -23,6 +23,23 @@ func init() {
 		SetRetryMaxWaitTime(20 * time.Second)
 }
 
+func GetReleaseFromLocal(releasePath string) (*codegen.Release, error) {
+	// open the yaml file
+	f, err := os.Open(releasePath)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+
+	// decode the yaml file
+	var release codegen.Release
+	decoder := yaml.NewDecoder(f)
+	if err := decoder.Decode(&release); err != nil {
+		return nil, err
+	}
+	return &release, nil
+}
+
 func GetReleaseFrom(ctx context.Context, releaseURL string) (*codegen.Release, error) {
 	// download content from releaseURL
 	response, err := client.R().SetContext(ctx).Get(releaseURL)
