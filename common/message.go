@@ -43,9 +43,12 @@ var (
 		PropertyTypeList: []message_bus.PropertyType{},
 	}
 	EventTypeCheckUpdateError = message_bus.EventType{
-		SourceID:         InstallerServiceName,
-		Name:             "installer:check-update-error",
-		PropertyTypeList: []message_bus.PropertyType{},
+		SourceID: InstallerServiceName,
+		Name:     "installer:check-update-error",
+		PropertyTypeList: []message_bus.PropertyType{
+			PropertyTypeAppName,
+			PropertyTypeMessage,
+		},
 	}
 
 	EventTypeDownloadUpdateBegin = message_bus.EventType{
@@ -78,8 +81,11 @@ var (
 		PropertyTypeList: []message_bus.PropertyType{},
 	}
 	EventTypeInstallUpdateError = message_bus.EventType{
-		SourceID:         InstallerServiceName,
-		Name:             "installer:install-update-error",
-		PropertyTypeList: []message_bus.PropertyType{},
+		SourceID: InstallerServiceName,
+		Name:     "installer:install-update-error",
+		PropertyTypeList: []message_bus.PropertyType{
+			PropertyTypeAppName,
+			PropertyTypeMessage,
+		},
 	}
 )
