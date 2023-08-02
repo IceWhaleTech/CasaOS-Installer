@@ -113,20 +113,12 @@ func main() {
 	}
 	_logger.Info("🟩 Release verified.")
 
-	// extract release packages
-	_logger.Info("🟨 Extracting release packages...")
-	if err := service.ExtractReleasePackages(releaseFilePath, *release); err != nil {
-		_logger.Error("🟥 Failed to extract release packages: %s", err.Error())
+	_logger.Info("🟨 Installing release...")
+	if err := service.InstallCasaOSPackages(*release, releaseFilePath, sysRoot); err != nil {
+		_logger.Error("🟥 Failed to install release: %s", err.Error())
 		os.Exit(1)
 	}
-	// extract modules packages
-	_logger.Info("🟨 Extracting modules packages...")
-	if err := service.ExtractReleasePackages(releaseFilePath+"/linux*", *release); err != nil {
-		_logger.Error("🟥 Failed to extract release packages: %s", err.Error())
-		os.Exit(1)
-	}
-
-	_logger.Info("🟩 Release packages extracted.")
+	_logger.Info("🟩 Release installed.")
 
 	// post install release
 	_logger.Info("🟨 Handle Post Release Install ...")
@@ -161,14 +153,6 @@ func main() {
 		_logger.Info("🟩 Download complete.")
 		os.Exit(0)
 	}
-
-	_logger.Info("🟨 Installing release...")
-	if err := service.InstallRelease(ctx, *release, sysRoot); err != nil {
-		_logger.Error("🟥 Failed to install release: %s", err.Error())
-		os.Exit(1)
-	}
-
-	_logger.Info("🟩 Release installed.")
 
 	_logger.Info("🟨 Installing modules...")
 	if err := service.ExecuteModuleInstallScript(releaseFilePath, *release); err != nil {
