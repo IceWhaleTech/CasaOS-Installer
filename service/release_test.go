@@ -59,7 +59,7 @@ func TestInstallRelease(t *testing.T) {
 
 	tmpSysRoot := filepath.Join(tmpDir, "sysroot")
 
-	err = service.InstallRelease(ctx, *release, tmpSysRoot)
+	err = service.InstallRelease(*release, tmpSysRoot)
 	assert.NoError(t, err)
 
 	assert.FileExists(t, filepath.Join(tmpSysRoot, "usr", "bin", "casaos"))

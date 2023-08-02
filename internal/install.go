@@ -90,7 +90,7 @@ func BulkExtract(dir string) error {
 	})
 }
 
-func InstallRelease(ctx context.Context, releaseDir string, sysrootPath string) error {
+func InstallRelease(releaseDir string, sysrootPath string) error {
 	srcSysroot := filepath.Join(releaseDir, "build", "sysroot") + "/"
 	if _, err := os.Stat(srcSysroot); err != nil {
 		return err

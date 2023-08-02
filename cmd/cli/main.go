@@ -163,7 +163,7 @@ func main() {
 	}
 
 	_logger.Info("🟨 Installing release...")
-	if err := service.InstallRelease(ctx, *release, sysRoot); err != nil {
+	if err := service.InstallRelease(*release, sysRoot); err != nil {
 		_logger.Error("🟥 Failed to install release: %s", err.Error())
 		os.Exit(1)
 	}

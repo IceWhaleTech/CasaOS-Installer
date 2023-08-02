@@ -113,7 +113,7 @@ func (a *api) InstallRelease(ctx echo.Context, params codegen.InstallReleasePara
 			return
 		}
 
-		if err := service.InstallRelease(backgroundCtx, *release, sysRoot); err != nil {
+		if err := service.InstallRelease(*release, sysRoot); err != nil {
 			go service.PublishEventWrapper(context.Background(), common.EventTypeInstallUpdateError, map[string]string{
 				common.PropertyTypeMessage.Name: err.Error(),
 			})

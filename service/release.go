@@ -183,6 +183,14 @@ func ExtractReleasePackages(packageFilepath string, release codegen.Release) err
 	return internal.BulkExtract(releaseDir)
 }
 
+func InstallCasaOSPackages(sysRoot string) error {
+	return nil
+}
+
+func InstallRAUC(sysRoot string) error {
+	return nil
+}
+
 func ShouldUpgrade(release codegen.Release, sysrootPath string) bool {
 	if release.Version == "" {
 		return false
@@ -217,14 +225,13 @@ func IsUpgradable(release codegen.Release, sysrootPath string) bool {
 	return err == nil
 }
 
-func InstallRelease(ctx context.Context, release codegen.Release, sysrootPath string) error {
+func InstallRelease(release codegen.Release, sysrootPath string) error {
 	releaseDir, err := ReleaseDir(release)
 	if err != nil {
 		return err
 	}
 
-	backgroundCtx := context.Background()
-	if err := internal.InstallRelease(backgroundCtx, releaseDir, sysrootPath); err != nil {
+	if err := internal.InstallRelease(releaseDir, sysrootPath); err != nil {
 		return err
 	}
 

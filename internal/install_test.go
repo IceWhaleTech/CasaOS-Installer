@@ -102,10 +102,7 @@ func TestInstallRelease(t *testing.T) {
 	assert.NoError(t, err)
 	defer os.RemoveAll(sysrootPath)
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	err = internal.InstallRelease(ctx, releaseDir, sysrootPath)
+	err = internal.InstallRelease(releaseDir, sysrootPath)
 	assert.ErrorIs(t, err, fs.ErrNotExist)
 
 	sourceSysrootPath := filepath.Join(releaseDir, "build", "sysroot")
@@ -125,7 +122,7 @@ func TestInstallRelease(t *testing.T) {
 		assert.NoError(t, err)
 	}
 
-	err = internal.InstallRelease(ctx, releaseDir, sysrootPath)
+	err = internal.InstallRelease(releaseDir, sysrootPath)
 	assert.NoError(t, err)
 
 	for _, expectedFile := range expectedFiles {
