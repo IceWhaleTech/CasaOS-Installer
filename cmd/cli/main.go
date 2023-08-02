@@ -162,7 +162,7 @@ func main() {
 	_logger.Info("🟩 Modules installed.")
 
 	_logger.Info("🟨 Enable services...")
-	if err := service.SetStartUpAndLaunchModule(*release); err != nil {
+	if err := service.LaunchModule(*release); err != nil {
 		_logger.Error("🟥 Failed to enable services: %s", err.Error())
 		os.Exit(1)
 	}
