@@ -14,6 +14,7 @@ import (
 
 	"github.com/IceWhaleTech/CasaOS-Common/utils/file"
 	"github.com/IceWhaleTech/CasaOS-Common/utils/logger"
+	"github.com/IceWhaleTech/CasaOS-Common/utils/systemctl"
 	"github.com/IceWhaleTech/CasaOS-Installer/codegen"
 )
 
@@ -129,35 +130,20 @@ func InstallDependencies() error {
 	return nil
 }
 
-func getDockerRunningStatus() bool {
-	//systemctl is-active docker
-	_, writer, err := os.Pipe()
+func GetDockerRunningStatus() (bool, error) {
+	return systemctl.IsServiceRunning("docker.service")
+}
+
+func IsDockerInstalled() bool {
+	err := systemctl.StartService("docker.service")
 	if err != nil {
 		return false
-	}
-	cmd := exec.Command("systemctl", "is-active", "docker")
-
-	cmd.Stdout = writer
-
-	if cmd.String() == "active" {
-		return true
 	} else {
-		return false
+		return true
 	}
 }
 
-func isDockerInstalled() bool {
-	// command -v docker
-	cmd := exec.Command("command", "-v", "docker")
-	if cmd == nil {
-		return true
-	} else {
-		return false
-	}
-
-}
-
-func installDocker() error {
+func InstallDockerByShell() error {
 	// to install docker
 	// curl -fsSL https://get.docker.com | bash -s docker --mirror Aliyun
 	exec.Command("curl", "-fsSL", "https://get.docker.com", "|", "bash", "-s", "docker", "--mirror", "Aliyun")
@@ -166,25 +152,32 @@ func installDocker() error {
 }
 func InstallDocker() error {
 	// to check docker is running
-	isDockerRunning := getDockerRunningStatus()
+	isDockerRunning, err := GetDockerRunningStatus()
+	if err != nil {
+		return err
+	}
 	if isDockerRunning {
 		logger.Info("docker is running. skip install docker")
 		return nil
 	}
 
 	// to check docker is installed
-	if isDockerInstalled() {
+	if IsDockerInstalled() {
 		return nil
 	}
 
 	// to install docker
-	err := installDocker()
+	err = InstallDockerByShell()
 	if err != nil {
 		return err
 	}
 	// to run docker
 
-	isDockerRunning = getDockerRunningStatus()
+	isDockerRunning, err = GetDockerRunningStatus()
+	if err != nil {
+		return err
+	}
+
 	if !isDockerRunning {
 		return fmt.Errorf("docker is launch failed")
 	}
