@@ -127,3 +127,12 @@ func InstallDependencies() error {
 	}
 	return nil
 }
+
+func InstallDocker() error {
+	// to check docker is installed
+	// to check docker is running
+	// to install docker
+	// to run docker
+	// to check docker is running
+	return nil
+}

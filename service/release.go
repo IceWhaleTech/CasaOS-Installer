@@ -240,7 +240,6 @@ func PostReleaseInstall(ctx context.Context, release codegen.Release, sysrootPat
 	// post release install script
 	// work list
 	// 1. overwrite target release
-
 	// if casaos folder is exist, create casaos folder
 	os.MkdirAll(filepath.Join(sysrootPath, "etc", "casaos"), 0o755)
 
@@ -328,19 +327,44 @@ func ExecuteModuleInstallScript(releaseFilePath string, release codegen.Release)
 	return nil
 }
 
-func enableAndStartSystemdService(serviceName string) error {
+func reStartSystemdService(serviceName string) error {
 	// if err := systemctl.EnableService(fmt.Sprintf("%s.service", serviceName)); err != nil {
 	// 	return err
 	// }
+	if err := systemctl.StopService(fmt.Sprintf("%s.service", serviceName)); err != nil {
+		return err
+	}
+
 	if err := systemctl.StartService(fmt.Sprintf("%s.service", serviceName)); err != nil {
 		return err
 	}
 	return nil
 }
-func SetStartUpAndLaunchModule(release codegen.Release) error {
+
+func stopSystemdService(serviceName string) error {
+	if err := systemctl.StopService(fmt.Sprintf("%s.service", serviceName)); err != nil {
+		return err
+	}
+	return nil
+
+}
+
+func StopModule(release codegen.Release) error {
+	for _, module := range release.Modules {
+		fmt.Println("停止: ", module.Name)
+		if err := stopSystemdService(module.Name); err != nil {
+			return err
+		}
+		// to sleep 1s
+		time.Sleep(1 * time.Second)
+	}
+	return nil
+}
+
+func LaunchModule(release codegen.Release) error {
 	for _, module := range release.Modules {
 		fmt.Println("启动: ", module.Name)
-		if err := enableAndStartSystemdService(module.Name); err != nil {
+		if err := reStartSystemdService(module.Name); err != nil {
 			return err
 		}
 		// to sleep 1s
