@@ -14,6 +14,10 @@ import (
 
 func (a *api) GetRelease(ctx echo.Context, params codegen.GetReleaseParams) error {
 	tag := common.MainTag
+
+	go service.PublishEventWrapper(context.Background(), common.EventTypeCheckUpdateBegin, nil)
+	defer service.PublishEventWrapper(context.Background(), common.EventTypeCheckUpdateEnd, nil)
+
 	if params.Version != nil && *params.Version != "latest" {
 		tag = *params.Version
 	}
@@ -21,6 +25,9 @@ func (a *api) GetRelease(ctx echo.Context, params codegen.GetReleaseParams) erro
 	release, err := service.GetRelease(ctx.Request().Context(), tag)
 	if err != nil {
 		message := err.Error()
+		service.PublishEventWrapper(context.Background(), common.EventTypeCheckUpdateError, map[string]string{
+			common.PropertyTypeMessage.Name: err.Error(),
+		})
 
 		if err == service.ErrReleaseNotFound {
 			return ctx.JSON(http.StatusNotFound, &codegen.ResponseNotFound{
@@ -70,46 +77,71 @@ func (a *api) InstallRelease(ctx echo.Context, params codegen.InstallReleasePara
 	}
 
 	go func() {
+		go service.PublishEventWrapper(context.Background(), common.EventTypeInstallUpdateBegin, nil)
+		defer service.PublishEventWrapper(context.Background(), common.EventTypeInstallUpdateEnd, nil)
+
 		backgroundCtx, cancel := context.WithCancel(context.Background())
 		defer cancel()
 		sysRoot := "/"
 
+		// TODO NOTE: These step is missing something. Need to sync with cli main
+
 		if _, err := service.VerifyRelease(*release); err != nil {
+			go service.PublishEventWrapper(context.Background(), common.EventTypeInstallUpdateError, map[string]string{
+				common.PropertyTypeMessage.Name: err.Error(),
+			})
+
 			logger.Error("error while release verification: %s", zap.Error(err))
 			return
 		}
 
 		if err := service.ExtractReleasePackages(service.ReleaseFilePath, *release); err != nil {
+			go service.PublishEventWrapper(context.Background(), common.EventTypeInstallUpdateError, map[string]string{
+				common.PropertyTypeMessage.Name: err.Error(),
+			})
+
 			logger.Error("error while extract release packages: %s", zap.Error(err))
 			return
 		}
 
 		if err := service.ExtractReleasePackages(service.ReleaseFilePath+"/linux*", *release); err != nil {
+			go service.PublishEventWrapper(context.Background(), common.EventTypeInstallUpdateError, map[string]string{
+				common.PropertyTypeMessage.Name: err.Error(),
+			})
+
 			logger.Error("error while extract modules packages: %s", zap.Error(err))
 			return
 		}
 
 		if err := service.InstallRelease(backgroundCtx, *release, sysRoot); err != nil {
-			logger.Error("error while installing release", zap.Error(err))
-			return
-		}
+			go service.PublishEventWrapper(context.Background(), common.EventTypeInstallUpdateError, map[string]string{
+				common.PropertyTypeMessage.Name: err.Error(),
+			})
 
-		if err := service.ExecuteModuleInstallScript(service.ReleaseFilePath, *release); err != nil {
 			logger.Error("error while install modules: %s", zap.Error(err))
 			return
 		}
 
 		if err := service.LaunchModule(*release); err != nil {
+			go service.PublishEventWrapper(context.Background(), common.EventTypeInstallUpdateError, map[string]string{
+				common.PropertyTypeMessage.Name: err.Error(),
+			})
 			logger.Error("error while enable services: %s", zap.Error(err))
 			return
 		}
 
 		if _, err = service.DownloadUninstallScript(backgroundCtx, sysRoot); err != nil {
+			go service.PublishEventWrapper(context.Background(), common.EventTypeInstallUpdateError, map[string]string{
+				common.PropertyTypeMessage.Name: err.Error(),
+			})
 			logger.Error("Downloading uninstall script: %s", zap.Error(err))
 			return
 		}
 
 		if present := service.VerifyUninstallScript(); !present {
+			go service.PublishEventWrapper(context.Background(), common.EventTypeInstallUpdateError, map[string]string{
+				common.PropertyTypeMessage.Name: err.Error(),
+			})
 			logger.Error("uninstall script not found")
 			return
 		}

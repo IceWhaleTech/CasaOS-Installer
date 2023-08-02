@@ -230,6 +230,7 @@ func InstallRelease(ctx context.Context, release codegen.Release, sysrootPath st
 
 	return nil
 }
+
 func InstallDependencies(ctx context.Context, release codegen.Release, sysrootPath string) error {
 	internal.InstallDependencies()
 	return nil
@@ -239,7 +240,6 @@ func PostReleaseInstall(ctx context.Context, release codegen.Release, sysrootPat
 	// post release install script
 	// work list
 	// 1. overwrite target release
-
 	// if casaos folder is exist, create casaos folder
 	os.MkdirAll(filepath.Join(sysrootPath, "etc", "casaos"), 0o755)
 

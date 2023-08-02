@@ -55,7 +55,7 @@ func (s *services) MessageBus() (*message_bus.ClientWithResponses, error) {
 
 func PublishEventWrapper(ctx context.Context, eventType message_bus.EventType, properties map[string]string) {
 	if MyService == nil {
-		fmt.Println("failed to publish event - messsage bus service not initialized")
+		fmt.Println("Warning: failed to publish event - messsage bus service didn't running")
 		return
 	}
 

@@ -74,6 +74,12 @@ func main() {
 			panic(err)
 		}
 
+		// every 10 seconds for debug
+		if _, err := crontab.AddFunc("@every 1s", func() {
+		}); err != nil {
+			panic(err)
+		}
+
 		crontab.Start()
 		defer crontab.Stop()
 	}
