@@ -11,6 +11,7 @@ import (
 	"go.uber.org/zap/zapcore"
 
 	"github.com/IceWhaleTech/CasaOS-Installer/common"
+	"github.com/IceWhaleTech/CasaOS-Installer/internal"
 	"github.com/IceWhaleTech/CasaOS-Installer/service"
 )
 
@@ -88,6 +89,12 @@ func main() {
 
 	// install dep
 	_logger.Info("🟨 Install dependencies...")
+	err = internal.InstallDocker()
+	if err != nil {
+		_logger.Error("🟥 Failed to install docker: %s", err.Error())
+		os.Exit(1)
+	}
+
 	err = service.InstallDependencies(ctx, *release, sysRoot)
 	if err != nil {
 		_logger.Error("🟥 Failed to install dependencies: %s", err.Error())
