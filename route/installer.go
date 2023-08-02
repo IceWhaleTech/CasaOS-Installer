@@ -84,14 +84,23 @@ func (a *api) InstallRelease(ctx echo.Context, params codegen.InstallReleasePara
 		defer cancel()
 		sysRoot := "/"
 
-		// TODO NOTE: These step is missing something. Need to sync with cli main
-
+		// if the err is not nil. It mean should to download
 		if _, err := service.VerifyRelease(*release); err != nil {
 			go service.PublishEventWrapper(context.Background(), common.EventTypeInstallUpdateError, map[string]string{
 				common.PropertyTypeMessage.Name: err.Error(),
 			})
 
 			logger.Error("error while release verification: %s", zap.Error(err))
+			return
+		}
+
+		// to download migration script
+		if _, err := service.DownloadAllMigrationTools(backgroundCtx, *release, sysRoot); err != nil {
+			go service.PublishEventWrapper(context.Background(), common.EventTypeInstallUpdateError, map[string]string{
+				common.PropertyTypeMessage.Name: err.Error(),
+			})
+
+			logger.Error("error while download migration: %s", zap.Error(err))
 			return
 		}
 
@@ -125,15 +134,6 @@ func (a *api) InstallRelease(ctx echo.Context, params codegen.InstallReleasePara
 			})
 
 			logger.Error("error while extract modules packages: %s", zap.Error(err))
-			return
-		}
-
-		if err := service.InstallRelease(*release, sysRoot); err != nil {
-			go service.PublishEventWrapper(context.Background(), common.EventTypeInstallUpdateError, map[string]string{
-				common.PropertyTypeMessage.Name: err.Error(),
-			})
-
-			logger.Error("error while install modules: %s", zap.Error(err))
 			return
 		}
 
