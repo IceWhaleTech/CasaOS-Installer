@@ -13,6 +13,7 @@ import (
 	"github.com/samber/lo"
 
 	"github.com/IceWhaleTech/CasaOS-Common/utils/file"
+	"github.com/IceWhaleTech/CasaOS-Common/utils/logger"
 	"github.com/IceWhaleTech/CasaOS-Installer/codegen"
 )
 
@@ -128,11 +129,64 @@ func InstallDependencies() error {
 	return nil
 }
 
-func InstallDocker() error {
-	// to check docker is installed
-	// to check docker is running
+func getDockerRunningStatus() bool {
+	//systemctl is-active docker
+	_, writer, err := os.Pipe()
+	if err != nil {
+		return false
+	}
+	cmd := exec.Command("systemctl", "is-active", "docker")
+
+	cmd.Stdout = writer
+
+	if cmd.String() == "active" {
+		return true
+	} else {
+		return false
+	}
+}
+
+func isDockerInstalled() bool {
+	// command -v docker
+	cmd := exec.Command("command", "-v", "docker")
+	if cmd == nil {
+		return true
+	} else {
+		return false
+	}
+
+}
+
+func installDocker() error {
 	// to install docker
-	// to run docker
+	// curl -fsSL https://get.docker.com | bash -s docker --mirror Aliyun
+	exec.Command("curl", "-fsSL", "https://get.docker.com", "|", "bash", "-s", "docker", "--mirror", "Aliyun")
+
+	return nil
+}
+func InstallDocker() error {
 	// to check docker is running
+	isDockerRunning := getDockerRunningStatus()
+	if isDockerRunning {
+		logger.Info("docker is running. skip install docker")
+		return nil
+	}
+
+	// to check docker is installed
+	if isDockerInstalled() {
+		return nil
+	}
+
+	// to install docker
+	err := installDocker()
+	if err != nil {
+		return err
+	}
+	// to run docker
+
+	isDockerRunning = getDockerRunningStatus()
+	if !isDockerRunning {
+		return fmt.Errorf("docker is launch failed")
+	}
 	return nil
 }

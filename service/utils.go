@@ -73,7 +73,6 @@ func CurrentModuleVersion(module string, sysrootPath string) (*semver.Version, e
 		module,
 	} {
 		cmd := exec.Command(executablePath, "-v")
-		fmt.Println("cmd", executablePath)
 		if cmd == nil {
 			continue
 		}
