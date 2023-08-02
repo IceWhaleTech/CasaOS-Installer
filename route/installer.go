@@ -95,31 +95,28 @@ func (a *api) InstallRelease(ctx echo.Context, params codegen.InstallReleasePara
 			return
 		}
 
-		if err := service.ExtractReleasePackages(service.ReleaseFilePath, *release); err != nil {
-			go service.PublishEventWrapper(context.Background(), common.EventTypeInstallUpdateError, map[string]string{
-				common.PropertyTypeMessage.Name: err.Error(),
-			})
+		isCasaOS := true
 
-			logger.Error("error while extract release packages: %s", zap.Error(err))
-			return
-		}
+		if isCasaOS {
+			if err := service.InstallCasaOSPackages(*release, service.ReleaseFilePath, sysRoot); err != nil {
+				go service.PublishEventWrapper(context.Background(), common.EventTypeInstallUpdateError, map[string]string{
+					common.PropertyTypeMessage.Name: err.Error(),
+				})
 
-		if err := service.ExtractReleasePackages(service.ReleaseFilePath+"/linux*", *release); err != nil {
-			go service.PublishEventWrapper(context.Background(), common.EventTypeInstallUpdateError, map[string]string{
-				common.PropertyTypeMessage.Name: err.Error(),
-			})
+				logger.Error("error while installing casaos packages: %s", zap.Error(err))
+				return
+			}
+		} else {
+			// TODO the step is didn't implement
+			if err := service.InstallRAUC(sysRoot); err != nil {
+				go service.PublishEventWrapper(context.Background(), common.EventTypeInstallUpdateError, map[string]string{
+					common.PropertyTypeMessage.Name: err.Error(),
+				})
 
-			logger.Error("error while extract modules packages: %s", zap.Error(err))
-			return
-		}
+				logger.Error("error while installing casaos packages: %s", zap.Error(err))
+				return
+			}
 
-		if err := service.InstallRelease(*release, sysRoot); err != nil {
-			go service.PublishEventWrapper(context.Background(), common.EventTypeInstallUpdateError, map[string]string{
-				common.PropertyTypeMessage.Name: err.Error(),
-			})
-
-			logger.Error("error while installing release", zap.Error(err))
-			return
 		}
 
 		if err := service.ExecuteModuleInstallScript(service.ReleaseFilePath, *release); err != nil {

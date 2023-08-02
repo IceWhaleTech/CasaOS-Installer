@@ -50,16 +50,8 @@ func TestInstallRelease(t *testing.T) {
 	assert.NoError(t, err)
 	assert.FileExists(t, releaseFilePath)
 
-	err = service.ExtractReleasePackages(releaseFilePath, *release)
-	assert.NoError(t, err)
-
-	// extract very module package that the name is like linux*.tar.gz
-	err = service.ExtractReleasePackages(releaseFilePath+"/linux*", *release)
-	assert.NoError(t, err)
-
 	tmpSysRoot := filepath.Join(tmpDir, "sysroot")
-
-	err = service.InstallRelease(*release, tmpSysRoot)
+	err = service.InstallCasaOSPackages(*release, releaseFilePath, tmpSysRoot)
 	assert.NoError(t, err)
 
 	assert.FileExists(t, filepath.Join(tmpSysRoot, "usr", "bin", "casaos"))

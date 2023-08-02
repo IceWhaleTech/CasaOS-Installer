@@ -183,10 +183,27 @@ func ExtractReleasePackages(packageFilepath string, release codegen.Release) err
 	return internal.BulkExtract(releaseDir)
 }
 
-func InstallCasaOSPackages(sysRoot string) error {
+func InstallCasaOSPackages(release codegen.Release, releaseFilePath string, sysRoot string) error {
+	// extract packages
+	err := ExtractReleasePackages(releaseFilePath, release)
+	if err != nil {
+		return err
+	}
+
+	// extract module packages
+	err = ExtractReleasePackages(releaseFilePath+"/linux*", release)
+	if err != nil {
+		return err
+	}
+
+	err = InstallRelease(release, sysRoot)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
+// the function is for zimaos
 func InstallRAUC(sysRoot string) error {
 	return nil
 }
