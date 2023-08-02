@@ -65,6 +65,14 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
+	// start migration.
+	// only zimaos should do this.
+	// if it is CasaOS. the migration will be done by the installer. and will skip this.
+	err := service.StartMigration(sysRoot)
+	if err != nil {
+		logger.Error("error when trying to start migration", zap.Error(err))
+	}
+
 	{
 		crontab := cron.New(cron.WithSeconds())
 
@@ -150,6 +158,7 @@ func main() {
 	if err := s.Serve(listener); err != nil {
 		panic(err)
 	}
+
 }
 
 func cronjob(ctx context.Context) {
