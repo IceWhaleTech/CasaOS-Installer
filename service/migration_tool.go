@@ -37,17 +37,22 @@ func StartMigration(sysRoot string) error {
 		return err
 	}
 
-	// target version
-	targetVersion, err := semver.NewVersion(NormalizeVersion("v0.4.5"))
-	if err != nil {
-		return err
-	}
+	ctx := context.Background()
 
 	currentRelease, err := internal.GetReleaseFromLocal(currentReleaseLocalPath)
 	if err != nil {
 		return err
 	}
+
+	// if the err is not nil, it means the target release is not exist.
+	// and we didn't need to migrate
 	targetRelease, err := internal.GetReleaseFromLocal(targetReleaseLocalPath)
+	if err != nil {
+		return err
+	}
+
+	// target version
+	targetVersion, err := semver.NewVersion(NormalizeVersion(targetRelease.Version))
 	if err != nil {
 		return err
 	}
@@ -57,21 +62,13 @@ func StartMigration(sysRoot string) error {
 		return nil
 	}
 
-	// TODO: how to handle migration if the module of target version is more thatn the current version
-
-	// start migration
-	// 1. download migration tools
-	// the migration tools should be downloaded when install release
-	// So there is no need to download the migration tools again
-	DownloadAllMigrationTools(context.Background(), *targetRelease, sysRoot)
-	// for all modules of current release
-
-	// 2. run migration tools
+	// 1. get module from release.yaml
 	migrationToolMap, err := MigrationToolsMap(*targetRelease)
 	if err != nil {
 		return err
 	}
 
+	// 2. genrate migration path from migrationToolMap
 	for _, module := range currentRelease.Modules {
 		migrationPath, err := GetMigrationPath(module, *targetRelease, migrationToolMap, sysRoot)
 		if err != nil {
@@ -80,7 +77,7 @@ func StartMigration(sysRoot string) error {
 
 		for _, migration := range migrationPath {
 			// the migration tool should be downloaded when install release
-			migrationPath, err := DownloadMigrationTool(context.Background(), *targetRelease, module.Short, migration, false)
+			migrationPath, err := DownloadMigrationTool(ctx, *targetRelease, module.Short, migration, false)
 			if err != nil {
 				return err
 			}

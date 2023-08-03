@@ -50,8 +50,6 @@ func TestDownloadAllMigrationTools(t *testing.T) {
 	os.Mkdir(tmpSysRoot, 0755)
 
 	fixtures.SetLocalRelease(tmpSysRoot, "v0.3.5")
-	// fixtures.SetCasaOSVersion(tmpSysRoot, "casaos", "v0.3.5")
-	// fixtures.SetCasaOSVersion(tmpSysRoot, "casaos-app-management", "v0.3.5")
 
 	// to construct a fake migration map
 	releaseDir, err := service.ReleaseDir(*targetVersionRelease)
