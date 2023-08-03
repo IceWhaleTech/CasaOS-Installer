@@ -175,6 +175,17 @@ func main() {
 	}
 	_logger.Info("🟩 Services enabled.")
 
+	isCasaOS := true
+	if isCasaOS {
+		_logger.Info("🟨 Start Migration...")
+
+		if err := service.StartMigration(sysRoot); err != nil {
+			_logger.Error("🟥 Failed to Migration: %s", err.Error())
+			os.Exit(1)
+		}
+		_logger.Info("🟩 Migration complete.")
+	}
+
 	// download uninstall script
 	_logger.Info("🟨 Downloading uninstall script ...")
 	if _, err = service.DownloadUninstallScript(ctx, sysRoot); err != nil {

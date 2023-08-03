@@ -292,13 +292,13 @@ func TestVerifyMigration(t *testing.T) {
 
 }
 
-func TestVerifyAllMigrationTools(t *testing.T) {
+func TestVerifyAndDownloadAllMigrationTools(t *testing.T) {
 	if _, exists := os.LookupEnv("CI"); exists {
 		t.Skip("skipping test in CI environment")
 	}
 	logger.LogInitConsoleOnly()
 
-	tmpDir, err := os.MkdirTemp("", "casaos-execute-migration-test-*")
+	tmpDir, err := os.MkdirTemp("", "casaos-all-migration-test-*")
 	assert.NoError(t, err)
 	// defer os.RemoveAll(tmpDir)
 
@@ -327,4 +327,8 @@ func TestVerifyAllMigrationTools(t *testing.T) {
 
 	result2 := service.VerifyAllMigrationTools(*targetVersionRelease, tmpSysRoot)
 	assert.Equal(t, result2, true)
+
+	// assert migration tool exsit
+	assert.FileExists(t, filepath.Join(tmpDir, "cache", "migration-tools", "casaos", "linux-arm64-casaos-migration-tool-v0.3.6.tar.gz"))
+	assert.FileExists(t, filepath.Join(tmpDir, "cache", "migration-tools", "casaos-app-management", "linux-arm64-casaos-app-management-migration-tool-v0.4.0-alpha7.tar.gz"))
 }

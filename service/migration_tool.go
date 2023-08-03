@@ -77,7 +77,6 @@ func StartMigration(sysRoot string) error {
 
 		for _, migration := range migrationPath {
 			// the migration tool should be downloaded when install release
-			fmt.Println("module key2:", module.Name)
 			migrationPath, err := DownloadMigrationTool(ctx, *targetRelease, module.Name, migration, false)
 			if err != nil {
 				return err
@@ -90,11 +89,25 @@ func StartMigration(sysRoot string) error {
 	}
 
 	// post migration
+	err = PostMigration(sysRoot)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
 func PostMigration(sysRoot string) error {
-	// TODO: post migration. e.g. move target-relase to relase yaml
+	// post migration. e.g. move target-relase to relase yaml
+	// remove currentReleaseLocalPath
+	err := os.Remove(filepath.Join(sysRoot, currentReleaseLocalPath))
+	if err != nil {
+		return err
+	}
+	err = os.Rename(filepath.Join(sysRoot, targetReleaseLocalPath), filepath.Join(sysRoot, currentReleaseLocalPath))
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -315,7 +328,7 @@ func ExecuteMigrationTool(module string, migrationFilePath string, sysRoot strin
 	// to execute the migration tool
 	// force to execute the migration tool. otherwise, it require to stop the service
 	cmd := exec.Command(migrationToolPath, "-f")
-	fmt.Println(cmd)
+	fmt.Println("迁移工具执行命令:::::", cmd)
 	err = cmd.Run()
 	if err != nil {
 		return err
