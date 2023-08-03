@@ -148,7 +148,7 @@ func main() {
 
 		_logger.Info("🟨 Verifying migration tools...")
 		if !service.VerifyAllMigrationTools(*release, sysRoot) {
-			_logger.Error("🟥 Migration tools verification failed")
+			_logger.Error("🟥 Migration tools verification failed: %s", err.Error())
 			os.Exit(1)
 		}
 		_logger.Info("🟩 Migration tools verified.")
