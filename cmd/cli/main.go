@@ -87,6 +87,13 @@ func main() {
 
 	_logger.Info("🟩 Release found: %s", release.Version)
 
+	// stop old module
+	_logger.Info("🟨 Stopping old module...")
+	if err = service.StopModule(*release); err != nil {
+		_logger.Error("🟥 Failed to stop old module: %s", err.Error())
+	}
+	_logger.Info("🟩 Stopping old module: %s", release.Version)
+
 	// install dep
 	_logger.Info("🟨 Install dependencies...")
 	err = internal.InstallDocker()
@@ -161,6 +168,17 @@ func main() {
 		os.Exit(0)
 	}
 
+	isCasaOS := true
+	if isCasaOS {
+		_logger.Info("🟨 Start Migration...")
+
+		if err := service.StartMigration(sysRoot); err != nil {
+			_logger.Error("🟥 Failed to Migration: %s", err.Error())
+			os.Exit(1)
+		}
+		_logger.Info("🟩 Migration complete.")
+	}
+
 	_logger.Info("🟨 Installing modules...")
 	if err := service.ExecuteModuleInstallScript(releaseFilePath, *release); err != nil {
 		_logger.Error("🟥 Failed to install modules: %s", err.Error())
@@ -174,18 +192,6 @@ func main() {
 		os.Exit(1)
 	}
 	_logger.Info("🟩 Services enabled.")
-
-	isCasaOS := true
-	if isCasaOS {
-		_logger.Info("🟨 Start Migration...")
-
-		if err := service.StartMigration(sysRoot); err != nil {
-			_logger.Error("🟥 Failed to Migration: %s", err.Error())
-			os.Exit(1)
-		}
-		_logger.Info("🟩 Migration complete.")
-	}
-
 	// download uninstall script
 	_logger.Info("🟨 Downloading uninstall script ...")
 	if _, err = service.DownloadUninstallScript(ctx, sysRoot); err != nil {

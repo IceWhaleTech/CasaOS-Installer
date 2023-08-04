@@ -70,6 +70,10 @@ func StartMigration(sysRoot string) error {
 
 	// 2. genrate migration path from migrationToolMap
 	for _, module := range currentRelease.Modules {
+		if module.Short == "gateway" {
+			// skip casaos module
+			continue
+		}
 		migrationPath, err := GetMigrationPath(module, *targetRelease, migrationToolMap, sysRoot)
 		if err != nil {
 			return err
@@ -81,7 +85,7 @@ func StartMigration(sysRoot string) error {
 			if err != nil {
 				return err
 			}
-			err = ExecuteMigrationTool(module.Short, migrationPath, sysRoot)
+			err = ExecuteMigrationTool(module.Name, migrationPath, sysRoot)
 			if err != nil {
 				return err
 			}
@@ -306,7 +310,7 @@ func GetMigrationPath(module codegen.Module, release codegen.Release, migrationT
 	return RemoveDuplication(PathArray), nil
 }
 
-func ExecuteMigrationTool(module string, migrationFilePath string, sysRoot string) error {
+func ExecuteMigrationTool(moduleName string, migrationFilePath string, sysRoot string) error {
 	// to extract the migration tool
 	err := internal.Extract(migrationFilePath, MigrationToolsDir())
 	if err != nil {
@@ -319,7 +323,7 @@ func ExecuteMigrationTool(module string, migrationFilePath string, sysRoot strin
 	// }
 
 	// to execute the migration tool
-	migrationToolPath := filepath.Join(MigrationToolsDir(), "build", "sysroot", "usr", "bin", module+"-migration-tool")
+	migrationToolPath := filepath.Join(MigrationToolsDir(), "build", "sysroot", "usr", "bin", moduleName+"-migration-tool")
 	// to chmod file permission
 	err = os.Chmod(migrationToolPath, 0755)
 	if err != nil {
