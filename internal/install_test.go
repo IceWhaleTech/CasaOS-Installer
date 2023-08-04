@@ -133,8 +133,9 @@ func TestInstallRelease(t *testing.T) {
 
 // NOTE: the test require sudo permission
 func TestInstallDocker(t *testing.T) {
-	if _, exists := os.LookupEnv("CI"); exists {
-		t.Skip("skipping test in CI environment")
+	// if environment have non-root permission, skip test
+	if os.Geteuid() != 0 {
+		t.Skip("skipping test in no-root environment")
 	}
 
 	defer goleak.VerifyNone(t, goleak.IgnoreTopFunction("go.opencensus.io/stats/view.(*worker).start")) //
@@ -147,5 +148,4 @@ func TestInstallDocker(t *testing.T) {
 	value, err := internal.GetDockerRunningStatus()
 	assert.NoError(t, err)
 	assert.True(t, value)
-
 }
