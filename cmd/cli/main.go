@@ -87,6 +87,13 @@ func main() {
 
 	_logger.Info("🟩 Release found: %s", release.Version)
 
+	// stop old module
+	_logger.Info("🟨 Stopping old module...")
+	if err = service.StopModule(*release); err != nil {
+		_logger.Error("🟥 Failed to stop old module: %s", err.Error())
+	}
+	_logger.Info("🟩 Stopping old module: %s", release.Version)
+
 	// install dep
 	_logger.Info("🟨 Install dependencies...")
 	err = internal.InstallDocker()
@@ -148,7 +155,7 @@ func main() {
 
 		_logger.Info("🟨 Verifying migration tools...")
 		if !service.VerifyAllMigrationTools(*release, sysRoot) {
-			_logger.Error("🟥 Migration tools verification failed")
+			_logger.Error("🟥 Migration tools verification failed: %s", err.Error())
 			os.Exit(1)
 		}
 		_logger.Info("🟩 Migration tools verified.")
@@ -159,6 +166,17 @@ func main() {
 	if downloadOnly {
 		_logger.Info("🟩 Download complete.")
 		os.Exit(0)
+	}
+
+	isCasaOS := true
+	if isCasaOS {
+		_logger.Info("🟨 Start Migration...")
+
+		if err := service.StartMigration(sysRoot); err != nil {
+			_logger.Error("🟥 Failed to Migration: %s", err.Error())
+			os.Exit(1)
+		}
+		_logger.Info("🟩 Migration complete.")
 	}
 
 	_logger.Info("🟨 Installing modules...")
@@ -174,7 +192,6 @@ func main() {
 		os.Exit(1)
 	}
 	_logger.Info("🟩 Services enabled.")
-
 	// download uninstall script
 	_logger.Info("🟨 Downloading uninstall script ...")
 	if _, err = service.DownloadUninstallScript(ctx, sysRoot); err != nil {

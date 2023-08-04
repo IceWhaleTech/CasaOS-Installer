@@ -70,6 +70,10 @@ func StartMigration(sysRoot string) error {
 
 	// 2. genrate migration path from migrationToolMap
 	for _, module := range currentRelease.Modules {
+		if module.Short == "gateway" {
+			// skip casaos module
+			continue
+		}
 		migrationPath, err := GetMigrationPath(module, *targetRelease, migrationToolMap, sysRoot)
 		if err != nil {
 			return err
@@ -77,11 +81,11 @@ func StartMigration(sysRoot string) error {
 
 		for _, migration := range migrationPath {
 			// the migration tool should be downloaded when install release
-			migrationPath, err := DownloadMigrationTool(ctx, *targetRelease, module.Short, migration, false)
+			migrationPath, err := DownloadMigrationTool(ctx, *targetRelease, module.Name, migration, false)
 			if err != nil {
 				return err
 			}
-			err = ExecuteMigrationTool(module.Short, migrationPath, sysRoot)
+			err = ExecuteMigrationTool(module.Name, migrationPath, sysRoot)
 			if err != nil {
 				return err
 			}
@@ -89,11 +93,25 @@ func StartMigration(sysRoot string) error {
 	}
 
 	// post migration
+	err = PostMigration(sysRoot)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
 func PostMigration(sysRoot string) error {
-	// TODO: post migration. e.g. move target-relase to relase yaml
+	// post migration. e.g. move target-relase to relase yaml
+	// remove currentReleaseLocalPath
+	err := os.Remove(filepath.Join(sysRoot, currentReleaseLocalPath))
+	if err != nil {
+		return err
+	}
+	err = os.Rename(filepath.Join(sysRoot, targetReleaseLocalPath), filepath.Join(sysRoot, currentReleaseLocalPath))
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -126,7 +144,9 @@ func DownloadAllMigrationTools(ctx context.Context, release codegen.Release, sys
 			if migration.Version.LessThan(currentVersion) || migration.Version.GreaterThan(targetVersion) {
 				continue
 			}
+			fmt.Println("module key", module)
 
+			// TODO there is a bug. download require short name. but module from map is long name
 			if path, err := DownloadMigrationTool(ctx, release, module, migration, false); err != nil {
 				fmt.Println("下载完成", path)
 				return false, err
@@ -139,9 +159,16 @@ func DownloadAllMigrationTools(ctx context.Context, release codegen.Release, sys
 	return downloaded, nil
 }
 
-func DownloadMigrationTool(ctx context.Context, release codegen.Release, module string, migration MigrationTool, force bool) (string, error) {
+func GetFileNameFromMigrationURL(url string) string {
+	return NormalizeMigrationToolURL(filepath.Base(url))
+}
+
+func DownloadMigrationTool(ctx context.Context, release codegen.Release, moduleName string, migration MigrationTool, force bool) (string, error) {
+	if moduleName == "casaos-gateway" {
+		return "", nil
+	}
 	if !force {
-		if migrationToolFilePath, err := VerifyMigrationTool(module, filepath.Base(migration.URL)); err != nil {
+		if migrationToolFilePath, err := VerifyMigrationTool(moduleName, GetFileNameFromMigrationURL(migration.URL)); err != nil {
 			logger.Info("error while verifying migration tool - continue to download", zap.Error(err))
 		} else {
 			return migrationToolFilePath, nil
@@ -150,7 +177,7 @@ func DownloadMigrationTool(ctx context.Context, release codegen.Release, module 
 
 	template := NormalizeMigrationToolURL(migration.URL)
 
-	outDir := filepath.Join(MigrationToolsDir(), module)
+	outDir := filepath.Join(MigrationToolsDir(), moduleName)
 
 	for _, mirror := range release.Mirrors {
 		migrationToolURL := strings.ReplaceAll(template, common.MirrorPlaceHolder, mirror)
@@ -165,7 +192,7 @@ func DownloadMigrationTool(ctx context.Context, release codegen.Release, module 
 		return migrationToolFilePath, nil
 	}
 
-	return "", fmt.Errorf("failed to download migration tool %s", migration.URL)
+	return "", fmt.Errorf("failed to download migration tool %s ,%s", moduleName, migration.URL)
 }
 
 // Normalize migraiton tool URL to a standard format which uses `${MIRROR}` as the mirror placeholder
@@ -274,17 +301,16 @@ func GetMigrationPath(module codegen.Module, release codegen.Release, migrationT
 
 	PathArray := []MigrationTool{}
 
-	modulePath := migrationToolMap[module.Short]
+	modulePath := migrationToolMap[module.Name]
 	for _, migration := range modulePath {
 		if migration.Version.LessThan(sourceVersion) && (migration.Version.GreaterThan(currentVersion) || migration.Version.Equal(currentVersion)) {
 			PathArray = append(PathArray, migration)
-			// return migration.URL
 		}
 	}
 	return RemoveDuplication(PathArray), nil
 }
 
-func ExecuteMigrationTool(module string, migrationFilePath string, sysRoot string) error {
+func ExecuteMigrationTool(moduleName string, migrationFilePath string, sysRoot string) error {
 	// to extract the migration tool
 	err := internal.Extract(migrationFilePath, MigrationToolsDir())
 	if err != nil {
@@ -297,7 +323,7 @@ func ExecuteMigrationTool(module string, migrationFilePath string, sysRoot strin
 	// }
 
 	// to execute the migration tool
-	migrationToolPath := filepath.Join(MigrationToolsDir(), "build", "sysroot", "usr", "bin", module+"-migration-tool")
+	migrationToolPath := filepath.Join(MigrationToolsDir(), "build", "sysroot", "usr", "bin", moduleName+"-migration-tool")
 	// to chmod file permission
 	err = os.Chmod(migrationToolPath, 0755)
 	if err != nil {
@@ -306,7 +332,7 @@ func ExecuteMigrationTool(module string, migrationFilePath string, sysRoot strin
 	// to execute the migration tool
 	// force to execute the migration tool. otherwise, it require to stop the service
 	cmd := exec.Command(migrationToolPath, "-f")
-	fmt.Println(cmd)
+	fmt.Println("迁移工具执行命令:::::", cmd)
 	err = cmd.Run()
 	if err != nil {
 		return err
@@ -318,7 +344,7 @@ func ExecuteMigrationTool(module string, migrationFilePath string, sysRoot strin
 // verify migration tools for a release are already cached
 func VerifyAllMigrationTools(targetRelease codegen.Release, sysRoot string) bool {
 	// get all migration tool
-	currentRelease, err := internal.GetReleaseFromLocal(targetReleaseLocalPath)
+	currentRelease, err := internal.GetReleaseFromLocal(currentReleaseLocalPath)
 	if err != nil {
 		fmt.Println("获取release.yaml失败", currentRelease)
 		return false
@@ -327,11 +353,16 @@ func VerifyAllMigrationTools(targetRelease codegen.Release, sysRoot string) bool
 	migrationToolMap, err := MigrationToolsMap(targetRelease)
 	if err != nil {
 		fmt.Println("获取migration map失败")
-
 		return false
 	}
+	fmt.Println("migrationToolMap:::::", migrationToolMap)
 
 	for _, module := range currentRelease.Modules {
+		// TODO remove this hardcode
+		if module.Name == "casaos-gateway" {
+			continue
+		}
+
 		migrationPath, err := GetMigrationPath(module, targetRelease, migrationToolMap, sysRoot)
 		if err != nil {
 			fmt.Println("获取migration path失败", err)
@@ -340,8 +371,11 @@ func VerifyAllMigrationTools(targetRelease codegen.Release, sysRoot string) bool
 
 		for _, migration := range migrationPath {
 			// the migration tool should be downloaded when install release
-			_, err := VerifyMigrationTool(module.Short, NormalizeMigrationToolURL(filepath.Base(migration.URL)))
+			_, err := VerifyMigrationTool(module.Name, NormalizeMigrationToolURL(filepath.Base(migration.URL)))
+			fmt.Println(module, migration.Version, "验证完成")
+
 			if err != nil {
+				fmt.Println(module, "验证失败", err)
 				return false
 			}
 		}
@@ -350,11 +384,12 @@ func VerifyAllMigrationTools(targetRelease codegen.Release, sysRoot string) bool
 	return true
 }
 
-func VerifyMigrationTool(module string, fileName string) (string, error) {
-	migrationToolDir := filepath.Join(MigrationToolsDir(), module)
+func VerifyMigrationTool(moduleName string, fileName string) (string, error) {
+	fmt.Println("fileName:::::", fileName)
+	migrationToolDir := filepath.Join(MigrationToolsDir(), moduleName)
 
 	packageFilePath := filepath.Join(migrationToolDir, fileName)
-
+	fmt.Println("packageFilePath:::::", packageFilePath)
 	// to check if the migration tool is already downloaded, we need to check if the file exists and its size
 	if _, err := os.Stat(packageFilePath); err != nil {
 		// TODO - verify the hash
