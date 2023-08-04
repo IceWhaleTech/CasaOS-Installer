@@ -1,8 +1,13 @@
 package fixtures
 
 import (
+	"context"
 	"os"
 	"path/filepath"
+
+	"github.com/IceWhaleTech/CasaOS-Installer/internal/config"
+	"github.com/IceWhaleTech/CasaOS-Installer/service"
+	cp "github.com/otiai10/copy"
 )
 
 func createFolderIfNotExist(path string) {
@@ -64,4 +69,39 @@ modules:
 
 	createFolderIfNotExist(filepath.Join(sysRoot, "etc", "casaos"))
 	os.WriteFile(filepath.Join(sysRoot, "etc", "casaos", "release.yaml"), []byte(releaseContent), 0755)
+}
+
+func CacheRelease0441(cacheDir string) error {
+	originCachePath := config.ServerInfo.CachePath
+	config.ServerInfo.CachePath = filepath.Join("/tmp", "casaos-cache", "var", "cache", "casaos")
+	ctx := context.Background()
+	release, err := service.GetRelease(ctx, "unit-test-release-0.4.4-1")
+	if err != nil {
+		return err
+	}
+
+	releaseFilePath, err := service.DownloadRelease(ctx, *release, false)
+	if err != nil {
+		return err
+	}
+
+	err = service.ExtractReleasePackages(releaseFilePath, *release)
+	if err != nil {
+		return err
+	}
+
+	// extract module packages
+	err = service.ExtractReleasePackages(releaseFilePath+"/linux*", *release)
+	if err != nil {
+		return err
+	}
+
+	// copy release file to cache path
+	err = cp.Copy(config.ServerInfo.CachePath, cacheDir)
+	if err != nil {
+		return err
+	}
+
+	config.ServerInfo.CachePath = originCachePath
+	return nil
 }

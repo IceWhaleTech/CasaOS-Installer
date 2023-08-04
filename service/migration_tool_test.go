@@ -210,8 +210,6 @@ func TestMigrationPath(t *testing.T) {
 	}
 
 	fixtures.SetLocalRelease(tmpSysRoot, "v0.3.0")
-	// fixtures.SetCasaOSVersion(tmpSysRoot, "casaos", "v0.3.0")
-	// fixtures.SetCasaOSVersion(tmpSysRoot, module, "v0.3.0")
 
 	migrationPath, err := service.GetMigrationPath(codegen.Module{
 		Short: module,
@@ -247,15 +245,7 @@ func TestDownloadAndInstallMigrateion(t *testing.T) {
 	release, err := service.GetRelease(ctx, "unit-test-release-0.4.4-1")
 	assert.NoError(t, err)
 
-	releaseFilePath, err := service.DownloadRelease(ctx, *release, false)
-	assert.NoError(t, err)
-	assert.FileExists(t, releaseFilePath)
-
-	err = service.ExtractReleasePackages(releaseFilePath, *release)
-	assert.NoError(t, err)
-
-	// extract very module package that the name is like linux*.tar.gz
-	err = service.ExtractReleasePackages(releaseFilePath+"/linux*", *release)
+	err = fixtures.CacheRelease0441(config.ServerInfo.CachePath)
 	assert.NoError(t, err)
 
 	migrationToolMap, err := service.MigrationToolsMap(*release)
@@ -300,7 +290,7 @@ func TestVerifyAndDownloadAllMigrationTools(t *testing.T) {
 
 	tmpDir, err := os.MkdirTemp("", "casaos-all-migration-test-*")
 	assert.NoError(t, err)
-	// defer os.RemoveAll(tmpDir)
+	defer os.RemoveAll(tmpDir)
 
 	tmpSysRoot := filepath.Join(tmpDir, "sysroot")
 	config.ServerInfo.CachePath = filepath.Join(tmpDir, "cache")
@@ -310,11 +300,7 @@ func TestVerifyAndDownloadAllMigrationTools(t *testing.T) {
 	targetVersionRelease, err := service.GetRelease(context.Background(), "unit-test-release-0.4.4-1")
 	assert.NoError(t, err)
 
-	// 构造migration list
-	releaseFilePath, err := service.DownloadRelease(context.Background(), *targetVersionRelease, false)
-	assert.NoError(t, err)
-
-	err = service.InstallCasaOSPackages(*targetVersionRelease, releaseFilePath, tmpSysRoot)
+	err = fixtures.CacheRelease0441(config.ServerInfo.CachePath)
 	assert.NoError(t, err)
 
 	// 没有下载时，返回false，表示需要下载
