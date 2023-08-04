@@ -280,6 +280,7 @@ func TestVerifyMigration(t *testing.T) {
 	filename = service.NormalizeMigrationToolURL(filepath.Base("v0.3.6"))
 	assert.Equal(t, filename, "linux-"+arch+"-casaos-app-management-migration-tool-v0.4.0-alpha7.tar.gz")
 
+	// TODO to verify verifyMigration  function
 }
 
 func TestVerifyAndDownloadAllMigrationTools(t *testing.T) {
@@ -317,4 +318,10 @@ func TestVerifyAndDownloadAllMigrationTools(t *testing.T) {
 	// assert migration tool exsit
 	assert.FileExists(t, filepath.Join(tmpDir, "cache", "migration-tools", "casaos", "linux-arm64-casaos-migration-tool-v0.3.6.tar.gz"))
 	assert.FileExists(t, filepath.Join(tmpDir, "cache", "migration-tools", "casaos-app-management", "linux-arm64-casaos-app-management-migration-tool-v0.4.0-alpha7.tar.gz"))
+}
+
+func TestPostMigration(t *testing.T) {
+	// TODO: add test
+	// to assert target-release is cover release.yml
+
 }
