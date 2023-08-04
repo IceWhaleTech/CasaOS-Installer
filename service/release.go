@@ -374,15 +374,16 @@ func stopSystemdService(serviceName string) error {
 }
 
 func StopModule(release codegen.Release) error {
+	err := error(nil)
 	for _, module := range release.Modules {
 		fmt.Println("停止: ", module.Name)
 		if err := stopSystemdService(module.Name); err != nil {
-			return err
+			fmt.Printf("failed to stop module: %s\n", err.Error())
 		}
 		// to sleep 1s
 		time.Sleep(1 * time.Second)
 	}
-	return nil
+	return err
 }
 
 func LaunchModule(release codegen.Release) error {

@@ -146,10 +146,11 @@ func IsDockerInstalled() bool {
 func InstallDockerByShell() error {
 	// to install docker
 	// curl -fsSL https://get.docker.com | bash -s docker --mirror Aliyun
-	exec.Command("curl", "-fsSL", "https://get.docker.com", "|", "bash", "-s", "docker", "--mirror", "Aliyun")
+	fmt.Println("请手动执行 curl", "-fsSL https://get.docker.com | bash -s docker --mirror Aliyun")
 
 	return nil
 }
+
 func InstallDocker() error {
 	// to check docker is running
 	isDockerRunning, err := GetDockerRunningStatus()
