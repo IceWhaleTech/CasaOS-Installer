@@ -32,10 +32,6 @@ v0.3.9 ${DOWNLOAD_DOMAIN}IceWhaleTech/CasaOS-AppManagement/releases/download/v0.
 //
 //	/usr/local/go/bin/go test -timeout 290s -run ^TestDownloadAllMigrationTools$ github.com/IceWhaleTech/CasaOS-Installer/service
 func TestDownloadAllMigrationTools(t *testing.T) {
-	if _, exists := os.LookupEnv("CI"); exists {
-		t.Skip("skipping test in CI environment")
-	}
-
 	tmpDir, err := os.MkdirTemp("", "casaos-download-all-migration-test-*")
 	assert.NoError(t, err)
 	defer os.RemoveAll(tmpDir)
