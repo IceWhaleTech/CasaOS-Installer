@@ -225,9 +225,6 @@ func TestMigrationPath(t *testing.T) {
 }
 
 func TestDownloadAndInstallMigrateion(t *testing.T) {
-	if _, exists := os.LookupEnv("CI"); exists {
-		t.Skip("skipping test in CI environment")
-	}
 	logger.LogInitConsoleOnly()
 
 	tmpDir, err := os.MkdirTemp("", "casaos-execute-migration-test-*")
