@@ -32,10 +32,6 @@ func TestGetPackageURLByCurrentArch(t *testing.T) {
 }
 
 func TestDownload(t *testing.T) {
-	if _, exists := os.LookupEnv("CI"); exists {
-		t.Skip("skipping test in CI environment")
-	}
-
 	defer goleak.VerifyNone(t, goleak.IgnoreTopFunction("go.opencensus.io/stats/view.(*worker).start")) //
 
 	logger.LogInitConsoleOnly()
