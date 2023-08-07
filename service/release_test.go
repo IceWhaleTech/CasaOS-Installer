@@ -130,7 +130,8 @@ func TestIsUpgradable(t *testing.T) {
 	// mock /usr/bin/casaos
 	// casaosVersion := "v0.4.3"
 	fixtures.SetLocalRelease(tmpSysRoot, "v0.4.3")
-	currentVersion, err := service.CurrentReleaseVersion(tmpSysRoot)
+
+  currentVersion, err := service.CurrentReleaseVersion(tmpSysRoot)
 	assert.NoError(t, err)
 	assert.Equal(t, currentVersion, "0.4.3")
 
