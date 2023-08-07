@@ -307,12 +307,12 @@ func TestVerifyMigration(t *testing.T) {
 }
 
 func TestGetMigrationDownloadURLFromMigrationListURL(t *testing.T) {
-	// arch := runtime.GOARCH
+	arch := runtime.GOARCH
 	logger.LogInitConsoleOnly()
 	downloadLink := service.GetMigrationDownloadURLFromMigrationListURL("${DOWNLOAD_DOMAIN}IceWhaleTech/CasaOS/releases/download/v0.3.6/linux-${ARCH}-casaos-migration-tool-v0.3.6.tar.gz")
-	assert.Equal(t, downloadLink, "${MIRROR}/CasaOS/releases/download/v0.3.6/linux-arm64-casaos-migration-tool-v0.3.6.tar.gz")
+	assert.Equal(t, downloadLink, "${MIRROR}/CasaOS/releases/download/v0.3.6/linux-"+arch+"-casaos-migration-tool-v0.3.6.tar.gz")
 	downloadLink = service.GetMigrationDownloadURLFromMigrationListURL("v0.3.6")
-	assert.Equal(t, downloadLink, "${MIRROR}/CasaOS/releases/download/v0.3.6/linux-arm64-casaos-migration-tool-v0.3.6.tar.gz")
+	assert.Equal(t, downloadLink, "${MIRROR}/CasaOS/releases/download/v0.3.6/linux-"+arch+"-casaos-migration-tool-v0.3.6.tar.gz")
 }
 
 func TestVerifyAndDownloadAllMigrationTools(t *testing.T) {
