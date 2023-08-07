@@ -317,9 +317,6 @@ func TestGetMigrationDownloadURLFromMigrationListURL(t *testing.T) {
 }
 
 func TestVerifyAndDownloadAllMigrationTools(t *testing.T) {
-	if _, exists := os.LookupEnv("CI"); exists {
-		t.Skip("skipping test in CI environment")
-	}
 	logger.LogInitConsoleOnly()
 
 	tmpDir, err := os.MkdirTemp("", "casaos-all-migration-test-*")
