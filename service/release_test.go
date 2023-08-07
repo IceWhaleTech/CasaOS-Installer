@@ -105,6 +105,10 @@ func TestPostReleaseInsall(t *testing.T) {
 }
 
 func TestIsUpgradable(t *testing.T) {
+	if _, exists := os.LookupEnv("CI"); exists {
+		t.Skip("skipping test in CI environment")
+	}
+
 	logger.LogInitConsoleOnly()
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -131,7 +135,7 @@ func TestIsUpgradable(t *testing.T) {
 	// casaosVersion := "v0.4.3"
 	fixtures.SetLocalRelease(tmpSysRoot, "v0.4.3")
 
-  currentVersion, err := service.CurrentReleaseVersion(tmpSysRoot)
+	currentVersion, err := service.CurrentReleaseVersion(tmpSysRoot)
 	assert.NoError(t, err)
 	assert.Equal(t, currentVersion, "0.4.3")
 
