@@ -144,12 +144,11 @@ func DownloadAllMigrationTools(ctx context.Context, release codegen.Release, sys
 			if migration.Version.LessThan(currentVersion) || migration.Version.GreaterThan(targetVersion) {
 				continue
 			}
-			fmt.Println("module key", module)
 
-			// TODO there is a bug. download require short name. but module from map is long name
 			if path, err := DownloadMigrationTool(ctx, release, module, migration, false); err != nil {
-				fmt.Println("下载完成", path)
 				return false, err
+			} else {
+				fmt.Println(path, " 下载完成")
 			}
 
 			downloaded = true
