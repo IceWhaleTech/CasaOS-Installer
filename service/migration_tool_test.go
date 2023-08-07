@@ -32,10 +32,6 @@ v0.3.9 ${DOWNLOAD_DOMAIN}IceWhaleTech/CasaOS-AppManagement/releases/download/v0.
 //
 //	/usr/local/go/bin/go test -timeout 290s -run ^TestDownloadAllMigrationTools$ github.com/IceWhaleTech/CasaOS-Installer/service
 func TestDownloadAllMigrationTools(t *testing.T) {
-	if _, exists := os.LookupEnv("CI"); exists {
-		t.Skip("skipping test in CI environment")
-	}
-
 	tmpDir, err := os.MkdirTemp("", "casaos-download-all-migration-test-*")
 	assert.NoError(t, err)
 	defer os.RemoveAll(tmpDir)
@@ -225,9 +221,6 @@ func TestMigrationPath(t *testing.T) {
 }
 
 func TestDownloadAndInstallMigrateion(t *testing.T) {
-	if _, exists := os.LookupEnv("CI"); exists {
-		t.Skip("skipping test in CI environment")
-	}
 	logger.LogInitConsoleOnly()
 
 	tmpDir, err := os.MkdirTemp("", "casaos-execute-migration-test-*")
@@ -317,10 +310,8 @@ func TestGetMigrationDownloadURLFromMigrationListURL(t *testing.T) {
 }
 
 func TestVerifyAndDownloadAllMigrationTools(t *testing.T) {
-	if _, exists := os.LookupEnv("CI"); exists {
-		t.Skip("skipping test in CI environment")
-	}
 	logger.LogInitConsoleOnly()
+	arch := runtime.GOARCH
 
 	tmpDir, err := os.MkdirTemp("", "casaos-all-migration-test-*")
 	assert.NoError(t, err)
@@ -349,8 +340,8 @@ func TestVerifyAndDownloadAllMigrationTools(t *testing.T) {
 	assert.Equal(t, result2, true)
 
 	// assert migration tool exsit
-	assert.FileExists(t, filepath.Join(tmpDir, "cache", "migration-tools", "casaos", "linux-arm64-casaos-migration-tool-v0.3.6.tar.gz"))
-	assert.FileExists(t, filepath.Join(tmpDir, "cache", "migration-tools", "casaos-app-management", "linux-arm64-casaos-app-management-migration-tool-v0.4.0-alpha7.tar.gz"))
+	assert.FileExists(t, filepath.Join(tmpDir, "cache", "migration-tools", "casaos", "linux-"+arch+"-casaos-migration-tool-v0.3.6.tar.gz"))
+	assert.FileExists(t, filepath.Join(tmpDir, "cache", "migration-tools", "casaos-app-management", "linux-"+arch+"-casaos-app-management-migration-tool-v0.4.0-alpha7.tar.gz"))
 }
 
 func TestPostMigration(t *testing.T) {

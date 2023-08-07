@@ -39,14 +39,14 @@ func StartMigration(sysRoot string) error {
 
 	ctx := context.Background()
 
-	currentRelease, err := internal.GetReleaseFromLocal(currentReleaseLocalPath)
+	currentRelease, err := internal.GetReleaseFromLocal(filepath.Join(sysRoot, currentReleaseLocalPath))
 	if err != nil {
 		return err
 	}
 
 	// if the err is not nil, it means the target release is not exist.
 	// and we didn't need to migrate
-	targetRelease, err := internal.GetReleaseFromLocal(targetReleaseLocalPath)
+	targetRelease, err := internal.GetReleaseFromLocal(filepath.Join(sysRoot, targetReleaseLocalPath))
 	if err != nil {
 		return err
 	}
@@ -144,12 +144,11 @@ func DownloadAllMigrationTools(ctx context.Context, release codegen.Release, sys
 			if migration.Version.LessThan(currentVersion) || migration.Version.GreaterThan(targetVersion) {
 				continue
 			}
-			fmt.Println("module key", module)
 
-			// TODO there is a bug. download require short name. but module from map is long name
 			if path, err := DownloadMigrationTool(ctx, release, module, migration, false); err != nil {
-				fmt.Println("下载完成", path)
 				return false, err
+			} else {
+				fmt.Println(path, " 下载完成")
 			}
 
 			downloaded = true
@@ -356,15 +355,15 @@ func ExecuteMigrationTool(moduleName string, migrationFilePath string, sysRoot s
 // verify migration tools for a release are already cached
 func VerifyAllMigrationTools(targetRelease codegen.Release, sysRoot string) bool {
 	// get all migration tool
-	currentRelease, err := internal.GetReleaseFromLocal(currentReleaseLocalPath)
+	currentRelease, err := internal.GetReleaseFromLocal(filepath.Join(sysRoot, currentReleaseLocalPath))
 	if err != nil {
-		fmt.Println("获取release.yaml失败", currentRelease)
+		fmt.Printf("获取release.yaml失败 %s", err)
 		return false
 	}
 
 	migrationToolMap, err := MigrationToolsMap(targetRelease)
 	if err != nil {
-		fmt.Println("获取migration map失败")
+		fmt.Printf("获取migration map失败 %s", err)
 		return false
 	}
 	fmt.Println("migrationToolMap:::::", migrationToolMap)
