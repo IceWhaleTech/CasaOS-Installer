@@ -318,6 +318,7 @@ func TestGetMigrationDownloadURLFromMigrationListURL(t *testing.T) {
 
 func TestVerifyAndDownloadAllMigrationTools(t *testing.T) {
 	logger.LogInitConsoleOnly()
+	arch := runtime.GOARCH
 
 	tmpDir, err := os.MkdirTemp("", "casaos-all-migration-test-*")
 	assert.NoError(t, err)
@@ -346,8 +347,8 @@ func TestVerifyAndDownloadAllMigrationTools(t *testing.T) {
 	assert.Equal(t, result2, true)
 
 	// assert migration tool exsit
-	assert.FileExists(t, filepath.Join(tmpDir, "cache", "migration-tools", "casaos", "linux-arm64-casaos-migration-tool-v0.3.6.tar.gz"))
-	assert.FileExists(t, filepath.Join(tmpDir, "cache", "migration-tools", "casaos-app-management", "linux-arm64-casaos-app-management-migration-tool-v0.4.0-alpha7.tar.gz"))
+	assert.FileExists(t, filepath.Join(tmpDir, "cache", "migration-tools", "casaos", "linux-"+arch+"-casaos-migration-tool-v0.3.6.tar.gz"))
+	assert.FileExists(t, filepath.Join(tmpDir, "cache", "migration-tools", "casaos-app-management", "linux-"+arch+"-casaos-app-management-migration-tool-v0.4.0-alpha7.tar.gz"))
 }
 
 func TestPostMigration(t *testing.T) {
