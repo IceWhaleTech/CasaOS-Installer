@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 
 	"github.com/IceWhaleTech/CasaOS-Common/utils/logger"
@@ -178,7 +179,7 @@ func TestMigrationPath(t *testing.T) {
 
 	tmpDir, err := os.MkdirTemp("", "casaos-migration-path-test-*")
 	assert.NoError(t, err)
-	// defer os.RemoveAll(tmpDir)
+	defer os.RemoveAll(tmpDir)
 
 	tmpSysRoot := filepath.Join(tmpDir, "sysroot")
 
@@ -271,16 +272,48 @@ func TestDownloadAndInstallMigrateion(t *testing.T) {
 }
 
 func TestVerifyMigration(t *testing.T) {
-	// TODO fix test
-	// arch := runtime.GOARCH
-	// logger.LogInitConsoleOnly()
-	// filename := service.GetFileNameFromMigrationURL("${DOWNLOAD_DOMAIN}IceWhaleTech/CasaOS-AppManagement/releases/download/v0.4.0-alpha7/linux-${ARCH}-casaos-app-management-migration-tool-v0.4.0-alpha7.tar.gz")
-	// assert.Equal(t, filename, "linux-"+arch+"-casaos-app-management-migration-tool-v0.4.0-alpha7.tar.gz")
+	arch := runtime.GOARCH
+	logger.LogInitConsoleOnly()
 
-	// filename = service.NormalizeMigrationToolURL(filepath.Base("v0.3.6"))
-	// assert.Equal(t, filename, "linux-"+arch+"-casaos-app-management-migration-tool-v0.4.0-alpha7.tar.gz")
+	filename := service.GetFileNameFromMigrationURL("v0.3.6")
+	assert.Equal(t, filename, "linux-"+arch+"-casaos-migration-tool-v0.3.6.tar.gz")
 
-	// TODO to verify verifyMigration  function
+	filename = service.GetFileNameFromMigrationURL("${DOWNLOAD_DOMAIN}IceWhaleTech/CasaOS-AppManagement/releases/download/v0.4.0-alpha7/linux-${ARCH}-casaos-app-management-migration-tool-v0.4.0-alpha7.tar.gz")
+	assert.Equal(t, filename, "linux-"+arch+"-casaos-app-management-migration-tool-v0.4.0-alpha7.tar.gz")
+
+	tmpDir, err := os.MkdirTemp("", "casaos-verify-migration-test-*")
+	assert.NoError(t, err)
+	defer os.RemoveAll(tmpDir)
+
+	config.ServerInfo.CachePath = filepath.Join(tmpDir, "cache")
+	migrationPath, err := service.VerifyMigrationTool("casaos-app-management", filename)
+	assert.ErrorContains(t, err, "migration tool")
+	assert.Equal(t, migrationPath, "")
+
+	ctx := context.Background()
+	release, err := service.GetRelease(ctx, "unit-test-release-0.4.4-1")
+	assert.NoError(t, err)
+
+	// to download migration tool
+	migrationPath, err = service.DownloadMigrationTool(ctx, *release, "casaos-app-management", service.MigrationTool{
+		Version: *semver.MustParse("v0.3.7"),
+		URL:     "${DOWNLOAD_DOMAIN}IceWhaleTech/CasaOS-AppManagement/releases/download/v0.4.0-alpha7/linux-${ARCH}-casaos-app-management-migration-tool-v0.4.0-alpha7.tar.gz",
+	}, false)
+	assert.NoError(t, err)
+	assert.Equal(t, migrationPath, filepath.Join(service.MigrationToolsDir(), "casaos-app-management", "linux-"+arch+"-casaos-app-management-migration-tool-v0.4.0-alpha7.tar.gz"))
+
+	migrationPath, err = service.VerifyMigrationTool("casaos-app-management", filename)
+	assert.NoError(t, err)
+	assert.Equal(t, migrationPath, filepath.Join(service.MigrationToolsDir(), "casaos-app-management", "linux-"+arch+"-casaos-app-management-migration-tool-v0.4.0-alpha7.tar.gz"))
+}
+
+func TestGetMigrationDownloadURLFromMigrationListURL(t *testing.T) {
+	arch := runtime.GOARCH
+	logger.LogInitConsoleOnly()
+	downloadLink := service.GetMigrationDownloadURLFromMigrationListURL("${DOWNLOAD_DOMAIN}IceWhaleTech/CasaOS/releases/download/v0.3.6/linux-${ARCH}-casaos-migration-tool-v0.3.6.tar.gz")
+	assert.Equal(t, downloadLink, "${MIRROR}/CasaOS/releases/download/v0.3.6/linux-"+arch+"-casaos-migration-tool-v0.3.6.tar.gz")
+	downloadLink = service.GetMigrationDownloadURLFromMigrationListURL("v0.3.6")
+	assert.Equal(t, downloadLink, "${MIRROR}/CasaOS/releases/download/v0.3.6/linux-"+arch+"-casaos-migration-tool-v0.3.6.tar.gz")
 }
 
 func TestVerifyAndDownloadAllMigrationTools(t *testing.T) {

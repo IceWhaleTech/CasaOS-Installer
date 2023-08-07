@@ -160,7 +160,19 @@ func DownloadAllMigrationTools(ctx context.Context, release codegen.Release, sys
 }
 
 func GetFileNameFromMigrationURL(url string) string {
-	return NormalizeMigrationToolURL(filepath.Base(url))
+	// the url should be like this:
+	// v0.3.5
+	// v0.3.6
+	// ${DOWNLOAD_DOMAIN}IceWhaleTech/CasaOS/releases/download/v0.3.6/linux-${ARCH}-casaos-migration-tool-v0.3.6.tar.gz
+	if strings.HasPrefix(url, "v") {
+		return fmt.Sprintf("linux-%s-casaos-migration-tool-%s.tar.gz", lo.If(runtime.GOARCH == "arm", "arm-7").Else(runtime.GOARCH), url)
+	} else {
+		return NormalizeMigrationToolURL(filepath.Base(url))
+	}
+}
+
+func GetMigrationDownloadURLFromMigrationListURL(url string) string {
+	return NormalizeMigrationToolURL(url)
 }
 
 func DownloadMigrationTool(ctx context.Context, release codegen.Release, moduleName string, migration MigrationTool, force bool) (string, error) {
@@ -175,7 +187,7 @@ func DownloadMigrationTool(ctx context.Context, release codegen.Release, moduleN
 		}
 	}
 
-	template := NormalizeMigrationToolURL(migration.URL)
+	template := GetMigrationDownloadURLFromMigrationListURL(migration.URL)
 
 	outDir := filepath.Join(MigrationToolsDir(), moduleName)
 
@@ -371,7 +383,7 @@ func VerifyAllMigrationTools(targetRelease codegen.Release, sysRoot string) bool
 
 		for _, migration := range migrationPath {
 			// the migration tool should be downloaded when install release
-			_, err := VerifyMigrationTool(module.Name, NormalizeMigrationToolURL(filepath.Base(migration.URL)))
+			_, err := VerifyMigrationTool(module.Name, GetFileNameFromMigrationURL(migration.URL))
 			fmt.Println(module, migration.Version, "验证完成")
 
 			if err != nil {
@@ -385,11 +397,9 @@ func VerifyAllMigrationTools(targetRelease codegen.Release, sysRoot string) bool
 }
 
 func VerifyMigrationTool(moduleName string, fileName string) (string, error) {
-	fmt.Println("fileName:::::", fileName)
 	migrationToolDir := filepath.Join(MigrationToolsDir(), moduleName)
 
 	packageFilePath := filepath.Join(migrationToolDir, fileName)
-	fmt.Println("packageFilePath:::::", packageFilePath)
 	// to check if the migration tool is already downloaded, we need to check if the file exists and its size
 	if _, err := os.Stat(packageFilePath); err != nil {
 		// TODO - verify the hash
