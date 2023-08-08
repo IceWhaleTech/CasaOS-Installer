@@ -128,7 +128,7 @@ func main() {
 	_logger.Info("🟩 Release verified.")
 
 	_logger.Info("🟨 Installing release...")
-	if err := service.InstallCasaOSPackages(*release, releaseFilePath, sysRoot); err != nil {
+	if err := service.InstallCasaOSPackages(*release, sysRoot); err != nil {
 		_logger.Error("🟥 Failed to install release: %s", err.Error())
 		os.Exit(1)
 	}

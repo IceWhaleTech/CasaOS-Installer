@@ -38,7 +38,20 @@ paths:
           $ref: "#/components/responses/ResponseNotFound"
         "500":
           $ref: "#/components/responses/ResponseInternalServerError"
-          
+  /test:
+    post:
+      summary: Test to Install a rauc of zimaos
+      operationId: installRauc
+      parameters:
+        - $ref: "#/components/parameters/Version"
+      responses:
+        "200":
+          $ref: "#/components/responses/ResponseOK"
+        "404":
+          $ref: "#/components/responses/ResponseNotFound"
+        "500":
+          $ref: "#/components/responses/ResponseInternalServerError"
+
 components:
   securitySchemes:
     access_token:

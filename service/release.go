@@ -183,29 +183,49 @@ func ExtractReleasePackages(packageFilepath string, release codegen.Release) err
 	return internal.BulkExtract(releaseDir)
 }
 
-func InstallCasaOSPackages(release codegen.Release, releaseFilePath string, sysRoot string) error {
-	// extract packages
-	err := ExtractReleasePackages(releaseFilePath, release)
-	if err != nil {
-		return err
-	}
-
-	// extract module packages
-	err = ExtractReleasePackages(releaseFilePath+"/linux*", release)
-	if err != nil {
-		return err
-	}
-
-	err = InstallRelease(release, sysRoot)
-	if err != nil {
-		return err
-	}
-	return nil
+func IsZimaOS() bool {
+	return false
 }
 
-// the function is for zimaos
-func InstallRAUC(sysRoot string) error {
-	return nil
+func IsCasaOS() bool {
+	return true
+}
+
+func GetInstallMethod() (string, error) {
+	// to check the system is casaos or zimaos
+	// if zimaos, return "rauc"
+	// if casaos, return "tar"
+	if IsZimaOS() {
+		return "rauc", nil
+	}
+	if IsCasaOS() {
+		return "tar", nil
+	}
+	return "", fmt.Errorf("unknown system")
+}
+
+func InstallSystem(release codegen.Release, sysRoot string) error {
+	installMethod, err := GetInstallMethod()
+	if err != nil {
+		return err
+	}
+	err = nil
+	if installMethod == "rauc" {
+		err = InstallRAUC(release, sysRoot)
+	}
+	if installMethod == "tar" {
+		err = InstallCasaOSPackages(release, sysRoot)
+	}
+
+	if err != nil {
+		return err
+	}
+
+	// post install
+
+	// reboot
+
+	return fmt.Errorf("unknown install method")
 }
 
 func ShouldUpgrade(release codegen.Release, sysrootPath string) bool {
@@ -342,6 +362,7 @@ func ExecuteModuleInstallScript(releaseFilePath string, release codegen.Release)
 		return err
 	})
 
+	// TODO : remove this code
 	// // run service script
 	// serviceScriptFolderPath := filepath.Join(releaseFilePath, "..", "build/scripts/setup/service.d")
 	// for _, module := range release.Modules {
@@ -352,9 +373,8 @@ func ExecuteModuleInstallScript(releaseFilePath string, release codegen.Release)
 }
 
 func reStartSystemdService(serviceName string) error {
-	// if err := systemctl.EnableService(fmt.Sprintf("%s.service", serviceName)); err != nil {
-	// 	return err
-	// }
+	// TODO remove the code, because the service is stop in before
+	// but in install rauc. the stop is important. So I need to think about it.
 	if err := systemctl.StopService(fmt.Sprintf("%s.service", serviceName)); err != nil {
 		return err
 	}

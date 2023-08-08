@@ -14,7 +14,6 @@ import (
 )
 
 var MyService Services
-var ReleaseFilePath string // TODO move it to a better place
 
 type Services interface {
 	Gateway() (external.ManagementService, error)

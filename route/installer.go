@@ -107,7 +107,7 @@ func (a *api) InstallRelease(ctx echo.Context, params codegen.InstallReleasePara
 		isCasaOS := true
 
 		if isCasaOS {
-			if err := service.InstallCasaOSPackages(*release, service.ReleaseFilePath, sysRoot); err != nil {
+			if err := service.InstallCasaOSPackages(*release, sysRoot); err != nil {
 				go service.PublishEventWrapper(context.Background(), common.EventTypeInstallUpdateError, map[string]string{
 					common.PropertyTypeMessage.Name: err.Error(),
 				})
@@ -117,7 +117,7 @@ func (a *api) InstallRelease(ctx echo.Context, params codegen.InstallReleasePara
 			}
 		} else {
 			// TODO the step is didn't implement
-			if err := service.InstallRAUC(sysRoot); err != nil {
+			if err := service.InstallRAUC(*release, sysRoot); err != nil {
 				go service.PublishEventWrapper(context.Background(), common.EventTypeInstallUpdateError, map[string]string{
 					common.PropertyTypeMessage.Name: err.Error(),
 				})
@@ -128,7 +128,10 @@ func (a *api) InstallRelease(ctx echo.Context, params codegen.InstallReleasePara
 
 		}
 
-		if err := service.ExecuteModuleInstallScript(service.ReleaseFilePath, *release); err != nil {
+		// TODO: think move ExecuteModuleInstallScript to install casaos packages
+		releaseFilePath, _ := service.VerifyRelease(*release)
+
+		if err := service.ExecuteModuleInstallScript(releaseFilePath, *release); err != nil {
 			go service.PublishEventWrapper(context.Background(), common.EventTypeInstallUpdateError, map[string]string{
 				common.PropertyTypeMessage.Name: err.Error(),
 			})
@@ -167,3 +170,46 @@ func (a *api) InstallRelease(ctx echo.Context, params codegen.InstallReleasePara
 		Message: &message,
 	})
 }
+
+// func (a *api) installRauc(ctx echo.Context, params codegen.InstallReleaseParams) error {
+// 	tag := "dev-test"
+// 	if params.Version != nil && *params.Version != "latest" {
+// 		tag = *params.Version
+// 	}
+
+// 	release, err := service.GetRelease(ctx.Request().Context(), tag)
+// 	if err != nil {
+// 		message := err.Error()
+
+// 		if err == service.ErrReleaseNotFound {
+// 			return ctx.JSON(http.StatusNotFound, &codegen.ResponseNotFound{
+// 				Message: &message,
+// 			})
+// 		}
+
+// 		return ctx.JSON(http.StatusInternalServerError, &codegen.ResponseInternalServerError{
+// 			Message: &message,
+// 		})
+// 	}
+
+// 	if release == nil {
+// 		message := "release not found"
+// 		return ctx.JSON(http.StatusNotFound, &codegen.ResponseNotFound{
+// 			Message: &message,
+// 		})
+// 	}
+
+// 	err = service.InstallRAUC(*release, "/")
+// 	if err != nil {
+// 		message := err.Error()
+// 		return ctx.JSON(http.StatusInternalServerError, &codegen.ResponseInternalServerError{
+// 			Message: &message,
+// 		})
+// 	}
+
+// 	message := "rauc install complete"
+// 	return ctx.JSON(http.StatusOK, &codegen.ResponseOK{
+// 		Message: &message,
+// 	})
+
+// }

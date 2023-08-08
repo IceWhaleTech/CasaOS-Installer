@@ -11,6 +11,7 @@ import (
 	"github.com/IceWhaleTech/CasaOS-Common/utils/jwt"
 	"github.com/IceWhaleTech/CasaOS-Installer/codegen"
 	"github.com/IceWhaleTech/CasaOS-Installer/internal/config"
+	"github.com/IceWhaleTech/CasaOS-Installer/service"
 	"github.com/deepmap/oapi-codegen/pkg/middleware"
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/getkin/kin-openapi/openapi3filter"
@@ -27,6 +28,49 @@ var (
 )
 
 type api struct{}
+
+// InstallRauc implements codegen.ServerInterface.
+func (*api) InstallRauc(ctx echo.Context, params codegen.InstallRaucParams) error {
+	tag := "dev-test"
+	if params.Version != nil && *params.Version != "latest" {
+		tag = *params.Version
+	}
+
+	release, err := service.GetRelease(ctx.Request().Context(), tag)
+	if err != nil {
+		message := err.Error()
+
+		if err == service.ErrReleaseNotFound {
+			return ctx.JSON(http.StatusNotFound, &codegen.ResponseNotFound{
+				Message: &message,
+			})
+		}
+
+		return ctx.JSON(http.StatusInternalServerError, &codegen.ResponseInternalServerError{
+			Message: &message,
+		})
+	}
+
+	if release == nil {
+		message := "release not found"
+		return ctx.JSON(http.StatusNotFound, &codegen.ResponseNotFound{
+			Message: &message,
+		})
+	}
+
+	err = service.InstallRAUC(*release, "/")
+	if err != nil {
+		message := err.Error()
+		return ctx.JSON(http.StatusInternalServerError, &codegen.ResponseInternalServerError{
+			Message: &message,
+		})
+	}
+
+	message := "rauc install complete"
+	return ctx.JSON(http.StatusOK, &codegen.ResponseOK{
+		Message: &message,
+	})
+}
 
 func init() {
 	swagger, err := codegen.GetSwagger()
