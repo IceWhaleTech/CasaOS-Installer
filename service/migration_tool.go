@@ -25,8 +25,8 @@ type MigrationTool struct {
 }
 
 var (
-	currentReleaseLocalPath = "/etc/casaos/release.yaml"
-	targetReleaseLocalPath  = "/etc/casaos/target-release.yaml"
+	CurrentReleaseLocalPath = "/etc/casaos/release.yaml"
+	TargetReleaseLocalPath  = "/etc/casaos/target-release.yaml"
 )
 
 func StartMigration(sysRoot string) error {
@@ -39,14 +39,14 @@ func StartMigration(sysRoot string) error {
 
 	ctx := context.Background()
 
-	currentRelease, err := internal.GetReleaseFromLocal(filepath.Join(sysRoot, currentReleaseLocalPath))
+	currentRelease, err := internal.GetReleaseFromLocal(filepath.Join(sysRoot, CurrentReleaseLocalPath))
 	if err != nil {
 		return err
 	}
 
 	// if the err is not nil, it means the target release is not exist.
 	// and we didn't need to migrate
-	targetRelease, err := internal.GetReleaseFromLocal(filepath.Join(sysRoot, targetReleaseLocalPath))
+	targetRelease, err := internal.GetReleaseFromLocal(filepath.Join(sysRoot, TargetReleaseLocalPath))
 	if err != nil {
 		return err
 	}
@@ -103,11 +103,11 @@ func StartMigration(sysRoot string) error {
 func PostMigration(sysRoot string) error {
 	// post migration. e.g. move target-relase to relase yaml
 	// remove currentReleaseLocalPath
-	err := os.Remove(filepath.Join(sysRoot, currentReleaseLocalPath))
+	err := os.Remove(filepath.Join(sysRoot, CurrentReleaseLocalPath))
 	if err != nil {
 		return err
 	}
-	err = os.Rename(filepath.Join(sysRoot, targetReleaseLocalPath), filepath.Join(sysRoot, currentReleaseLocalPath))
+	err = os.Rename(filepath.Join(sysRoot, TargetReleaseLocalPath), filepath.Join(sysRoot, CurrentReleaseLocalPath))
 	if err != nil {
 		return err
 	}
@@ -355,7 +355,7 @@ func ExecuteMigrationTool(moduleName string, migrationFilePath string, sysRoot s
 // verify migration tools for a release are already cached
 func VerifyAllMigrationTools(targetRelease codegen.Release, sysRoot string) bool {
 	// get all migration tool
-	currentRelease, err := internal.GetReleaseFromLocal(filepath.Join(sysRoot, currentReleaseLocalPath))
+	currentRelease, err := internal.GetReleaseFromLocal(filepath.Join(sysRoot, CurrentReleaseLocalPath))
 	if err != nil {
 		fmt.Printf("获取release.yaml失败 %s", err)
 		return false

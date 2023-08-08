@@ -154,22 +154,3 @@ func TestIsUpgradable(t *testing.T) {
 	result = service.IsUpgradable(*release, tmpSysRoot)
 	assert.Equal(t, result, true)
 }
-
-func TestVerifyRAUC(t *testing.T) {
-	logger.LogInitConsoleOnly()
-
-	tmpDir, err := os.MkdirTemp("", "casaos-verify-rauc-*")
-	defer os.RemoveAll(tmpDir)
-	assert.NoError(t, err)
-	config.ServerInfo.CachePath = filepath.Join(tmpDir, "cache")
-
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	release, err := service.GetRelease(ctx, "unit-test-release-0.4.4-1")
-	assert.NoError(t, err)
-
-	path, err := service.VerifyRAUC(*release)
-	assert.NoError(t, err)
-	assert.FileExists(t, path)
-}

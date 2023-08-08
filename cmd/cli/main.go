@@ -200,7 +200,7 @@ func main() {
 	}
 	_logger.Info("🟩 Uninstall script Downloaded")
 
-	if service.VerifyUninstallScript() {
+	if service.VerifyUninstallScript(sysRoot) {
 		_logger.Info("🟨 uninstall script is installed")
 	} else {
 		panic("🟥 uninstall script is not installed")

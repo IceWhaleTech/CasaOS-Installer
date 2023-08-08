@@ -194,6 +194,7 @@ func InstallSystem(release codegen.Release, sysRoot string) error {
 	if installMethod == "tar" {
 		// migration
 		StartMigration(sysRoot)
+		// migration will remove target-release.yaml that generate in post install
 	}
 	if err != nil {
 		return err
@@ -212,7 +213,7 @@ func InstallSystem(release codegen.Release, sysRoot string) error {
 			return err
 		}
 
-		if present := VerifyUninstallScript(); !present {
+		if present := VerifyUninstallScript(sysRoot); !present {
 			return fmt.Errorf("uninstall script not found")
 		}
 	}
@@ -284,7 +285,7 @@ func PostReleaseInstall(release codegen.Release, sysrootPath string) error {
 	// if casaos folder is exist, create casaos folder
 	os.MkdirAll(filepath.Join(sysrootPath, "etc", "casaos"), 0o755)
 
-	targetReleaseLocalPath = filepath.Join(sysrootPath, targetReleaseLocalPath)
+	targetReleaseLocalPath := filepath.Join(sysrootPath, TargetReleaseLocalPath)
 	targetReleaseContent, err := yaml.Marshal(release)
 	if err != nil {
 		return err
@@ -296,7 +297,7 @@ func PostReleaseInstall(release codegen.Release, sysrootPath string) error {
 	// 2. if current release is not exist, create it( using current release version )
 	// if current release is exist, It mean the casaos is old casaos that install by shell
 	// So It should update to casaos v0.4.4 and we didn't need to migrate it.
-	currentReleaseLocalPath = filepath.Join(sysrootPath, currentReleaseLocalPath)
+	currentReleaseLocalPath := filepath.Join(sysrootPath, CurrentReleaseLocalPath)
 	if _, err := os.Stat(currentReleaseLocalPath); os.IsNotExist(err) {
 		currentReleaseContent, err := yaml.Marshal(release)
 		if err != nil {

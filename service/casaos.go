@@ -76,8 +76,8 @@ func DownloadUninstallScript(ctx context.Context, sysRoot string) (string, error
 	return "", nil
 }
 
-func VerifyUninstallScript() bool {
+func VerifyUninstallScript(sysRoot string) bool {
 	// to check the present of file
 	// how to do the test? the uninstall is always in the same place?
-	return !file.CheckNotExist("/usr/bin/casaos-uninstall")
+	return !file.CheckNotExist(filepath.Join(sysRoot, "/usr/bin/casaos-uninstall"))
 }

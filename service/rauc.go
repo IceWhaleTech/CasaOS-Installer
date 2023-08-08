@@ -36,8 +36,6 @@ func InstallRAUC(release codegen.Release, sysRoot string) error {
 	if err != nil {
 		log.Fatal("InstallBundle() failed: ", err.Error())
 	}
-	// TODO how to post install?
-	defer RebootSystem()
 
 	return nil
 }
@@ -58,7 +56,6 @@ func VerifyRAUC(release codegen.Release) (string, error) {
 
 	packageFilePath := filepath.Join(releaseDir, packageFilename)
 
-	fmt.Println(packageFilePath)
 	if _, err := os.Stat(packageFilePath); err != nil {
 		return "", fmt.Errorf("rauc %s not found", packageFilePath)
 	}
