@@ -148,7 +148,7 @@ func DownloadAllMigrationTools(ctx context.Context, release codegen.Release, sys
 			if path, err := DownloadMigrationTool(ctx, release, module, migration, false); err != nil {
 				return false, err
 			} else {
-				fmt.Println(path, " 下载完成")
+				fmt.Println(module, "migration tools 下载完成. 位为 [", path, "]")
 			}
 
 			downloaded = true
