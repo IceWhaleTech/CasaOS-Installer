@@ -9,7 +9,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/IceWhaleTech/CasaOS-Common/utils/file"
 	"github.com/IceWhaleTech/CasaOS-Common/utils/logger"
 	"github.com/IceWhaleTech/CasaOS-Common/utils/systemctl"
 	"github.com/IceWhaleTech/CasaOS-Installer/codegen"
@@ -53,32 +52,6 @@ func GetRelease(ctx context.Context, tag string) (*codegen.Release, error) {
 	}
 
 	return release, nil
-}
-
-func DownloadUninstallScript(ctx context.Context, sysRoot string) (string, error) {
-	CASA_UNINSTALL_URL := "https://get.casaos.io/uninstall/v0.4.0"
-	CASA_UNINSTALL_PATH := filepath.Join(sysRoot, "/usr/bin/casaos-uninstall")
-	// to delete the old uninstall script when the script is exsit
-	if _, err := os.Stat(CASA_UNINSTALL_PATH); err == nil {
-		// 删除文件
-		err := os.Remove(CASA_UNINSTALL_PATH)
-		if err != nil {
-			fmt.Println(err)
-		} else {
-			fmt.Println("Old uninstall script deleted successfully")
-		}
-	}
-
-	// to download the new uninstall script
-	if err := internal.DownloadAs(ctx, CASA_UNINSTALL_PATH, CASA_UNINSTALL_URL); err != nil {
-		return CASA_UNINSTALL_PATH, err
-	}
-	// change the permission of the uninstall script
-	if err := os.Chmod(CASA_UNINSTALL_PATH, 0o755); err != nil {
-		return CASA_UNINSTALL_PATH, err
-	}
-
-	return "", nil
 }
 
 // returns releaseFilePath if successful
@@ -170,19 +143,6 @@ func DownloadRelease(ctx context.Context, release codegen.Release, force bool) (
 	return releaseFilePath, os.WriteFile(releaseFilePath, buf, 0o600)
 }
 
-func ExtractReleasePackages(packageFilepath string, release codegen.Release) error {
-	releaseDir, err := ReleaseDir(release)
-	if err != nil {
-		return err
-	}
-
-	if err := internal.Extract(packageFilepath, releaseDir); err != nil {
-		return err
-	}
-
-	return internal.BulkExtract(releaseDir)
-}
-
 func IsZimaOS() bool {
 	return false
 }
@@ -209,6 +169,7 @@ func InstallSystem(release codegen.Release, sysRoot string) error {
 	if err != nil {
 		return err
 	}
+
 	err = nil
 	if installMethod == "rauc" {
 		err = InstallRAUC(release, sysRoot)
@@ -372,12 +333,6 @@ func VerifyRelease(release codegen.Release) (string, error) {
 	return packageFilePath, VerifyChecksumByFilePath(packageFilePath, packageChecksum)
 }
 
-func VerifyUninstallScript() bool {
-	// to check the present of file
-	// how to do the test? the uninstall is always in the same place?
-	return !file.CheckNotExist("/usr/bin/casaos-uninstall")
-}
-
 func ExecuteModuleInstallScript(releaseFilePath string, release codegen.Release) error {
 	// run setup script
 	scriptFolderPath := filepath.Join(releaseFilePath, "..", "build/scripts/setup/script.d")
@@ -397,13 +352,6 @@ func ExecuteModuleInstallScript(releaseFilePath string, release codegen.Release)
 		err = cmd.Run()
 		return err
 	})
-
-	// TODO : remove this code
-	// // run service script
-	// serviceScriptFolderPath := filepath.Join(releaseFilePath, "..", "build/scripts/setup/service.d")
-	// for _, module := range release.Modules {
-	// 	moduleServiceScriptFolderPath := filepath.Join(serviceScriptFolderPath, module.Name)
-	// }
 
 	return nil
 }

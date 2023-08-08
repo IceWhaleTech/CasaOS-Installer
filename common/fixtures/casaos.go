@@ -105,3 +105,11 @@ func CacheRelease0441(cacheDir string) error {
 	config.ServerInfo.CachePath = originCachePath
 	return nil
 }
+
+func SetZimaOS(sysRoot string) {
+
+}
+
+func SetCasaOS(sysRoot string) {
+
+}
