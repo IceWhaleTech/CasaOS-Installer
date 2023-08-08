@@ -345,7 +345,22 @@ func TestVerifyAndDownloadAllMigrationTools(t *testing.T) {
 }
 
 func TestPostMigration(t *testing.T) {
-	// TODO: add test
-	// to assert target-release is cover release.yml
+	logger.LogInitConsoleOnly()
 
+	tmpDir, err := os.MkdirTemp("", "casaos-uninstall-script-test-*")
+	assert.NoError(t, err)
+	defer os.RemoveAll(tmpDir)
+
+	tmpSysRoot := filepath.Join(tmpDir, "sysroot")
+
+	fixtures.SetLocalRelease(tmpSysRoot, "v0.3.5")
+	fixtures.SetLocalTargetRelease(tmpSysRoot, "v0.4.4")
+
+	assert.FileExists(t, filepath.Join(tmpSysRoot, service.CurrentReleaseLocalPath))
+	assert.FileExists(t, filepath.Join(tmpSysRoot, service.TargetReleaseLocalPath))
+
+	service.PostMigration(tmpSysRoot)
+
+	assert.FileExists(t, filepath.Join(tmpSysRoot, service.CurrentReleaseLocalPath))
+	assert.NoFileExists(t, filepath.Join(tmpSysRoot, service.TargetReleaseLocalPath))
 }

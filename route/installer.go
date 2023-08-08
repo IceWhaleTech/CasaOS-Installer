@@ -104,61 +104,14 @@ func (a *api) InstallRelease(ctx echo.Context, params codegen.InstallReleasePara
 			return
 		}
 
-		isCasaOS := true
-
-		if isCasaOS {
-			if err := service.InstallCasaOSPackages(*release, service.ReleaseFilePath, sysRoot); err != nil {
-				go service.PublishEventWrapper(context.Background(), common.EventTypeInstallUpdateError, map[string]string{
-					common.PropertyTypeMessage.Name: err.Error(),
-				})
-
-				logger.Error("error while installing casaos packages: %s", zap.Error(err))
-				return
-			}
-		} else {
-			// TODO the step is didn't implement
-			if err := service.InstallRAUC(sysRoot); err != nil {
-				go service.PublishEventWrapper(context.Background(), common.EventTypeInstallUpdateError, map[string]string{
-					common.PropertyTypeMessage.Name: err.Error(),
-				})
-
-				logger.Error("error while installing casaos packages: %s", zap.Error(err))
-				return
-			}
-
-		}
-
-		if err := service.ExecuteModuleInstallScript(service.ReleaseFilePath, *release); err != nil {
+		if err := service.InstallSystem(*release, sysRoot); err != nil {
 			go service.PublishEventWrapper(context.Background(), common.EventTypeInstallUpdateError, map[string]string{
 				common.PropertyTypeMessage.Name: err.Error(),
 			})
 
-			logger.Error("error while extract modules packages: %s", zap.Error(err))
+			logger.Error("error while install system: %s", zap.Error(err))
 			return
-		}
 
-		if err := service.LaunchModule(*release); err != nil {
-			go service.PublishEventWrapper(context.Background(), common.EventTypeInstallUpdateError, map[string]string{
-				common.PropertyTypeMessage.Name: err.Error(),
-			})
-			logger.Error("error while enable services: %s", zap.Error(err))
-			return
-		}
-
-		if _, err = service.DownloadUninstallScript(backgroundCtx, sysRoot); err != nil {
-			go service.PublishEventWrapper(context.Background(), common.EventTypeInstallUpdateError, map[string]string{
-				common.PropertyTypeMessage.Name: err.Error(),
-			})
-			logger.Error("Downloading uninstall script: %s", zap.Error(err))
-			return
-		}
-
-		if present := service.VerifyUninstallScript(); !present {
-			go service.PublishEventWrapper(context.Background(), common.EventTypeInstallUpdateError, map[string]string{
-				common.PropertyTypeMessage.Name: err.Error(),
-			})
-			logger.Error("uninstall script not found")
-			return
 		}
 	}()
 

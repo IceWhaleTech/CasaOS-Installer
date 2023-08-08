@@ -9,7 +9,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/IceWhaleTech/CasaOS-Common/utils/file"
 	"github.com/IceWhaleTech/CasaOS-Common/utils/logger"
 	"github.com/IceWhaleTech/CasaOS-Common/utils/systemctl"
 	"github.com/IceWhaleTech/CasaOS-Installer/codegen"
@@ -53,32 +52,6 @@ func GetRelease(ctx context.Context, tag string) (*codegen.Release, error) {
 	}
 
 	return release, nil
-}
-
-func DownloadUninstallScript(ctx context.Context, sysRoot string) (string, error) {
-	CASA_UNINSTALL_URL := "https://get.casaos.io/uninstall/v0.4.0"
-	CASA_UNINSTALL_PATH := filepath.Join(sysRoot, "/usr/bin/casaos-uninstall")
-	// to delete the old uninstall script when the script is exsit
-	if _, err := os.Stat(CASA_UNINSTALL_PATH); err == nil {
-		// 删除文件
-		err := os.Remove(CASA_UNINSTALL_PATH)
-		if err != nil {
-			fmt.Println(err)
-		} else {
-			fmt.Println("Old uninstall script deleted successfully")
-		}
-	}
-
-	// to download the new uninstall script
-	if err := internal.DownloadAs(ctx, CASA_UNINSTALL_PATH, CASA_UNINSTALL_URL); err != nil {
-		return CASA_UNINSTALL_PATH, err
-	}
-	// change the permission of the uninstall script
-	if err := os.Chmod(CASA_UNINSTALL_PATH, 0o755); err != nil {
-		return CASA_UNINSTALL_PATH, err
-	}
-
-	return "", nil
 }
 
 // returns releaseFilePath if successful
@@ -170,42 +143,87 @@ func DownloadRelease(ctx context.Context, release codegen.Release, force bool) (
 	return releaseFilePath, os.WriteFile(releaseFilePath, buf, 0o600)
 }
 
-func ExtractReleasePackages(packageFilepath string, release codegen.Release) error {
-	releaseDir, err := ReleaseDir(release)
-	if err != nil {
-		return err
-	}
-
-	if err := internal.Extract(packageFilepath, releaseDir); err != nil {
-		return err
-	}
-
-	return internal.BulkExtract(releaseDir)
+func IsZimaOS() bool {
+	return false
 }
 
-func InstallCasaOSPackages(release codegen.Release, releaseFilePath string, sysRoot string) error {
-	// extract packages
-	err := ExtractReleasePackages(releaseFilePath, release)
-	if err != nil {
-		return err
-	}
-
-	// extract module packages
-	err = ExtractReleasePackages(releaseFilePath+"/linux*", release)
-	if err != nil {
-		return err
-	}
-
-	err = InstallRelease(release, sysRoot)
-	if err != nil {
-		return err
-	}
-	return nil
+func IsCasaOS() bool {
+	return true
 }
 
-// the function is for zimaos
-func InstallRAUC(sysRoot string) error {
-	return nil
+func GetInstallMethod() (string, error) {
+	// to check the system is casaos or zimaos
+	// if zimaos, return "rauc"
+	// if casaos, return "tar"
+	if IsZimaOS() {
+		return "rauc", nil
+	}
+	if IsCasaOS() {
+		return "tar", nil
+	}
+	return "", fmt.Errorf("unknown system")
+}
+
+func InstallSystem(release codegen.Release, sysRoot string) error {
+	installMethod, err := GetInstallMethod()
+	if err != nil {
+		return err
+	}
+
+	err = nil
+	if installMethod == "rauc" {
+		err = InstallRAUC(release, sysRoot)
+	}
+	if installMethod == "tar" {
+		err = InstallCasaOSPackages(release, sysRoot)
+	}
+
+	if err != nil {
+		return err
+	}
+	// install setup(only for casaos)
+	if installMethod == "tar" {
+		releaseFilePath, _ := VerifyRelease(release)
+		err = ExecuteModuleInstallScript(releaseFilePath, release)
+	}
+
+	// post install
+	PostReleaseInstall(release, sysRoot)
+
+	// start migration(only for casaos)
+	if installMethod == "tar" {
+		// migration
+		StartMigration(sysRoot)
+		// migration will remove target-release.yaml that generate in post install
+	}
+	if err != nil {
+		return err
+	}
+
+	// restart services(only for casaos)
+	if installMethod == "tar" {
+		if err := LaunchModule(release); err != nil {
+			return err
+		}
+
+		backgroundCtx, cancel := context.WithCancel(context.Background())
+		defer cancel()
+
+		if _, err = DownloadUninstallScript(backgroundCtx, sysRoot); err != nil {
+			return err
+		}
+
+		if present := VerifyUninstallScript(sysRoot); !present {
+			return fmt.Errorf("uninstall script not found")
+		}
+	}
+
+	// reboot(only for zima)
+	if installMethod == "rauc" {
+		RebootSystem()
+	}
+
+	return fmt.Errorf("unknown install method")
 }
 
 func ShouldUpgrade(release codegen.Release, sysrootPath string) bool {
@@ -255,19 +273,19 @@ func InstallRelease(release codegen.Release, sysrootPath string) error {
 	return nil
 }
 
-func InstallDependencies(ctx context.Context, release codegen.Release, sysrootPath string) error {
+func InstallDependencies(release codegen.Release, sysrootPath string) error {
 	internal.InstallDependencies()
 	return nil
 }
 
-func PostReleaseInstall(ctx context.Context, release codegen.Release, sysrootPath string) error {
+func PostReleaseInstall(release codegen.Release, sysrootPath string) error {
 	// post release install script
 	// work list
 	// 1. overwrite target release
 	// if casaos folder is exist, create casaos folder
 	os.MkdirAll(filepath.Join(sysrootPath, "etc", "casaos"), 0o755)
 
-	targetReleaseLocalPath = filepath.Join(sysrootPath, targetReleaseLocalPath)
+	targetReleaseLocalPath := filepath.Join(sysrootPath, TargetReleaseLocalPath)
 	targetReleaseContent, err := yaml.Marshal(release)
 	if err != nil {
 		return err
@@ -279,7 +297,7 @@ func PostReleaseInstall(ctx context.Context, release codegen.Release, sysrootPat
 	// 2. if current release is not exist, create it( using current release version )
 	// if current release is exist, It mean the casaos is old casaos that install by shell
 	// So It should update to casaos v0.4.4 and we didn't need to migrate it.
-	currentReleaseLocalPath = filepath.Join(sysrootPath, currentReleaseLocalPath)
+	currentReleaseLocalPath := filepath.Join(sysrootPath, CurrentReleaseLocalPath)
 	if _, err := os.Stat(currentReleaseLocalPath); os.IsNotExist(err) {
 		currentReleaseContent, err := yaml.Marshal(release)
 		if err != nil {
@@ -316,12 +334,6 @@ func VerifyRelease(release codegen.Release) (string, error) {
 	return packageFilePath, VerifyChecksumByFilePath(packageFilePath, packageChecksum)
 }
 
-func VerifyUninstallScript() bool {
-	// to check the present of file
-	// how to do the test? the uninstall is always in the same place?
-	return !file.CheckNotExist("/usr/bin/casaos-uninstall")
-}
-
 func ExecuteModuleInstallScript(releaseFilePath string, release codegen.Release) error {
 	// run setup script
 	scriptFolderPath := filepath.Join(releaseFilePath, "..", "build/scripts/setup/script.d")
@@ -342,19 +354,12 @@ func ExecuteModuleInstallScript(releaseFilePath string, release codegen.Release)
 		return err
 	})
 
-	// // run service script
-	// serviceScriptFolderPath := filepath.Join(releaseFilePath, "..", "build/scripts/setup/service.d")
-	// for _, module := range release.Modules {
-	// 	moduleServiceScriptFolderPath := filepath.Join(serviceScriptFolderPath, module.Name)
-	// }
-
 	return nil
 }
 
 func reStartSystemdService(serviceName string) error {
-	// if err := systemctl.EnableService(fmt.Sprintf("%s.service", serviceName)); err != nil {
-	// 	return err
-	// }
+	// TODO remove the code, because the service is stop in before
+	// but in install rauc. the stop is important. So I need to think about it.
 	if err := systemctl.StopService(fmt.Sprintf("%s.service", serviceName)); err != nil {
 		return err
 	}

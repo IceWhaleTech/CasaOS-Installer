@@ -16,29 +16,8 @@ func createFolderIfNotExist(path string) {
 	}
 }
 
-func SetCasaOS043(sysRoot string, module string) {
-	casaos043VersionScript := "#! /usr/bin/python3\nprint(\"v0.4.3\")"
-	createFolderIfNotExist(filepath.Join(sysRoot, "/usr", "bin"))
-	casaosPath := filepath.Join(sysRoot, "/usr", "bin", module)
-	os.WriteFile(casaosPath, []byte(casaos043VersionScript), 0755)
-}
-
-func SetCasaOS035(sysRoot string, module string) {
-	casaos043VersionScript := "#! /usr/bin/python3\nprint(\"v0.3.5\")"
-	createFolderIfNotExist(filepath.Join(sysRoot, "/usr", "bin"))
-	casaosPath := filepath.Join(sysRoot, "/usr", "bin", module)
-	os.WriteFile(casaosPath, []byte(casaos043VersionScript), 0755)
-}
-
-func SetCasaOSVersion(sysRoot string, module string, versionTag string) {
-	casaos043VersionScript := "#! /usr/bin/python3\nprint(\"" + versionTag + "\")"
-	createFolderIfNotExist(filepath.Join(sysRoot, "/usr", "bin"))
-	casaosPath := filepath.Join(sysRoot, "/usr", "bin", module)
-	os.WriteFile(casaosPath, []byte(casaos043VersionScript), 0755)
-}
-
-func SetLocalRelease(sysRoot string, versionTag string) {
-	releaseContent := `version: ` + versionTag + `
+func getReleaseYamlContent(versionTag string) string {
+	return `version: ` + versionTag + `
 release_notes: |
   TOOD: add release notes
 mirrors:
@@ -66,9 +45,41 @@ modules:
   - name: casaos-app-management
     short: app-management
 `
+}
+
+func SetCasaOS043(sysRoot string, module string) {
+	casaos043VersionScript := "#! /usr/bin/python3\nprint(\"v0.4.3\")"
+	createFolderIfNotExist(filepath.Join(sysRoot, "/usr", "bin"))
+	casaosPath := filepath.Join(sysRoot, "/usr", "bin", module)
+	os.WriteFile(casaosPath, []byte(casaos043VersionScript), 0755)
+}
+
+func SetCasaOS035(sysRoot string, module string) {
+	casaos043VersionScript := "#! /usr/bin/python3\nprint(\"v0.3.5\")"
+	createFolderIfNotExist(filepath.Join(sysRoot, "/usr", "bin"))
+	casaosPath := filepath.Join(sysRoot, "/usr", "bin", module)
+	os.WriteFile(casaosPath, []byte(casaos043VersionScript), 0755)
+}
+
+func SetCasaOSVersion(sysRoot string, module string, versionTag string) {
+	casaos043VersionScript := "#! /usr/bin/python3\nprint(\"" + versionTag + "\")"
+	createFolderIfNotExist(filepath.Join(sysRoot, "/usr", "bin"))
+	casaosPath := filepath.Join(sysRoot, "/usr", "bin", module)
+	os.WriteFile(casaosPath, []byte(casaos043VersionScript), 0755)
+}
+
+func SetLocalRelease(sysRoot string, versionTag string) {
+	releaseContent := getReleaseYamlContent(versionTag)
 
 	createFolderIfNotExist(filepath.Join(sysRoot, "etc", "casaos"))
-	os.WriteFile(filepath.Join(sysRoot, "etc", "casaos", "release.yaml"), []byte(releaseContent), 0755)
+	os.WriteFile(filepath.Join(sysRoot, service.CurrentReleaseLocalPath), []byte(releaseContent), 0755)
+}
+
+func SetLocalTargetRelease(sysRoot string, versionTag string) {
+	releaseContent := getReleaseYamlContent(versionTag)
+
+	createFolderIfNotExist(filepath.Join(sysRoot, "etc", "casaos"))
+	os.WriteFile(filepath.Join(sysRoot, service.TargetReleaseLocalPath), []byte(releaseContent), 0755)
 }
 
 func CacheRelease0441(cacheDir string) error {
@@ -104,4 +115,12 @@ func CacheRelease0441(cacheDir string) error {
 
 	config.ServerInfo.CachePath = originCachePath
 	return nil
+}
+
+func SetZimaOS(sysRoot string) {
+
+}
+
+func SetCasaOS(sysRoot string) {
+
 }

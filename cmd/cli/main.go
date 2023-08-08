@@ -102,7 +102,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	err = service.InstallDependencies(ctx, *release, sysRoot)
+	err = service.InstallDependencies(*release, sysRoot)
 	if err != nil {
 		_logger.Error("🟥 Failed to install dependencies: %s", err.Error())
 		os.Exit(1)
@@ -128,7 +128,7 @@ func main() {
 	_logger.Info("🟩 Release verified.")
 
 	_logger.Info("🟨 Installing release...")
-	if err := service.InstallCasaOSPackages(*release, releaseFilePath, sysRoot); err != nil {
+	if err := service.InstallCasaOSPackages(*release, sysRoot); err != nil {
 		_logger.Error("🟥 Failed to install release: %s", err.Error())
 		os.Exit(1)
 	}
@@ -136,7 +136,7 @@ func main() {
 
 	// post install release
 	_logger.Info("🟨 Handle Post Release Install ...")
-	if err := service.PostReleaseInstall(ctx, *release, sysRoot); err != nil {
+	if err := service.PostReleaseInstall(*release, sysRoot); err != nil {
 		_logger.Error("🟥 Failed to Handle Post Release Install: %s", err.Error())
 		os.Exit(1)
 	}
@@ -200,7 +200,7 @@ func main() {
 	}
 	_logger.Info("🟩 Uninstall script Downloaded")
 
-	if service.VerifyUninstallScript() {
+	if service.VerifyUninstallScript(sysRoot) {
 		_logger.Info("🟨 uninstall script is installed")
 	} else {
 		panic("🟥 uninstall script is not installed")

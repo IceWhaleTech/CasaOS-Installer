@@ -52,7 +52,7 @@ func NormalizeVersion(version string) string {
 
 func CurrentReleaseVersion(sysrootPath string) (*semver.Version, error) {
 	// get version from local release file, if not exist, get version from local casaos
-	currentRelease, err := internal.GetReleaseFromLocal(filepath.Join(sysrootPath, currentReleaseLocalPath))
+	currentRelease, err := internal.GetReleaseFromLocal(filepath.Join(sysrootPath, CurrentReleaseLocalPath))
 	if err != nil {
 		return CurrentModuleVersion("casaos", sysrootPath)
 	} else {
