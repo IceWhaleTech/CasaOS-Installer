@@ -104,64 +104,14 @@ func (a *api) InstallRelease(ctx echo.Context, params codegen.InstallReleasePara
 			return
 		}
 
-		isCasaOS := true
-
-		if isCasaOS {
-			if err := service.InstallCasaOSPackages(*release, sysRoot); err != nil {
-				go service.PublishEventWrapper(context.Background(), common.EventTypeInstallUpdateError, map[string]string{
-					common.PropertyTypeMessage.Name: err.Error(),
-				})
-
-				logger.Error("error while installing casaos packages: %s", zap.Error(err))
-				return
-			}
-		} else {
-			// TODO the step is didn't implement
-			if err := service.InstallRAUC(*release, sysRoot); err != nil {
-				go service.PublishEventWrapper(context.Background(), common.EventTypeInstallUpdateError, map[string]string{
-					common.PropertyTypeMessage.Name: err.Error(),
-				})
-
-				logger.Error("error while installing casaos packages: %s", zap.Error(err))
-				return
-			}
-
-		}
-
-		// TODO: think move ExecuteModuleInstallScript to install casaos packages
-		releaseFilePath, _ := service.VerifyRelease(*release)
-
-		if err := service.ExecuteModuleInstallScript(releaseFilePath, *release); err != nil {
+		if err := service.InstallSystem(*release, sysRoot); err != nil {
 			go service.PublishEventWrapper(context.Background(), common.EventTypeInstallUpdateError, map[string]string{
 				common.PropertyTypeMessage.Name: err.Error(),
 			})
 
-			logger.Error("error while extract modules packages: %s", zap.Error(err))
+			logger.Error("error while install system: %s", zap.Error(err))
 			return
-		}
 
-		if err := service.LaunchModule(*release); err != nil {
-			go service.PublishEventWrapper(context.Background(), common.EventTypeInstallUpdateError, map[string]string{
-				common.PropertyTypeMessage.Name: err.Error(),
-			})
-			logger.Error("error while enable services: %s", zap.Error(err))
-			return
-		}
-
-		if _, err = service.DownloadUninstallScript(backgroundCtx, sysRoot); err != nil {
-			go service.PublishEventWrapper(context.Background(), common.EventTypeInstallUpdateError, map[string]string{
-				common.PropertyTypeMessage.Name: err.Error(),
-			})
-			logger.Error("Downloading uninstall script: %s", zap.Error(err))
-			return
-		}
-
-		if present := service.VerifyUninstallScript(); !present {
-			go service.PublishEventWrapper(context.Background(), common.EventTypeInstallUpdateError, map[string]string{
-				common.PropertyTypeMessage.Name: err.Error(),
-			})
-			logger.Error("uninstall script not found")
-			return
 		}
 	}()
 
@@ -170,46 +120,3 @@ func (a *api) InstallRelease(ctx echo.Context, params codegen.InstallReleasePara
 		Message: &message,
 	})
 }
-
-// func (a *api) installRauc(ctx echo.Context, params codegen.InstallReleaseParams) error {
-// 	tag := "dev-test"
-// 	if params.Version != nil && *params.Version != "latest" {
-// 		tag = *params.Version
-// 	}
-
-// 	release, err := service.GetRelease(ctx.Request().Context(), tag)
-// 	if err != nil {
-// 		message := err.Error()
-
-// 		if err == service.ErrReleaseNotFound {
-// 			return ctx.JSON(http.StatusNotFound, &codegen.ResponseNotFound{
-// 				Message: &message,
-// 			})
-// 		}
-
-// 		return ctx.JSON(http.StatusInternalServerError, &codegen.ResponseInternalServerError{
-// 			Message: &message,
-// 		})
-// 	}
-
-// 	if release == nil {
-// 		message := "release not found"
-// 		return ctx.JSON(http.StatusNotFound, &codegen.ResponseNotFound{
-// 			Message: &message,
-// 		})
-// 	}
-
-// 	err = service.InstallRAUC(*release, "/")
-// 	if err != nil {
-// 		message := err.Error()
-// 		return ctx.JSON(http.StatusInternalServerError, &codegen.ResponseInternalServerError{
-// 			Message: &message,
-// 		})
-// 	}
-
-// 	message := "rauc install complete"
-// 	return ctx.JSON(http.StatusOK, &codegen.ResponseOK{
-// 		Message: &message,
-// 	})
-
-// }

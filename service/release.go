@@ -220,10 +220,46 @@ func InstallSystem(release codegen.Release, sysRoot string) error {
 	if err != nil {
 		return err
 	}
+	// install setup(only for casaos)
+	if installMethod == "tar" {
+		releaseFilePath, _ := VerifyRelease(release)
+		err = ExecuteModuleInstallScript(releaseFilePath, release)
+	}
 
 	// post install
+	PostReleaseInstall(release, sysRoot)
 
-	// reboot
+	// start migration(only for casaos)
+	if installMethod == "tar" {
+		// migration
+		StartMigration(sysRoot)
+	}
+	if err != nil {
+		return err
+	}
+
+	// restart services(only for casaos)
+	if installMethod == "tar" {
+		if err := LaunchModule(release); err != nil {
+			return err
+		}
+
+		backgroundCtx, cancel := context.WithCancel(context.Background())
+		defer cancel()
+
+		if _, err = DownloadUninstallScript(backgroundCtx, sysRoot); err != nil {
+			return err
+		}
+
+		if present := VerifyUninstallScript(); !present {
+			return fmt.Errorf("uninstall script not found")
+		}
+	}
+
+	// reboot(only for zima)
+	if installMethod == "rauc" {
+		RebootSystem()
+	}
 
 	return fmt.Errorf("unknown install method")
 }
@@ -275,12 +311,12 @@ func InstallRelease(release codegen.Release, sysrootPath string) error {
 	return nil
 }
 
-func InstallDependencies(ctx context.Context, release codegen.Release, sysrootPath string) error {
+func InstallDependencies(release codegen.Release, sysrootPath string) error {
 	internal.InstallDependencies()
 	return nil
 }
 
-func PostReleaseInstall(ctx context.Context, release codegen.Release, sysrootPath string) error {
+func PostReleaseInstall(release codegen.Release, sysrootPath string) error {
 	// post release install script
 	// work list
 	// 1. overwrite target release

@@ -102,7 +102,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	err = service.InstallDependencies(ctx, *release, sysRoot)
+	err = service.InstallDependencies(*release, sysRoot)
 	if err != nil {
 		_logger.Error("🟥 Failed to install dependencies: %s", err.Error())
 		os.Exit(1)
@@ -136,7 +136,7 @@ func main() {
 
 	// post install release
 	_logger.Info("🟨 Handle Post Release Install ...")
-	if err := service.PostReleaseInstall(ctx, *release, sysRoot); err != nil {
+	if err := service.PostReleaseInstall(*release, sysRoot); err != nil {
 		_logger.Error("🟥 Failed to Handle Post Release Install: %s", err.Error())
 		os.Exit(1)
 	}

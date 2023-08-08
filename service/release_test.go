@@ -96,7 +96,7 @@ func TestPostReleaseInsall(t *testing.T) {
 	release, err := service.GetRelease(ctx, "unit-test-release-0.4.4-1")
 	assert.NoError(t, err)
 
-	err = service.PostReleaseInstall(ctx, *release, tmpSysRoot)
+	err = service.PostReleaseInstall(*release, tmpSysRoot)
 	assert.NoError(t, err)
 
 	// to check the target file is exist
