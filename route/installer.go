@@ -12,11 +12,25 @@ import (
 	"go.uber.org/zap"
 )
 
+func (a *api) GetStatus(ctx echo.Context) error {
+	return ctx.JSON(http.StatusOK, &codegen.StatusOK{
+		Data:    &service.Status,
+		Message: nil,
+	})
+}
+
 func (a *api) GetRelease(ctx echo.Context, params codegen.GetReleaseParams) error {
+
 	tag := common.MainTag
 
 	go service.PublishEventWrapper(context.Background(), common.EventTypeCheckUpdateBegin, nil)
 	defer service.PublishEventWrapper(context.Background(), common.EventTypeCheckUpdateEnd, nil)
+	go service.UpdateStatus(codegen.Status{
+		Status: codegen.FetchUpdating,
+	})
+	defer service.UpdateStatus(codegen.Status{
+		Status: codegen.Fetchupdated,
+	})
 
 	if params.Version != nil && *params.Version != "latest" {
 		tag = *params.Version
@@ -49,6 +63,13 @@ func (a *api) GetRelease(ctx echo.Context, params codegen.GetReleaseParams) erro
 }
 
 func (a *api) InstallRelease(ctx echo.Context, params codegen.InstallReleaseParams) error {
+	go service.UpdateStatus(codegen.Status{
+		Status: codegen.Installing,
+	})
+	defer service.UpdateStatus(codegen.Status{
+		Status: codegen.Installed,
+	})
+
 	tag := "dev-test"
 	if params.Version != nil && *params.Version != "latest" {
 		tag = *params.Version

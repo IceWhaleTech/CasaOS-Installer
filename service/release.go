@@ -60,6 +60,13 @@ func DownloadRelease(ctx context.Context, release codegen.Release, force bool) (
 	go PublishEventWrapper(ctx, common.EventTypeDownloadUpdateBegin, nil)
 	defer PublishEventWrapper(ctx, common.EventTypeDownloadUpdateEnd, nil)
 
+	go UpdateStatus(codegen.Status{
+		Status: codegen.Downloading,
+	})
+	defer UpdateStatus(codegen.Status{
+		Status: codegen.Downloaded,
+	})
+
 	// check and verify existing packages
 	if !force {
 		if packageFilePath, err := VerifyRelease(release); err != nil {

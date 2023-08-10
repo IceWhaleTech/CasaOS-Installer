@@ -38,7 +38,16 @@ paths:
           $ref: "#/components/responses/ResponseNotFound"
         "500":
           $ref: "#/components/responses/ResponseInternalServerError"
-
+  /status:
+    get:
+      summary: Get the status of the installation
+      operationId: getStatus
+      responses:
+        "200":
+          $ref: "#/components/responses/StatusOK"
+        "500":
+          $ref: "#/components/responses/ResponseInternalServerError"
+          
 components:
   securitySchemes:
     access_token:
@@ -105,6 +114,18 @@ components:
                     readOnly: true
                     type: boolean
                     example: false
+    
+    StatusOK:
+      description: OK
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: "#/components/schemas/BaseResponse"
+              - properties:
+                  data:
+                    $ref: "#/components/schemas/Status"
+
   schemas:
     BaseResponse:
       properties:
@@ -112,6 +133,23 @@ components:
           description: message returned by server side if there is any
           type: string
           example: ""
+    Status:
+      readOnly: true
+      required:
+        - status
+        - message
+      properties:
+        status:
+          type: string
+          enum:
+            - "idle"
+            - "fetchUpdating"
+            - "fetchupdated"
+            - "downloading"
+            - "downloaded"
+            - "installing"
+            - "installed"
+            - "error"
 
     Release:
       readOnly: true

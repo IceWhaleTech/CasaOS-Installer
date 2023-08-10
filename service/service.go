@@ -7,6 +7,7 @@ import (
 
 	"github.com/IceWhaleTech/CasaOS-Common/external"
 	"github.com/IceWhaleTech/CasaOS-Common/utils/logger"
+	"github.com/IceWhaleTech/CasaOS-Installer/codegen"
 	"github.com/IceWhaleTech/CasaOS-Installer/codegen/message_bus"
 	"github.com/IceWhaleTech/CasaOS-Installer/common"
 	"github.com/IceWhaleTech/CasaOS-Installer/internal/config"
@@ -14,6 +15,9 @@ import (
 )
 
 var MyService Services
+
+// TODO move to another place
+var Status codegen.Status
 
 type Services interface {
 	Gateway() (external.ManagementService, error)
@@ -24,7 +28,15 @@ type services struct {
 	runtimePath string
 }
 
+func UpdateStatus(status codegen.Status) {
+	// if status move to server. the function can be reuse.
+	Status = status
+}
+
 func NewService(RuntimePath string) Services {
+	Status = codegen.Status{
+		Status: codegen.Idle,
+	}
 	return &services{
 		runtimePath: RuntimePath,
 	}
