@@ -5,9 +5,11 @@ package main
 
 import (
 	"context"
+	"embed"
 	_ "embed"
 	"flag"
 	"fmt"
+	"io/fs"
 	"net"
 	"net/http"
 	"os"
@@ -26,6 +28,9 @@ import (
 	"github.com/robfig/cron/v3"
 	"go.uber.org/zap"
 )
+
+//go:embed static
+var embeddedFiles embed.FS
 
 var (
 	commit = "private build"
@@ -78,13 +83,7 @@ func main() {
 
 		go cronjob(ctx) // run once immediately
 
-		if _, err := crontab.AddFunc("@every 24h", func() { cronjob(ctx) }); err != nil {
-			panic(err)
-		}
-
-		// every 10 seconds for debug
-		if _, err := crontab.AddFunc("@every 1s", func() {
-		}); err != nil {
+		if _, err := crontab.AddFunc("@every 1h", func() { cronjob(ctx) }); err != nil {
 			panic(err)
 		}
 
@@ -131,10 +130,21 @@ func main() {
 		}
 	}
 
+	// add a new route to handle the root path to static files
+
+	fs, err := fs.Sub(embeddedFiles, "static")
+	if err != nil {
+		panic(err)
+	}
+
 	mux := &util_http.HandlerMultiplexer{
 		HandlerMap: map[string]http.Handler{
 			"v2":  route.InitV2Router(),
 			"doc": route.InitV2DocRouter(_docHTML, _docYAML),
+			// TODO fix the following
+			"hello": http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				fmt.Fprint(w, http.FileServer(http.FS(fs)))
+			}),
 		},
 	}
 
