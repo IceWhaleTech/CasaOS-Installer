@@ -1,0 +1,59 @@
+<style>
+    body {
+        background: url('./background.jpg');
+    }
+    .block{
+        display: flex;
+        flex-direction: column;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+        font-size: 30px;
+
+        padding-top: 150px;
+        padding-bottom: 50px;
+
+        padding-left: 100px;
+        padding-right: 100px;
+
+
+        backdrop-filter: none;
+        border-radius: 10px;
+        
+        background-color: rgba(90, 108, 124, 0.4);
+        gap: 5px;
+    }
+
+    .main{
+        margin: 20px;
+        color: white;
+    }
+    .second{
+        font-size: small;
+        color: white;
+    }
+</style>
+<html>
+    <head>
+        <title>Static</title>
+    </head>
+    
+    <body>
+        <div class="block">
+            <div>
+                <img src="./zima.svg" />
+            </div>
+            <div class="main">
+                正在更新
+            </div>
+            <div class="second">
+                大约需要5分钟
+            </div>
+            <div>
+               <img height="70px" src="./waiting.svg" />
+            </div>
+        </div>
+    </body>
+</html>
