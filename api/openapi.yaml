@@ -38,6 +38,7 @@ paths:
           $ref: "#/components/responses/ResponseNotFound"
         "500":
           $ref: "#/components/responses/ResponseInternalServerError"
+ 
   /status:
     get:
       summary: Get the status of the installation
