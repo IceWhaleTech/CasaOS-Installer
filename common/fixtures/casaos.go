@@ -2,6 +2,7 @@ package fixtures
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"path/filepath"
 
@@ -117,8 +118,27 @@ func CacheRelease0441(cacheDir string) error {
 	return nil
 }
 
-func SetZimaOS(sysRoot string) {
+func SetZimaOS(sysRoot string) error {
+	// write  sysRoot/etc/os-release file
+	osReleaseContent := `PRETTY_NAME="Ubuntu 22.04.2 LTS"
+NAME="Ubuntu"
+VERSION_ID="22.04"
+VERSION="22.04.2 LTS (Jammy Jellyfish)"
+VERSION_CODENAME=jammy
+ID=ubuntu
+ID_LIKE=debian
+MODEL="Zima"
+HOME_URL="https://www.ubuntu.com/"
+SUPPORT_URL="https://help.ubuntu.com/"
+BUG_REPORT_URL="https://bugs.launchpad.net/ubuntu/"
+PRIVACY_POLICY_URL="https://www.ubuntu.com/legal/terms-and-policies/privacy-policy"
+UBUNTU_CODENAME=jammy`
+	filePath := filepath.Join(sysRoot, "etc", "os-release")
+	fmt.Println(filePath)
+	os.MkdirAll(filepath.Join(sysRoot, "etc"), 0o755)
 
+	err := os.WriteFile(filePath, []byte(osReleaseContent), 0755)
+	return err
 }
 
 func SetCasaOS(sysRoot string) {
