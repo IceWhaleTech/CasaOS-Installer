@@ -150,6 +150,31 @@ func DownloadRelease(ctx context.Context, release codegen.Release, force bool) (
 	return releaseFilePath, os.WriteFile(releaseFilePath, buf, 0o600)
 }
 
+func IsZimaOSNew(sysRoot string) bool {
+	// read sysRoot/etc/os-release
+	// if the file have "MODEL="Zima" return true
+	// else return false
+	fileContent, err := os.ReadFile(filepath.Join(sysRoot, "etc/os-release"))
+	if err != nil {
+		return false
+	}
+	if strings.Contains(string(fileContent), "MODEL=\"Zima\"") {
+		return true
+	}
+	return false
+}
+
+func IsCasaOSNew(sysRoot string) bool {
+	fileContent, err := os.ReadFile(filepath.Join(sysRoot, "etc/os-release"))
+	if err != nil {
+		return true
+	}
+	if strings.Contains(string(fileContent), "MODEL=\"Zima\"") {
+		return false
+	}
+	return true
+}
+
 func IsZimaOS() bool {
 	return false
 }

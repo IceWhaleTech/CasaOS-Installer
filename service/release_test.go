@@ -191,3 +191,29 @@ func TestIsUpgradable(t *testing.T) {
 	result = service.IsUpgradable(*release, tmpSysRoot)
 	assert.Equal(t, result, true)
 }
+
+func TestDeviceModelDiscover(t *testing.T) {
+	logger.LogInitConsoleOnly()
+
+	tmpDir, err := os.MkdirTemp("", "casaos-device-test-*")
+	assert.NoError(t, err)
+	// defer os.RemoveAll(tmpDir)
+
+	// to download release files
+	config.ServerInfo.CachePath = filepath.Join(tmpDir, "cache")
+
+	tmpSysRoot := filepath.Join(tmpDir, "sysroot")
+
+	resule := service.IsCasaOSNew(tmpSysRoot)
+	assert.Equal(t, resule, true)
+	resule = service.IsZimaOSNew(tmpSysRoot)
+	assert.Equal(t, resule, false)
+
+	fixtures.SetZimaOS(tmpSysRoot)
+	assert.NoError(t, err)
+
+	resule = service.IsCasaOSNew(tmpSysRoot)
+	assert.Equal(t, resule, false)
+	resule = service.IsZimaOSNew(tmpSysRoot)
+	assert.Equal(t, resule, true)
+}
