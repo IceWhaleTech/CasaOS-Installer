@@ -58,7 +58,7 @@ func main() {
 		_logger.Info("Root privileges are required to run this program.")
 		os.Exit(1)
 	}
-	tag := "dev-test"
+	tag := service.GetReleaseBranch()
 	if tagFlag != nil && *tagFlag != "" {
 		tag = *tagFlag
 	}

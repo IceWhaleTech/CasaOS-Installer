@@ -21,7 +21,7 @@ func (a *api) GetStatus(ctx echo.Context) error {
 
 func (a *api) GetRelease(ctx echo.Context, params codegen.GetReleaseParams) error {
 
-	tag := common.MainTag
+	tag := service.GetReleaseBranch()
 
 	go service.PublishEventWrapper(context.Background(), common.EventTypeCheckUpdateBegin, nil)
 	defer service.PublishEventWrapper(context.Background(), common.EventTypeCheckUpdateEnd, nil)
@@ -70,7 +70,8 @@ func (a *api) InstallRelease(ctx echo.Context, params codegen.InstallReleasePara
 		Status: codegen.Installed,
 	})
 
-	tag := "dev-test"
+	tag := service.GetReleaseBranch()
+
 	if params.Version != nil && *params.Version != "latest" {
 		tag = *params.Version
 	}
