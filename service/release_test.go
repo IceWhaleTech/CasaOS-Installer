@@ -14,6 +14,43 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestDownloadRauc(t *testing.T) {
+	logger.LogInitConsoleOnly()
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	release, err := service.GetRelease(ctx, "rauc")
+	assert.NoError(t, err)
+	assert.NotNil(t, release)
+
+	assert.NotNil(t, release.Mirrors)
+	assert.NotEmpty(t, release.Mirrors)
+
+	assert.NotNil(t, release.Modules)
+	assert.NotEmpty(t, release.Modules)
+
+	assert.NotNil(t, release.Packages)
+	assert.NotEmpty(t, release.Packages)
+
+	assert.NotEmpty(t, release.ReleaseNotes)
+	assert.NotEmpty(t, release.Version)
+
+	tmpDir, err := os.MkdirTemp("", "casaos-installer-rauc-test-*")
+	assert.NoError(t, err)
+	// defer os.RemoveAll(tmpDir)
+
+	config.ServerInfo.CachePath = filepath.Join(tmpDir, "cache")
+
+	releaseFilePath, err := service.DownloadRelease(ctx, *release, false)
+	assert.NoError(t, err)
+	assert.FileExists(t, releaseFilePath)
+	// fmt.Println(releaseFilePath)
+
+	releaseFilePath, err = service.VerifyRAUC(*release)
+	assert.NoError(t, err)
+	assert.FileExists(t, releaseFilePath)
+}
 func TestInstallRelease(t *testing.T) {
 	logger.LogInitConsoleOnly()
 

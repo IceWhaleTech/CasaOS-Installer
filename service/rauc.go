@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 
 	"github.com/IceWhaleTech/CasaOS-Installer/codegen"
+	"github.com/IceWhaleTech/CasaOS-Installer/internal"
 	"github.com/holoplot/go-rauc/rauc"
 )
 
@@ -51,8 +52,9 @@ func VerifyRAUC(release codegen.Release) (string, error) {
 	// 	return "", err
 	// }
 
-	// packageFilename := filepath.Base(packageURL)
-	packageFilename := "casaos_generic-x86-64-0.4.4.raucb"
+	packageURL, err := internal.GetPackageURLByCurrentArch(release, "")
+
+	packageFilename := filepath.Base(packageURL)
 
 	packageFilePath := filepath.Join(releaseDir, packageFilename)
 
