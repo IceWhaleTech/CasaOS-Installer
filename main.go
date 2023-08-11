@@ -162,7 +162,7 @@ func main() {
 }
 
 func cronjob(ctx context.Context) {
-	release, err := service.GetRelease(ctx, common.MainTag)
+	release, err := service.GetRelease(ctx, service.GetReleaseBranch())
 	if err != nil {
 		logger.Error("error when trying to get release", zap.Error(err))
 		return

@@ -158,6 +158,16 @@ func IsCasaOS() bool {
 	return true
 }
 
+func GetReleaseBranch() string {
+	if IsZimaOS() {
+		return "rauc"
+	}
+	if IsZimaOS() {
+		return "dev-test"
+	}
+	return "main"
+}
+
 func GetInstallMethod() (string, error) {
 	// to check the system is casaos or zimaos
 	// if zimaos, return "rauc"
