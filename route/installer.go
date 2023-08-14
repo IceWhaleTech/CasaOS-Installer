@@ -25,6 +25,7 @@ func (a *api) GetRelease(ctx echo.Context, params codegen.GetReleaseParams) erro
 
 	tag := service.GetReleaseBranch(sysRoot)
 
+  
 	go service.PublishEventWrapper(context.Background(), common.EventTypeCheckUpdateBegin, nil)
 	defer service.PublishEventWrapper(context.Background(), common.EventTypeCheckUpdateEnd, nil)
 	go service.UpdateStatus(codegen.Status{
