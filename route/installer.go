@@ -12,6 +12,8 @@ import (
 	"go.uber.org/zap"
 )
 
+var sysRoot = "/"
+
 func (a *api) GetStatus(ctx echo.Context) error {
 	return ctx.JSON(http.StatusOK, &codegen.StatusOK{
 		Data:    &service.Status,
@@ -21,7 +23,7 @@ func (a *api) GetStatus(ctx echo.Context) error {
 
 func (a *api) GetRelease(ctx echo.Context, params codegen.GetReleaseParams) error {
 
-	tag := service.GetReleaseBranch()
+	tag := service.GetReleaseBranch(sysRoot)
 
 	go service.PublishEventWrapper(context.Background(), common.EventTypeCheckUpdateBegin, nil)
 	defer service.PublishEventWrapper(context.Background(), common.EventTypeCheckUpdateEnd, nil)
@@ -70,7 +72,7 @@ func (a *api) InstallRelease(ctx echo.Context, params codegen.InstallReleasePara
 		Status: codegen.Installed,
 	})
 
-	tag := service.GetReleaseBranch()
+	tag := service.GetReleaseBranch(sysRoot)
 
 	if params.Version != nil && *params.Version != "latest" {
 		tag = *params.Version

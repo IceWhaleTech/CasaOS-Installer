@@ -183,11 +183,11 @@ func IsCasaOS() bool {
 	return true
 }
 
-func GetReleaseBranch() string {
-	if IsZimaOS() {
+func GetReleaseBranch(sysRoot string) string {
+	if IsZimaOSNew(sysRoot) {
 		return "rauc"
 	}
-	if IsZimaOS() {
+	if IsCasaOSNew(sysRoot) {
 		return "dev-test"
 	}
 	return "main"
