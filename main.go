@@ -116,19 +116,25 @@ func main() {
 		defer crontab.Stop()
 	}
 
-	// register at message bus
-	if messageBus, err := service.MyService.MessageBus(); err != nil {
-		logger.Info("error when trying to connect to message bus... skipping", zap.Error(err))
-	} else {
-		response, err := messageBus.RegisterEventTypesWithResponse(ctx, common.EventTypes)
-		if err != nil {
-			logger.Error("error when trying to register one or more event types - some event type will not be discoverable", zap.Error(err))
-		}
+	go func() {
+		for {
+			// register at message bus
+			if messageBus, err := service.MyService.MessageBus(); err != nil {
+				logger.Info("error when trying to connect to message bus... skipping", zap.Error(err))
+			} else {
+				response, err := messageBus.RegisterEventTypesWithResponse(ctx, common.EventTypes)
+				if err != nil {
+					logger.Error("error when trying to register one or more event types - some event type will not be discoverable", zap.Error(err))
+				}
 
-		if response != nil && response.StatusCode() != http.StatusOK {
-			logger.Error("error when trying to register one or more event types - some event type will not be discoverable", zap.String("status", response.Status()), zap.String("body", string(response.Body)))
+				if response != nil && response.StatusCode() != http.StatusOK {
+					logger.Error("error when trying to register one or more event types - some event type will not be discoverable", zap.String("status", response.Status()), zap.String("body", string(response.Body)))
+				}
+				break
+			}
 		}
-	}
+		time.Sleep(10 * time.Second)
+	}()
 
 	// initialize routers and register at gateway
 	listener, err := net.Listen("tcp", net.JoinHostPort(common.Localhost, "0"))
