@@ -25,3 +25,4 @@ __debug_bin
 codegen/
 dist/
 .vscode/
+._.DS_Store

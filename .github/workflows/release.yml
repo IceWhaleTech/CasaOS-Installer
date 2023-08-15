@@ -43,3 +43,19 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # Your GoReleaser Pro key, if you are using the 'goreleaser-pro' distribution
           # GORELEASER_KEY: ${{ secrets.GORELEASER_KEY }}
+      - name: Upload to oss
+        id: upload_to_oss
+        uses: tvrcgo/upload-to-oss@master
+        with:
+          key-id: ${{ secrets.OSS_KEY_ID }}
+          key-secret: ${{ secrets.OSS_KEY_SECRET }}
+          region: oss-cn-shanghai
+          bucket: casaos
+          assets: |
+            dist/checksums.txt:/IceWhaleTech/CasaOS-Installer/releases/download/${{ steps.get_version.outputs.VERSION }}/checksums.txt
+            dist/linux-arm-7-casaos-installer-${{ steps.get_version.outputs.VERSION }}.tar.gz:/IceWhaleTech/CasaOS-AppManagement/releases/download/${{ steps.get_version.outputs.VERSION }}/linux-arm-7-casaos-installer-${{ steps.get_version.outputs.VERSION }}.tar.gz
+            dist/linux-arm64-casaos-installer-${{ steps.get_version.outputs.VERSION }}.tar.gz:/IceWhaleTech/CasaOS-AppManagement/releases/download/${{ steps.get_version.outputs.VERSION }}/linux-arm64-casaos-installer-${{ steps.get_version.outputs.VERSION }}.tar.gz
+            dist/linux-amd64-casaos-installer-${{ steps.get_version.outputs.VERSION }}.tar.gz:/IceWhaleTech/CasaOS-AppManagement/releases/download/${{ steps.get_version.outputs.VERSION }}/linux-amd64-casaos-installer-${{ steps.get_version.outputs.VERSION }}.tar.gz
+            dist/linux-arm-7-casaos-installer-cli-${{ steps.get_version.outputs.VERSION }}.tar.gz:/IceWhaleTech/CasaOS-AppManagement/releases/download/${{ steps.get_version.outputs.VERSION }}/linux-arm-7-casaos-installer-cli-${{ steps.get_version.outputs.VERSION }}.tar.gz
+            dist/linux-arm64-casaos-installer-cli-${{ steps.get_version.outputs.VERSION }}.tar.gz:/IceWhaleTech/CasaOS-AppManagement/releases/download/${{ steps.get_version.outputs.VERSION }}/linux-arm64-casaos-installer-cli-${{ steps.get_version.outputs.VERSION }}.tar.gz
+            dist/linux-amd64-casaos-installer-cli-${{ steps.get_version.outputs.VERSION }}.tar.gz:/IceWhaleTech/CasaOS-AppManagement/releases/download/${{ steps.get_version.outputs.VERSION }}/linux-amd64-casaos-installer-cli-${{ steps.get_version.outputs.VERSION }}.tar.gz
