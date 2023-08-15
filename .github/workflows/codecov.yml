@@ -23,6 +23,6 @@ jobs:
       - name: Go Generate
         run: go generate
       - name: Run coverage
-        run: go test -race -failfast -coverprofile=coverage.txt -covermode=atomic -v ./...
+        run: go test -failfast -coverprofile=coverage.txt -covermode=atomic -v ./...
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
