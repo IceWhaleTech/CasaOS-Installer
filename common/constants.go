@@ -3,7 +3,7 @@ package common
 const (
 	Localhost = "127.0.0.1"
 
-	InstallerVersion     = "0.4.5"
+	InstallerVersion     = "0.1.2"
 	InstallerServiceName = "installer"
 
 	ReleaseYAMLFileName   = "release.yaml"
@@ -14,4 +14,7 @@ const (
 
 	MirrorPlaceHolder = "${MIRROR}"
 	ArchPlaceHolder   = "${ARCH}"
+
+	InstallerName       = "installer"
+	InstallerConfigType = "conf"
 )

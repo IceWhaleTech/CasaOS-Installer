@@ -1,5 +1,4 @@
 [Unit]
-ConditionFileNotEmpty=/etc/casaos/installer.conf
 Description=CasaOS Installer (and Updater) Service
 
 [Service]

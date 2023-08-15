@@ -11,13 +11,14 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/IceWhaleTech/CasaOS-Common/model"
+	"github.com/IceWhaleTech/CasaOS-Common/utils/constants"
 	"github.com/IceWhaleTech/CasaOS-Common/utils/logger"
 
 	util_http "github.com/IceWhaleTech/CasaOS-Common/utils/http"
-
 	"github.com/IceWhaleTech/CasaOS-Installer/common"
 	"github.com/IceWhaleTech/CasaOS-Installer/internal/config"
 	"github.com/IceWhaleTech/CasaOS-Installer/route"
@@ -37,9 +38,32 @@ var (
 	//go:embed api/openapi.yaml
 	_docYAML string
 	sysRoot  = "/"
+
+	//go:embed build/sysroot/etc/casaos/installer.conf.sample
+	_confSample string
 )
 
 func main() {
+	// create config
+	{
+		// create default config file if not exist
+		ConfigFilePath := filepath.Join(constants.DefaultConfigPath, common.InstallerName+"."+common.InstallerConfigType)
+		if _, err := os.Stat(ConfigFilePath); os.IsNotExist(err) {
+			fmt.Println("config file not exist, create it")
+			// create config file
+			file, err := os.Create(ConfigFilePath)
+			if err != nil {
+				panic(err)
+			}
+			defer file.Close()
+
+			// write default config
+			_, err = file.WriteString(_confSample)
+			if err != nil {
+				panic(err)
+			}
+		}
+	}
 	// parse arguments and intialize
 	{
 		configFlag := flag.String("c", "", "config file path")
@@ -163,9 +187,9 @@ func main() {
 
 func cronjob(ctx context.Context) {
 
-  release, err := service.GetRelease(ctx, service.GetReleaseBranch(sysRoot))
+	release, err := service.GetRelease(ctx, service.GetReleaseBranch(sysRoot))
 
-  if err != nil {
+	if err != nil {
 		logger.Error("error when trying to get release", zap.Error(err))
 		return
 	}
