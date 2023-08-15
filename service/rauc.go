@@ -53,6 +53,9 @@ func VerifyRAUC(release codegen.Release) (string, error) {
 	// }
 
 	packageURL, err := internal.GetPackageURLByCurrentArch(release, "")
+	if err != nil {
+		return "", err
+	}
 
 	packageFilename := filepath.Base(packageURL)
 
