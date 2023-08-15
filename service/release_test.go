@@ -204,16 +204,16 @@ func TestDeviceModelDiscover(t *testing.T) {
 
 	tmpSysRoot := filepath.Join(tmpDir, "sysroot")
 
-	resule := service.IsCasaOSNew(tmpSysRoot)
+	resule := service.IsCasaOS(tmpSysRoot)
 	assert.Equal(t, resule, true)
-	resule = service.IsZimaOSNew(tmpSysRoot)
+	resule = service.IsZimaOS(tmpSysRoot)
 	assert.Equal(t, resule, false)
 
 	fixtures.SetZimaOS(tmpSysRoot)
 	assert.NoError(t, err)
 
-	resule = service.IsCasaOSNew(tmpSysRoot)
+	resule = service.IsCasaOS(tmpSysRoot)
 	assert.Equal(t, resule, false)
-	resule = service.IsZimaOSNew(tmpSysRoot)
+	resule = service.IsZimaOS(tmpSysRoot)
 	assert.Equal(t, resule, true)
 }

@@ -150,7 +150,7 @@ func DownloadRelease(ctx context.Context, release codegen.Release, force bool) (
 	return releaseFilePath, os.WriteFile(releaseFilePath, buf, 0o600)
 }
 
-func IsZimaOSNew(sysRoot string) bool {
+func IsZimaOS(sysRoot string) bool {
 	// read sysRoot/etc/os-release
 	// if the file have "MODEL="Zima" return true
 	// else return false
@@ -164,7 +164,7 @@ func IsZimaOSNew(sysRoot string) bool {
 	return false
 }
 
-func IsCasaOSNew(sysRoot string) bool {
+func IsCasaOS(sysRoot string) bool {
 	fileContent, err := os.ReadFile(filepath.Join(sysRoot, "etc/os-release"))
 	if err != nil {
 		return true
@@ -175,39 +175,31 @@ func IsCasaOSNew(sysRoot string) bool {
 	return true
 }
 
-func IsZimaOS() bool {
-	return false
-}
-
-func IsCasaOS() bool {
-	return true
-}
-
 func GetReleaseBranch(sysRoot string) string {
-	if IsZimaOSNew(sysRoot) {
+	if IsZimaOS(sysRoot) {
 		return "rauc"
 	}
-	if IsCasaOSNew(sysRoot) {
+	if IsCasaOS(sysRoot) {
 		return "dev-test"
 	}
 	return "main"
 }
 
-func GetInstallMethod() (string, error) {
+func GetInstallMethod(sysRoot string) (string, error) {
 	// to check the system is casaos or zimaos
 	// if zimaos, return "rauc"
 	// if casaos, return "tar"
-	if IsZimaOS() {
+	if IsZimaOS(sysRoot) {
 		return "rauc", nil
 	}
-	if IsCasaOS() {
+	if IsCasaOS(sysRoot) {
 		return "tar", nil
 	}
 	return "", fmt.Errorf("unknown system")
 }
 
 func InstallSystem(release codegen.Release, sysRoot string) error {
-	installMethod, err := GetInstallMethod()
+	installMethod, err := GetInstallMethod(sysRoot)
 	if err != nil {
 		return err
 	}
