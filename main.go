@@ -136,24 +136,31 @@ func main() {
 		panic(err)
 	}
 
-	// initialize routers and register at gateway
-	if gateway, err := service.MyService.Gateway(); err != nil {
-		logger.Info("error when trying to connect to gateway... skipping", zap.Error(err))
-	} else {
-		apiPaths := []string{
-			route.V2APIPath,
-			route.V2DocPath,
-		}
+	go func() {
+		for {
+			// initialize routers and register at gateway
+			if gateway, err := service.MyService.Gateway(); err != nil {
+				logger.Info("error when trying to connect to gateway... skipping", zap.Error(err))
+			} else {
+				apiPaths := []string{
+					route.V2APIPath,
+					route.V2DocPath,
+				}
 
-		for _, apiPath := range apiPaths {
-			if err := gateway.CreateRoute(&model.Route{
-				Path:   apiPath,
-				Target: "http://" + listener.Addr().String(),
-			}); err != nil {
-				panic(err)
+				for _, apiPath := range apiPaths {
+					if err := gateway.CreateRoute(&model.Route{
+						Path:   apiPath,
+						Target: "http://" + listener.Addr().String(),
+					}); err != nil {
+						panic(err)
+					}
+				}
+				fmt.Println("gateway register success")
+				break
 			}
+			time.Sleep(10 * time.Second)
 		}
-	}
+	}()
 
 	mux := &util_http.HandlerMultiplexer{
 		HandlerMap: map[string]http.Handler{
