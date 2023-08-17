@@ -1,2 +1,2 @@
 # CasaOS-Installer
-CasaOS-Installer is a backend deamon + a installer for CasaOS. 
+CasaOS-Installer is a backend daemon + a installer for CasaOS. 
