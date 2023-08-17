@@ -90,8 +90,7 @@ func main() {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	fmt.Println("sleep")
-	time.Sleep(1 * time.Minute)
+
 	// start migration.
 	// only zimaos should do this.
 	// if it is CasaOS. the migration will be done by the installer. and will skip this.
