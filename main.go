@@ -44,6 +44,7 @@ var (
 )
 
 func main() {
+	go service.StartFallbackWebsite()
 	// create config
 	{
 		// create default config file if not exist
@@ -64,6 +65,7 @@ func main() {
 			}
 		}
 	}
+
 	// parse arguments and intialize
 	{
 		configFlag := flag.String("c", "", "config file path")
@@ -88,10 +90,13 @@ func main() {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-
+	fmt.Println("sleep")
+	time.Sleep(1 * time.Minute)
 	// start migration.
 	// only zimaos should do this.
 	// if it is CasaOS. the migration will be done by the installer. and will skip this.
+	service.StopFallbackWebsite()
+
 	err := service.StartMigration(sysRoot)
 	if err != nil {
 		logger.Error("error when trying to start migration", zap.Error(err))
