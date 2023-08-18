@@ -17,7 +17,6 @@ import (
 //
 //go:embed static
 var FallbackStaticFiles embed.FS
-var server http.Server
 var srv *http.Server
 
 func StartFallbackWebsite() {
