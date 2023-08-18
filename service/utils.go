@@ -56,8 +56,20 @@ func CurrentReleaseVersion(sysrootPath string) (*semver.Version, error) {
 	if err != nil {
 		return CurrentModuleVersion("casaos", sysrootPath)
 	} else {
-		return semver.NewVersion(currentRelease.Version)
+		return semver.NewVersion(NormalizationVersion(currentRelease.Version))
 	}
+}
+
+func NormalizationVersion(version string) string {
+	// v0.4.2.1 => v0.4.2-1
+	// v0.4.2.1 => v0.4.2-1
+	// v0.4.2 => v0.4.2
+
+	versionNumbers := strings.SplitN(version, ".", 3)
+	if len(versionNumbers) < 3 {
+		return version
+	}
+	return strings.Join([]string{versionNumbers[0], versionNumbers[1], strings.Replace(versionNumbers[2], ".", "-", 1)}, ".")
 }
 
 func CurrentModuleVersion(module string, sysrootPath string) (*semver.Version, error) {
