@@ -9,6 +9,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/IceWhaleTech/CasaOS-Installer/common"
 )
@@ -67,5 +68,18 @@ func StartFallbackWebsite() {
 }
 
 func StopFallbackWebsite() {
-	srv.Close()
+	count := 0
+	for {
+		if srv != nil {
+			srv.Close()
+			fmt.Println("stop fallback website")
+			break
+		} else {
+			count++
+		}
+		if count > 5 {
+			break
+		}
+		time.Sleep(1 * time.Second)
+	}
 }
