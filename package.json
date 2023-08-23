@@ -1,0 +1,36 @@
+{
+    "name": "@icewhale/casaos-installer-openapi",
+    "version": "0.0.1",
+    "scripts": {
+      "build": "rm -rf dist && tsc && rm -rf generate",
+      "generate:local": "openapi-generator-cli generate -g typescript-axios -i ./api/openapi.yaml -o ./generate",
+      "generate:npx": "npx @openapitools/openapi-generator-cli generate -g typescript-axios -i ./api/openapi.yaml -o ./generate",
+      "generate:ts": "npx openapi-typescript-codegen --input ./api/openapi.yaml --output ./generate",
+      "publish": "npm publish --access public",
+      "start": "yarn generate:ts && yarn build"
+    },
+    "homepage": "https://github.com/IceWhaleTech/CasaOS-LocalStorage#readme",
+    "description": "Casaos-Localstorage Typescript+Axios SDK",
+    "keywords": [
+      "CasaOS-installer",
+      "SDK",
+      "CasaOS-installer Axios"
+    ],
+    "main": "dist/index",
+    "files": [
+      "LICENSE",
+      "README.md",
+      "dist"
+    ],
+    "dependencies": {
+      "axios": "^1.1.0"
+    },
+    "devDependencies": {
+      "@openapitools/openapi-generator-cli": "2.5.2",
+      "@types/node": "^18.8.3",
+      "openapi-typescript-codegen": "^0.23.0",
+      "typescript": "^4.9.5"
+    },
+    "author": "casaos",
+    "license": "Apache-2.0"
+  }
