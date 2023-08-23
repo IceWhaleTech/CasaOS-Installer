@@ -25,3 +25,11 @@ __debug_bin
 codegen/
 dist/
 .vscode/
+.idea/
+/node_modules
+/generate 
+yarn*
+.pnp*
+.yarn
+pnpm-lock.yaml
+
