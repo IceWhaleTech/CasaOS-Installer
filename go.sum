@@ -181,8 +181,8 @@ cloud.google.com/go/workflows v1.7.0/go.mod h1:JhSrZuVZWuiDfKEFxU0/F1PQjmpnpcoIS
 dmitri.shuralyov.com/gpu/mtl v0.0.0-20190408044501-666a987793e9/go.mod h1:H6x//7gZCb22OMCxBHrMx7a5I7Hp++hsVxbQ4BYO7hU=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/BurntSushi/xgb v0.0.0-20160522181843-27f122750802/go.mod h1:IVnqGOEym/WlBOVXweHU+Q+/VP0lqqI8lqeDx9IjBqo=
-github.com/IceWhaleTech/CasaOS-Common v0.4.5-alpha2 h1:OS2V3y72Eq42KfEn5sl7LqwkSg157Q0ilkuRvGUFyyE=
-github.com/IceWhaleTech/CasaOS-Common v0.4.5-alpha2/go.mod h1:2IuYyy5qW1BE6jqC6M+tOU+WtUec1K565rLATBJ9p/0=
+github.com/IceWhaleTech/CasaOS-Common v0.4.7-alpha4 h1:bsVQ+kdVkmPsqX6lxxETaShiMb9I8OgiR4xrEQ/vyss=
+github.com/IceWhaleTech/CasaOS-Common v0.4.7-alpha4/go.mod h1:2IuYyy5qW1BE6jqC6M+tOU+WtUec1K565rLATBJ9p/0=
 github.com/Masterminds/semver/v3 v3.2.1 h1:RN9w6+7QoMeJVGyfmbcgs28Br8cvmnucEXnY0rYXWg0=
 github.com/Masterminds/semver/v3 v3.2.1/go.mod h1:qvl/7zhW3nngYb5+80sSMF+FG2BjYrf8m9wsX0PNOMQ=
 github.com/OneOfOne/xxhash v1.2.2/go.mod h1:HSdplMjZKSmBqAxg5vPj2TmRDmfkzw+cTzAElWljhcU=
