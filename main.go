@@ -94,7 +94,7 @@ func main() {
 	// start migration.
 	// only zimaos should do this.
 	// if it is CasaOS. the migration will be done by the installer. and will skip this.
-	service.StopFallbackWebsite()
+	go service.StopFallbackWebsite()
 
 	err := service.StartMigration(sysRoot)
 	if err != nil {
