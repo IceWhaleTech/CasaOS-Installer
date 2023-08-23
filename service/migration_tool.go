@@ -30,6 +30,15 @@ var (
 )
 
 func StartMigration(sysRoot string) error {
+
+	UpdateStatus(codegen.Status{
+		Status: codegen.Installing,
+	})
+
+	defer UpdateStatus(codegen.Status{
+		Status: codegen.Idle,
+	})
+
 	// check if migration is needed
 	// current version
 	currentVersion, err := CurrentReleaseVersion(sysRoot)
