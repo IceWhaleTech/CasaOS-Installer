@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"sync"
 
 	"github.com/IceWhaleTech/CasaOS-Common/external"
 	"github.com/IceWhaleTech/CasaOS-Common/utils/logger"
@@ -17,7 +18,8 @@ import (
 var MyService Services
 
 // TODO move to another place
-var Status codegen.Status
+var status codegen.Status
+var lock sync.RWMutex
 
 type Services interface {
 	Gateway() (external.ManagementService, error)
@@ -28,15 +30,24 @@ type services struct {
 	runtimePath string
 }
 
-func UpdateStatus(status codegen.Status) {
+func UpdateStatus(newStatus codegen.Status) {
 	// if status move to server. the function can be reuse.
-	Status = status
+	lock.Lock()
+	defer lock.Unlock()
+
+	status = newStatus
+}
+
+func GetStatus() codegen.Status {
+	lock.RLock()
+	defer lock.RUnlock()
+	return status
 }
 
 func NewService(RuntimePath string) Services {
-	Status = codegen.Status{
+	UpdateStatus(codegen.Status{
 		Status: codegen.Idle,
-	}
+	})
 	return &services{
 		runtimePath: RuntimePath,
 	}

@@ -15,8 +15,9 @@ import (
 var sysRoot = "/"
 
 func (a *api) GetStatus(ctx echo.Context) error {
+	status := service.GetStatus()
 	return ctx.JSON(http.StatusOK, &codegen.StatusOK{
-		Data:    &service.Status,
+		Data:    &status,
 		Message: nil,
 	})
 }
@@ -25,7 +26,6 @@ func (a *api) GetRelease(ctx echo.Context, params codegen.GetReleaseParams) erro
 
 	tag := service.GetReleaseBranch(sysRoot)
 
-  
 	go service.PublishEventWrapper(context.Background(), common.EventTypeCheckUpdateBegin, nil)
 	defer service.PublishEventWrapper(context.Background(), common.EventTypeCheckUpdateEnd, nil)
 	go service.UpdateStatus(codegen.Status{
