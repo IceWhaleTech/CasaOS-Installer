@@ -158,7 +158,7 @@ func IsZimaOS(sysRoot string) bool {
 	if err != nil {
 		return false
 	}
-	if strings.Contains(string(fileContent), "MODEL=\"Zima\"") {
+	if strings.Contains(string(fileContent), "MODEL=Zima") {
 		return true
 	}
 	return false

@@ -16,6 +16,7 @@ import (
 )
 
 var MyService Services
+var InstallerService InstallerServices
 
 // TODO move to another place
 var status codegen.Status
@@ -24,6 +25,14 @@ var lock sync.RWMutex
 type Services interface {
 	Gateway() (external.ManagementService, error)
 	MessageBus() (*message_bus.ClientWithResponses, error)
+}
+
+type InstallerServices interface {
+	GetRelease(ctx context.Context, tag string) (*codegen.Release, error)
+	VerifyRelease(release codegen.Release) (string, error)
+	DownloadRelease(ctx context.Context, release codegen.Release, force bool) (string, error)
+	Install(release codegen.Release, sysRoot string) error
+	MigrationInLaunch(sysRoot string) error
 }
 
 type services struct {
@@ -51,6 +60,25 @@ func NewService(RuntimePath string) Services {
 	return &services{
 		runtimePath: RuntimePath,
 	}
+}
+
+func NewInstallerService(sysRoot string) InstallerServices {
+	installMethod, err := GetInstallMethod(sysRoot)
+	if err != nil {
+		panic(err)
+	}
+
+	// 这里搞个工厂模式。
+
+	if installMethod == "rauc" {
+		return &RAUCService{}
+	}
+	// 回头做这个社区版。
+	// if installMethod == "tar" {
+	// 	return &TarService{}
+	// }
+
+	panic(fmt.Errorf("install method %s not supported", installMethod))
 }
 
 func (s *services) Gateway() (external.ManagementService, error) {

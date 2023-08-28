@@ -44,6 +44,8 @@ var (
 )
 
 func main() {
+	service.InstallerService = service.NewInstallerService(sysRoot)
+
 	go service.StartFallbackWebsite()
 	// create config
 	{
@@ -92,11 +94,12 @@ func main() {
 	defer cancel()
 
 	// start migration.
-	// only zimaos should do this.
+	// only ZIMA OS should do this.
 	// if it is CasaOS. the migration will be done by the installer. and will skip this.
 	go service.StopFallbackWebsite()
 
-	err := service.StartMigration(sysRoot)
+	// err := service.StartMigration(sysRoot)
+	err := service.InstallerService.MigrationInLaunch(sysRoot)
 	if err != nil {
 		logger.Error("error when trying to start migration", zap.Error(err))
 	}
@@ -204,7 +207,8 @@ func main() {
 
 func cronjob(ctx context.Context) {
 
-	release, err := service.GetRelease(ctx, service.GetReleaseBranch(sysRoot))
+	// release, err := service.GetRelease(ctx, service.GetReleaseBranch(sysRoot))
+	release, err := service.InstallerService.GetRelease(ctx, service.GetReleaseBranch(sysRoot))
 
 	if err != nil {
 		logger.Error("error when trying to get release", zap.Error(err))
@@ -220,7 +224,9 @@ func cronjob(ctx context.Context) {
 	if _, err := service.VerifyRelease(*release); err != nil {
 		logger.Info("error while verifying release - continue to download", zap.Error(err))
 
-		releaseFilePath, err := service.DownloadRelease(ctx, *release, true)
+		// releaseFilePath, err := service.DownloadRelease(ctx, *release, true)
+		releaseFilePath, err := service.InstallerService.DownloadRelease(ctx, *release, true)
+
 		if err != nil {
 			logger.Error("error when trying to download release", zap.Error(err))
 			return

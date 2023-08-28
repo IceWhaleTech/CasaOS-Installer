@@ -173,14 +173,19 @@ func TestIsUpgradable(t *testing.T) {
 
 	currentVersion, err := service.CurrentReleaseVersion(tmpSysRoot)
 	assert.NoError(t, err)
-	assert.Equal(t, currentVersion, "0.4.3")
+	assert.Equal(t, "0.4.3", currentVersion.String())
 
 	result = service.ShouldUpgrade(*release, tmpSysRoot)
-	assert.Equal(t, result, true)
+	assert.Equal(t, true, result)
+
+	// 这里有坑，认为0.4.4-1不比0.4.4大。
+	// fixtures.SetLocalRelease(tmpSysRoot, "v0.4.4")
+	// result = service.ShouldUpgrade(*release, tmpSysRoot)
+	// assert.Equal(t, true, result)
 
 	// test case: the version can be update, but the package is not exist
 	result = service.IsUpgradable(*release, tmpSysRoot)
-	assert.Equal(t, result, false)
+	assert.Equal(t, false, result)
 
 	fixtures.CacheRelease0441(config.ServerInfo.CachePath)
 

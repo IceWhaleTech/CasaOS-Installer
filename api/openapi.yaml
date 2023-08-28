@@ -145,7 +145,7 @@ components:
           enum:
             - "idle"
             - "fetchUpdating"
-            - "fetchupdated"
+            - "fetchUpdated"
             - "downloading"
             - "downloaded"
             - "installing"
