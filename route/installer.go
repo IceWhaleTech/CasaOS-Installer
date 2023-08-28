@@ -79,7 +79,7 @@ func (a *api) InstallRelease(ctx echo.Context, params codegen.InstallReleasePara
 		tag = *params.Version
 	}
 
-	release, err := service.GetRelease(ctx.Request().Context(), tag)
+	release, err := service.InstallerService.GetRelease(ctx.Request().Context(), tag)
 	if err != nil {
 		message := err.Error()
 
@@ -110,7 +110,7 @@ func (a *api) InstallRelease(ctx echo.Context, params codegen.InstallReleasePara
 		sysRoot := "/"
 
 		// if the err is not nil. It mean should to download
-		if _, err := service.VerifyRelease(*release); err != nil {
+		if _, err := service.InstallerService.VerifyRelease(*release); err != nil {
 			go service.PublishEventWrapper(context.Background(), common.EventTypeInstallUpdateError, map[string]string{
 				common.PropertyTypeMessage.Name: err.Error(),
 			})
@@ -126,7 +126,8 @@ func (a *api) InstallRelease(ctx echo.Context, params codegen.InstallReleasePara
 			})
 
 			logger.Error("error while download migration: %s", zap.Error(err))
-			return
+			// 回头这里重做一下，有rauc自己的migration
+			//return
 		}
 
 		if err := service.InstallSystem(*release, sysRoot); err != nil {

@@ -11,6 +11,17 @@ import (
 	"github.com/IceWhaleTech/CasaOS-Installer/internal"
 )
 
+type TarService struct {
+}
+
+func (r *TarService) Install(release codegen.Release, sysRoot string) error {
+	return nil
+}
+
+func (r *TarService) GetRelease(ctx context.Context, tag string) (*codegen.Release, error) {
+	return GetRelease(ctx, tag)
+}
+
 // dependent config.ServerInfo.CachePath
 func InstallCasaOSPackages(release codegen.Release, sysRoot string) error {
 	releaseFilePath, err := VerifyRelease(release)
