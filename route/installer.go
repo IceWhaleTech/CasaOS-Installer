@@ -32,7 +32,7 @@ func (a *api) GetRelease(ctx echo.Context, params codegen.GetReleaseParams) erro
 		Status: codegen.FetchUpdating,
 	})
 	defer service.UpdateStatus(codegen.Status{
-		Status: codegen.Fetchupdated,
+		Status: codegen.FetchUpdated,
 	})
 
 	if params.Version != nil && *params.Version != "latest" {
