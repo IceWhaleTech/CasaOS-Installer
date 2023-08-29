@@ -105,8 +105,8 @@ func (a *api) InstallRelease(ctx echo.Context, params codegen.InstallReleasePara
 		go service.PublishEventWrapper(context.Background(), common.EventTypeInstallUpdateBegin, nil)
 		defer service.PublishEventWrapper(context.Background(), common.EventTypeInstallUpdateEnd, nil)
 
-		backgroundCtx, cancel := context.WithCancel(context.Background())
-		defer cancel()
+		// backgroundCtx, cancel := context.WithCancel(context.Background())
+		// defer cancel()
 		sysRoot := "/"
 
 		// if the err is not nil. It mean should to download
@@ -119,16 +119,17 @@ func (a *api) InstallRelease(ctx echo.Context, params codegen.InstallReleasePara
 			return
 		}
 
-		// to download migration script
-		if _, err := service.DownloadAllMigrationTools(backgroundCtx, *release, sysRoot); err != nil {
-			go service.PublishEventWrapper(context.Background(), common.EventTypeInstallUpdateError, map[string]string{
-				common.PropertyTypeMessage.Name: err.Error(),
-			})
+		// TODO disable migration when rauc install temporarily
+		// // to download migration script
+		// if _, err := service.DownloadAllMigrationTools(backgroundCtx, *release, sysRoot); err != nil {
+		// 	go service.PublishEventWrapper(context.Background(), common.EventTypeInstallUpdateError, map[string]string{
+		// 		common.PropertyTypeMessage.Name: err.Error(),
+		// 	})
 
-			logger.Error("error while download migration: %s", zap.Error(err))
-			// 回头这里重做一下，有rauc自己的migration
-			//return
-		}
+		// 	logger.Error("error while download migration: %s", zap.Error(err))
+		// 	// 回头这里重做一下，有rauc自己的migration
+		// 	//return
+		// }
 
 		if err := service.InstallSystem(*release, sysRoot); err != nil {
 			go service.PublishEventWrapper(context.Background(), common.EventTypeInstallUpdateError, map[string]string{

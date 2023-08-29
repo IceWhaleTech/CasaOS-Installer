@@ -74,6 +74,9 @@ func Extract(tarFilePath, destinationFolder string) error {
 	if strings.HasSuffix(tarFilePath, ".tar.gz") {
 		exec.Command("tar", "-xzf", tarFilePath, "-C", destinationFolder).Run()
 	}
+	if strings.HasSuffix(tarFilePath, ".zip") {
+		exec.Command("unzip", tarFilePath, "-d", destinationFolder).Run()
+	}
 	return nil
 }
 

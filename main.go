@@ -234,16 +234,17 @@ func cronjob(ctx context.Context) {
 		logger.Info("downloaded release", zap.String("release file path", releaseFilePath))
 	}
 
-	// cache migration tools if not already cached
-	{
-		if service.VerifyAllMigrationTools(*release, sysRoot) {
-			logger.Info("all migration tools exist", zap.String("version", release.Version))
-			return
-		}
+	// TOOD disable migration when rauc install temporarily
+	// // cache migration tools if not already cached
+	// {
+	// 	if service.VerifyAllMigrationTools(*release, sysRoot) {
+	// 		logger.Info("all migration tools exist", zap.String("version", release.Version))
+	// 		return
+	// 	}
 
-		if _, err := service.DownloadAllMigrationTools(ctx, *release, sysRoot); err != nil {
-			logger.Error("error when trying to download migration tools", zap.Error(err))
-			return
-		}
-	}
+	// 	if _, err := service.DownloadAllMigrationTools(ctx, *release, sysRoot); err != nil {
+	// 		logger.Error("error when trying to download migration tools", zap.Error(err))
+	// 		return
+	// 	}
+	// }
 }

@@ -44,6 +44,36 @@ func (r *RAUCService) DownloadRelease(ctx context.Context, release codegen.Relea
 	return DownloadRelease(ctx, release, force)
 }
 
+func (r *RAUCService) ExtractRelease(packageFilepath string, release codegen.Release) error {
+	return ExtractRAUCRelease(packageFilepath, release)
+}
+
+func (r *RAUCService) GetMigrationInfo(ctx context.Context, release codegen.Release) error {
+	return nil
+}
+
+func (r *RAUCService) DownloadAllMigrationTools(ctx context.Context, release codegen.Release) error {
+	return nil
+}
+
+// 目前不需要这个做额外的动作
+func DownloadReleaseZIP(release codegen.Release, force bool) (string, error) {
+	return "", nil
+}
+
+func ExtractRAUCRelease(packageFilepath string, release codegen.Release) error {
+	releaseDir, err := ReleaseDir(release)
+	if err != nil {
+		return err
+	}
+
+	if err := internal.Extract(packageFilepath, releaseDir); err != nil {
+		return err
+	}
+
+	return internal.BulkExtract(releaseDir)
+}
+
 func (r *RAUCService) MigrationInLaunch(sysRoot string) error {
 	return StartMigration(sysRoot)
 }
@@ -90,7 +120,7 @@ func InstallRAUC(release codegen.Release, sysRoot string) error {
 	if err != nil {
 		log.Fatal("InstallBundle() failed: ", err.Error())
 	}
-
+	f
 	return nil
 }
 
