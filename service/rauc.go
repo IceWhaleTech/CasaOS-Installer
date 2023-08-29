@@ -120,7 +120,6 @@ func InstallRAUC(release codegen.Release, sysRoot string) error {
 	if err != nil {
 		log.Fatal("InstallBundle() failed: ", err.Error())
 	}
-	f
 	return nil
 }
 
