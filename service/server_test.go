@@ -61,14 +61,15 @@ func TestRAUCOfflineServer(t *testing.T) {
 
 	tmpDir, err := os.MkdirTemp("", "casaos-rauc-offline-extract-test-*")
 	assert.NoError(t, err)
-	defer os.RemoveAll(tmpDir)
+	// defer os.RemoveAll(tmpDir)
 
 	ctx := context.Background()
 	assert.NoError(t, err)
 	config.ServerInfo.CachePath = filepath.Join(tmpDir, "cache")
 
 	installerServer := &service.RAUCOfflineService{
-		SysRoot: tmpDir,
+		SysRoot:            tmpDir,
+		InstallRAUCHandler: service.InstallRAUCTest,
 	}
 
 	config.ServerInfo.CachePath = filepath.Join(tmpDir, "cache")
@@ -98,4 +99,7 @@ func TestRAUCOfflineServer(t *testing.T) {
 	// ensure rauc file exists
 	// get parent dir of releaseDir
 	assert.FileExists(t, filepath.Join(parentDir, "casaos_ova-0.4.4-1.raucb"))
+
+	err = installerServer.Install(*release, tmpDir)
+	assert.NoError(t, err)
 }

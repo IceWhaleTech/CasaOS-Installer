@@ -109,7 +109,7 @@ func main() {
 
 		go cronjob(ctx) // run once immediately
 
-		if _, err := crontab.AddFunc("@every 24h", func() { cronjob(ctx) }); err != nil {
+		if _, err := crontab.AddFunc("@every 10m", func() { cronjob(ctx) }); err != nil {
 			panic(err)
 		}
 
