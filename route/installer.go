@@ -111,15 +111,28 @@ func (a *api) InstallRelease(ctx echo.Context, params codegen.InstallReleasePara
 
 		// if the err is not nil. It mean should to download
 		contentCtx := context.Background()
+
+		go service.PublishEventWrapper(contentCtx, common.EventTypeDownloadUpdateBegin, nil)
+		go service.UpdateStatus(codegen.Status{
+			Status: codegen.Downloading,
+		})
+
 		releasePath, err := service.InstallerService.DownloadRelease(contentCtx, *release, false)
+
 		if err != nil {
-			go service.PublishEventWrapper(context.Background(), common.EventTypeInstallUpdateError, map[string]string{
+			go service.PublishEventWrapper(context.Background(), common.EventTypeDownloadUpdateError, map[string]string{
 				common.PropertyTypeMessage.Name: err.Error(),
 			})
 
 			logger.Error("error while download release: %s", zap.Error(err))
 			return
 		}
+
+		go service.PublishEventWrapper(contentCtx, common.EventTypeDownloadUpdateEnd, nil)
+
+		go service.UpdateStatus(codegen.Status{
+			Status: codegen.Downloaded,
+		})
 
 		// TODO disable migration when rauc install temporarily
 		// // to download migration script
