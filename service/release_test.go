@@ -20,7 +20,7 @@ func TestDownloadRauc(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	release, err := service.GetRelease(ctx, "rauc")
+	release, err := service.GetRelease(ctx, "unit-test-rauc-0.4.4-1")
 	assert.NoError(t, err)
 	assert.NotNil(t, release)
 
@@ -44,6 +44,10 @@ func TestDownloadRauc(t *testing.T) {
 
 	releaseFilePath, err := service.DownloadRelease(ctx, *release, false)
 	assert.NoError(t, err)
+
+	err = service.ExtractRAUCRelease(releaseFilePath, *release)
+
+	assert.NoError(t, err)
 	assert.FileExists(t, releaseFilePath)
 	// fmt.Println(releaseFilePath)
 
@@ -51,6 +55,7 @@ func TestDownloadRauc(t *testing.T) {
 	assert.NoError(t, err)
 	assert.FileExists(t, releaseFilePath)
 }
+
 func TestInstallRelease(t *testing.T) {
 	logger.LogInitConsoleOnly()
 

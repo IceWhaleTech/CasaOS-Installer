@@ -52,7 +52,6 @@ func TestRAUCServer(t *testing.T) {
 
 	err = installerServer.Install(*release, tmpDir)
 	assert.NoError(t, err)
-
 }
 
 func TestRAUCOfflineServer(t *testing.T) {
