@@ -74,7 +74,9 @@ func NewInstallerService(sysRoot string) InstallerServices {
 	// 这里搞个工厂模式。
 
 	if installMethod == "rauc" {
-		return &RAUCService{}
+		return &RAUCService{
+			InstallRAUCHandler: InstallRAUCHandlerV1,
+		}
 	}
 	// 回头做这个社区版。
 	// if installMethod == "tar" {

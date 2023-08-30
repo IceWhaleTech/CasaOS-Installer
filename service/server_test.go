@@ -26,7 +26,9 @@ func TestRAUCServer(t *testing.T) {
 	assert.NoError(t, err)
 	config.ServerInfo.CachePath = filepath.Join(tmpDir, "cache")
 
-	installerServer := &service.RAUCService{}
+	installerServer := &service.RAUCService{
+		InstallRAUCHandler: service.InstallRAUCTest,
+	}
 
 	release, err := installerServer.GetRelease(ctx, "unit-test-rauc-0.4.4-1")
 	assert.NoError(t, err)
@@ -47,6 +49,10 @@ func TestRAUCServer(t *testing.T) {
 	// ensure rauc file exists
 	// get parent dir of releaseDir
 	assert.FileExists(t, filepath.Join(parentDir, "casaos_ova-0.4.4-1.raucb"))
+
+	err = installerServer.Install(*release, tmpDir)
+	assert.NoError(t, err)
+
 }
 
 func TestRAUCOfflineServer(t *testing.T) {

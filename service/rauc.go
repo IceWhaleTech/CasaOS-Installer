@@ -20,10 +20,11 @@ const (
 )
 
 type RAUCService struct {
+	InstallRAUCHandler func(raucPath string) error
 }
 
 func (r *RAUCService) Install(release codegen.Release, sysRoot string) error {
-	return InstallRAUC(release, sysRoot)
+	return InstallRAUC(release, sysRoot, r.InstallRAUCHandler)
 }
 
 func (r *RAUCService) GetRelease(ctx context.Context, tag string) (*codegen.Release, error) {
@@ -88,14 +89,23 @@ func LoadReleaseFromLocal(sysRoot string) (*codegen.Release, error) {
 }
 
 // dependent config.ServerInfo.CachePath
-func InstallRAUC(release codegen.Release, sysRoot string) error {
+func InstallRAUC(release codegen.Release, sysRoot string, InstallRAUCHandler func(raucPath string) error) error {
 	// to check rauc tar
 
-	raucfilepath, err := VerifyRAUC(release)
+	raucFilePath, err := VerifyRAUC(release)
+	if err != nil {
+		return err
+	}
+
+	err = InstallRAUCHandler(raucFilePath)
 	if err != nil {
 		log.Fatal("VerifyRAUC() failed: ", err.Error())
 	}
 
+	return nil
+}
+
+func InstallRAUCHandlerV1(raucfilepath string) error {
 	// install rauc
 	raucInstaller, err := rauc.InstallerNew()
 	if err != nil {
@@ -115,16 +125,21 @@ func InstallRAUC(release codegen.Release, sysRoot string) error {
 	return nil
 }
 
+func InstallRAUCTest(raucfilepath string) error {
+	// to check file exist
+	fmt.Println("文件名为", raucfilepath)
+	if _, err := os.Stat(raucfilepath); os.IsNotExist(err) {
+		return fmt.Errorf("not found offline install package")
+	}
+
+	return nil
+}
+
 func VerifyRAUC(release codegen.Release) (string, error) {
 	releaseDir, err := ReleaseDir(release)
 	if err != nil {
 		return "", err
 	}
-
-	// packageURL, err := internal.GetPackageURLByCurrentArch(release, "")
-	// if err != nil {
-	// 	return "", err
-	// }
 
 	packageURL, err := internal.GetPackageURLByCurrentArch(release, "")
 	if err != nil {
@@ -139,6 +154,9 @@ func VerifyRAUC(release codegen.Release) (string, error) {
 		return "", fmt.Errorf("rauc %s not found", packageFilePath)
 	}
 
+	// TODO 更好的包信息，不能只有包名，没有rauc名。
+	// replace tar.gz to raucb of packageFilePath
+	packageFilePath = packageFilePath[:len(packageFilePath)-len(".tar.gz")] + ".raucb"
 	return packageFilePath, nil
 }
 

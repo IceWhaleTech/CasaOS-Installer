@@ -206,7 +206,8 @@ func InstallSystem(release codegen.Release, sysRoot string) error {
 
 	err = nil
 	if installMethod == "rauc" {
-		err = InstallRAUC(release, sysRoot)
+		// err = InstallRAUC(release, sysRoot)
+		panic("not support rauc install")
 	}
 	if installMethod == "tar" {
 		err = InstallCasaOSPackages(release, sysRoot)

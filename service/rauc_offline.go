@@ -12,11 +12,12 @@ import (
 )
 
 type RAUCOfflineService struct {
-	SysRoot string
+	SysRoot            string
+	InstallRAUCHandler func(raucPath string) error
 }
 
 func (r *RAUCOfflineService) Install(release codegen.Release, sysRoot string) error {
-	return InstallRAUC(release, sysRoot)
+	return InstallRAUC(release, sysRoot, r.InstallRAUCHandler)
 }
 
 func (r *RAUCOfflineService) GetRelease(ctx context.Context, tag string) (*codegen.Release, error) {
