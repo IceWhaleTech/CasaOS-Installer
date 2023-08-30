@@ -31,6 +31,9 @@ type InstallerServices interface {
 	GetRelease(ctx context.Context, tag string) (*codegen.Release, error)
 	VerifyRelease(release codegen.Release) (string, error)
 	DownloadRelease(ctx context.Context, release codegen.Release, force bool) (string, error)
+	ExtractRelease(packageFilepath string, release codegen.Release) error
+	GetMigrationInfo(ctx context.Context, release codegen.Release) error
+	DownloadAllMigrationTools(ctx context.Context, release codegen.Release) error
 	Install(release codegen.Release, sysRoot string) error
 	MigrationInLaunch(sysRoot string) error
 }
@@ -71,7 +74,9 @@ func NewInstallerService(sysRoot string) InstallerServices {
 	// 这里搞个工厂模式。
 
 	if installMethod == "rauc" {
-		return &RAUCService{}
+		return &RAUCService{
+			InstallRAUCHandler: InstallRAUCHandlerV1,
+		}
 	}
 	// 回头做这个社区版。
 	// if installMethod == "tar" {

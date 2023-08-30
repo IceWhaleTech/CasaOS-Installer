@@ -105,40 +105,54 @@ func (a *api) InstallRelease(ctx echo.Context, params codegen.InstallReleasePara
 		go service.PublishEventWrapper(context.Background(), common.EventTypeInstallUpdateBegin, nil)
 		defer service.PublishEventWrapper(context.Background(), common.EventTypeInstallUpdateEnd, nil)
 
-		backgroundCtx, cancel := context.WithCancel(context.Background())
-		defer cancel()
+		// backgroundCtx, cancel := context.WithCancel(context.Background())
+		// defer cancel()
 		sysRoot := "/"
 
 		// if the err is not nil. It mean should to download
-		if _, err := service.InstallerService.VerifyRelease(*release); err != nil {
+		contentCtx := context.Background()
+		releasePath, err := service.InstallerService.DownloadRelease(contentCtx, *release, false)
+		if err != nil {
 			go service.PublishEventWrapper(context.Background(), common.EventTypeInstallUpdateError, map[string]string{
 				common.PropertyTypeMessage.Name: err.Error(),
 			})
 
-			logger.Error("error while release verification: %s", zap.Error(err))
+			logger.Error("error while download release: %s", zap.Error(err))
 			return
 		}
 
-		// to download migration script
-		if _, err := service.DownloadAllMigrationTools(backgroundCtx, *release, sysRoot); err != nil {
+		// TODO disable migration when rauc install temporarily
+		// // to download migration script
+		// if _, err := service.DownloadAllMigrationTools(backgroundCtx, *release, sysRoot); err != nil {
+		// 	go service.PublishEventWrapper(context.Background(), common.EventTypeInstallUpdateError, map[string]string{
+		// 		common.PropertyTypeMessage.Name: err.Error(),
+		// 	})
+
+		// 	logger.Error("error while download migration: %s", zap.Error(err))
+		// 	// 回头这里重做一下，有rauc自己的migration
+		// 	//return
+		// }
+
+		err = service.InstallerService.ExtractRelease(releasePath, *release)
+		if err != nil {
 			go service.PublishEventWrapper(context.Background(), common.EventTypeInstallUpdateError, map[string]string{
 				common.PropertyTypeMessage.Name: err.Error(),
 			})
 
-			logger.Error("error while download migration: %s", zap.Error(err))
-			// 回头这里重做一下，有rauc自己的migration
-			//return
+			logger.Error("error while extract release: %s", zap.Error(err))
+			return
 		}
 
-		if err := service.InstallSystem(*release, sysRoot); err != nil {
+		err = service.InstallerService.Install(*release, sysRoot)
+		if err != nil {
 			go service.PublishEventWrapper(context.Background(), common.EventTypeInstallUpdateError, map[string]string{
 				common.PropertyTypeMessage.Name: err.Error(),
 			})
 
 			logger.Error("error while install system: %s", zap.Error(err))
 			return
-
 		}
+
 	}()
 
 	message := "release being installed asynchronously"
