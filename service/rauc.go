@@ -15,7 +15,7 @@ import (
 
 const (
 	RAUCOfflinePath        = "/Data/rauc/"
-	RAUCOfflineReleaseFile = "rauc-release.yml"
+	RAUCOfflineReleaseFile = "release.yaml"
 	RAUCOfflineRAUCFile    = "rauc.tar.gz"
 )
 
@@ -27,14 +27,9 @@ func (r *RAUCService) Install(release codegen.Release, sysRoot string) error {
 }
 
 func (r *RAUCService) GetRelease(ctx context.Context, tag string) (*codegen.Release, error) {
-	// 这里多做一步，从本地读release
-	release, err := LoadReleaseFromLocal()
-	if err != nil {
-		// 不然就是从网络读
-		return GetRelease(ctx, tag)
-	}
-	return release, nil
+	return GetRelease(ctx, tag)
 }
+
 func (r *RAUCService) VerifyRelease(release codegen.Release) (string, error) {
 	return VerifyRAUC(release)
 }
@@ -78,17 +73,14 @@ func (r *RAUCService) MigrationInLaunch(sysRoot string) error {
 	return StartMigration(sysRoot)
 }
 
-func LoadReleaseFromLocal() (*codegen.Release, error) {
+func LoadReleaseFromLocal(sysRoot string) (*codegen.Release, error) {
 	// to check RAUCOfflinePath + RAUCOfflineReleaseFile
-	if _, err := os.Stat(RAUCOfflinePath + RAUCOfflineReleaseFile); err != nil {
+	fmt.Println(filepath.Join(sysRoot, RAUCOfflinePath, RAUCOfflineReleaseFile))
+	if _, err := os.Stat(filepath.Join(sysRoot, RAUCOfflinePath, RAUCOfflineReleaseFile)); err != nil {
 		return nil, fmt.Errorf("rauc release file not found")
 	}
 
-	if _, err := os.Stat(RAUCOfflinePath + RAUCOfflineRAUCFile); err != nil {
-		return nil, fmt.Errorf("rauc tar file not found")
-	}
-
-	release, err := internal.GetReleaseFromLocal(filepath.Join(RAUCOfflinePath, RAUCOfflineReleaseFile))
+	release, err := internal.GetReleaseFromLocal(filepath.Join(sysRoot, RAUCOfflinePath, RAUCOfflineReleaseFile))
 	if err != nil {
 		return nil, err
 	}

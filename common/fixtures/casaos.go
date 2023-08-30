@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/IceWhaleTech/CasaOS-Installer/internal"
 	"github.com/IceWhaleTech/CasaOS-Installer/internal/config"
 	"github.com/IceWhaleTech/CasaOS-Installer/service"
 	cp "github.com/otiai10/copy"
@@ -142,5 +143,17 @@ UBUNTU_CODENAME=jammy`
 }
 
 func SetCasaOS(sysRoot string) {
+
+}
+
+func SetOfflineRAUC(sysRoot string, RAUCOfflinePath string, RAUCOfflineRAUCFile string) {
+	ctx := context.Background()
+	internal.DownloadAs(ctx, filepath.Join(sysRoot, RAUCOfflinePath, RAUCOfflineRAUCFile), "https://github.com/raller1028/test_rauc/releases/download/v0.4.4-1/casaos_ova-0.4.4-1.tar.gz")
+	fmt.Println(filepath.Join(sysRoot, RAUCOfflinePath, RAUCOfflineRAUCFile))
+	if _, err := os.Stat(filepath.Join(sysRoot, RAUCOfflinePath, RAUCOfflineRAUCFile)); os.IsNotExist(err) {
+		panic("not found offline install package")
+	} else {
+		fmt.Println("found offline install package")
+	}
 
 }
