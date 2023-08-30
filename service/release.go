@@ -141,7 +141,7 @@ func IsCasaOS(sysRoot string) bool {
 	if err != nil {
 		return true
 	}
-	if strings.Contains(string(fileContent), "MODEL=\"Zima\"") {
+	if strings.Contains(string(fileContent), "MODEL=Zima") {
 		return false
 	}
 	return true
