@@ -36,7 +36,7 @@ func (r *RAUCService) VerifyRelease(release codegen.Release) (string, error) {
 }
 
 func (r *RAUCService) DownloadRelease(ctx context.Context, release codegen.Release, force bool) (string, error) {
-	// 这里多做一步，从本地读release
+	// TODO 这里重做，不做额外的功能
 	return DownloadRelease(ctx, release, force)
 }
 
@@ -105,23 +105,27 @@ func InstallRAUC(release codegen.Release, sysRoot string, InstallRAUCHandler fun
 	return nil
 }
 
-func InstallRAUCHandlerV1(raucfilepath string) error {
+func InstallRAUCHandlerV1(RAUCFilePath string) error {
 	// install rauc
+	fmt.Println("rauc路径为:", RAUCFilePath)
+
 	raucInstaller, err := rauc.InstallerNew()
 	if err != nil {
 		fmt.Sprintln("rauc.InstallerNew() failed: ", err.Error())
 	}
 
-	compatible, version, err := raucInstaller.Info(raucfilepath)
+	compatible, version, err := raucInstaller.Info(RAUCFilePath)
 	if err != nil {
 		log.Fatal("Info() failed", err.Error())
 	}
 	log.Printf("Info(): compatible=%s, version=%s", compatible, version)
 
-	err = raucInstaller.InstallBundle(raucfilepath, rauc.InstallBundleOptions{})
+	err = raucInstaller.InstallBundle(RAUCFilePath, rauc.InstallBundleOptions{})
 	if err != nil {
 		log.Fatal("InstallBundle() failed: ", err.Error())
 	}
+
+	RebootSystem()
 	return nil
 }
 

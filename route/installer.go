@@ -141,7 +141,6 @@ func (a *api) InstallRelease(ctx echo.Context, params codegen.InstallReleasePara
 
 			logger.Error("error while extract release: %s", zap.Error(err))
 			return
-
 		}
 
 		err = service.InstallerService.Install(*release, sysRoot)
