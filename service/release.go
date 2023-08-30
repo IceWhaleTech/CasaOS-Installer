@@ -57,16 +57,6 @@ func GetRelease(ctx context.Context, tag string) (*codegen.Release, error) {
 // returns releaseFilePath if successful
 func DownloadRelease(ctx context.Context, release codegen.Release, force bool) (string, error) {
 
-	go PublishEventWrapper(ctx, common.EventTypeDownloadUpdateBegin, nil)
-	defer PublishEventWrapper(ctx, common.EventTypeDownloadUpdateEnd, nil)
-
-	go UpdateStatus(codegen.Status{
-		Status: codegen.Downloading,
-	})
-	defer UpdateStatus(codegen.Status{
-		Status: codegen.Downloaded,
-	})
-
 	// check and verify existing packages
 	if !force {
 		if packageFilePath, err := VerifyRelease(release); err != nil {
@@ -78,17 +68,11 @@ func DownloadRelease(ctx context.Context, release codegen.Release, force bool) (
 	}
 
 	if release.Mirrors == nil {
-		go PublishEventWrapper(ctx, common.EventTypeDownloadUpdateError, map[string]string{
-			common.PropertyTypeMessage.Name: "no mirror found",
-		})
 		return "", fmt.Errorf("no mirror found")
 	}
 
 	releaseDir, err := ReleaseDir(release)
 	if err != nil {
-		go PublishEventWrapper(ctx, common.EventTypeDownloadUpdateError, map[string]string{
-			common.PropertyTypeMessage.Name: err.Error(),
-		})
 		return "", err
 	}
 
@@ -101,18 +85,12 @@ func DownloadRelease(ctx context.Context, release codegen.Release, force bool) (
 			packageURL, err := internal.GetPackageURLByCurrentArch(release, mirror)
 			if err != nil {
 				logger.Info("error while getting package url - skipping", zap.Error(err), zap.Any("release", release))
-				go PublishEventWrapper(ctx, common.EventTypeDownloadUpdateError, map[string]string{
-					common.PropertyTypeMessage.Name: err.Error(),
-				})
 				continue
 			}
 
 			packageFilePath, err = internal.Download(ctx, releaseDir, packageURL)
 			if err != nil {
 				logger.Info("error while downloading and extracting package - skipping", zap.Error(err), zap.String("package_url", packageURL))
-				go PublishEventWrapper(ctx, common.EventTypeDownloadUpdateError, map[string]string{
-					common.PropertyTypeMessage.Name: err.Error(),
-				})
 				continue
 			}
 		}
@@ -122,9 +100,6 @@ func DownloadRelease(ctx context.Context, release codegen.Release, force bool) (
 			checksumsURL := internal.GetChecksumsURL(release, mirror)
 			if _, err := internal.Download(ctx, releaseDir, checksumsURL); err != nil {
 				logger.Info("error while downloading checksums - skipping", zap.Error(err), zap.String("checksums_url", checksumsURL))
-				go PublishEventWrapper(ctx, common.EventTypeDownloadUpdateError, map[string]string{
-					common.PropertyTypeMessage.Name: err.Error(),
-				})
 				continue
 			}
 		}
@@ -132,9 +107,6 @@ func DownloadRelease(ctx context.Context, release codegen.Release, force bool) (
 	}
 
 	if packageFilePath == "" {
-		go PublishEventWrapper(ctx, common.EventTypeDownloadUpdateError, map[string]string{
-			common.PropertyTypeMessage.Name: "package could not be found - there must be a bug",
-		})
 		return "", fmt.Errorf("package could not be found - there must be a bug")
 	}
 

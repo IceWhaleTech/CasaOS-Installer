@@ -52,11 +52,6 @@ func (r *RAUCService) DownloadAllMigrationTools(ctx context.Context, release cod
 	return nil
 }
 
-// 目前不需要这个做额外的动作
-func DownloadReleaseZIP(release codegen.Release, force bool) (string, error) {
-	return "", nil
-}
-
 func ExtractRAUCRelease(packageFilepath string, release codegen.Release) error {
 	releaseDir, err := ReleaseDir(release)
 	if err != nil {
