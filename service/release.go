@@ -325,11 +325,6 @@ func VerifyRelease(release codegen.Release) (string, error) {
 		return "", err
 	}
 
-	checksums, err := GetChecksums(release)
-	if err != nil {
-		return "", err
-	}
-
 	packageURL, err := internal.GetPackageURLByCurrentArch(release, "")
 	if err != nil {
 		return "", err
@@ -339,7 +334,6 @@ func VerifyRelease(release codegen.Release) (string, error) {
 
 	// 回头再把这个开一下
 	// packageChecksum := checksums[packageFilename]
-	_ = checksums[packageFilename]
 
 	packageFilePath := filepath.Join(releaseDir, packageFilename)
 

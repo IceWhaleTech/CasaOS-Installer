@@ -2,6 +2,7 @@ package route
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	"github.com/IceWhaleTech/CasaOS-Common/utils"
@@ -71,7 +72,6 @@ func (a *api) GetRelease(ctx echo.Context, params codegen.GetReleaseParams) erro
 
 func (a *api) InstallRelease(ctx echo.Context, params codegen.InstallReleaseParams) error {
 	go service.UpdateStatusWithMessage(service.InstallBegin, "主动触发的安装更新1级")
-	defer service.UpdateStatusWithMessage(service.InstallEnd, "更新完成")
 
 	tag := service.GetReleaseBranch(sysRoot)
 
@@ -109,48 +109,27 @@ func (a *api) InstallRelease(ctx echo.Context, params codegen.InstallReleasePara
 		// if the err is not nil. It mean should to download
 		contentCtx := context.Background()
 
-		go service.UpdateStatusWithMessage(service.DownloadBegin, "安装触发的下载")
+		service.UpdateStatusWithMessage(service.DownloadBegin, "安装触发的下载")
 
 		releasePath, err := service.InstallerService.DownloadRelease(contentCtx, *release, false)
 		if err != nil {
 		}
 
 		service.UpdateStatusWithMessage(service.DownloadEnd, "ready-to-update")
+		service.UpdateStatusWithMessage(service.InstallBegin, "正式开始安装")
 
-		// TODO disable migration when rauc install temporarily
-		// // to download migration script
-		// if _, err := service.DownloadAllMigrationTools(backgroundCtx, *release, sysRoot); err != nil {
-		// 	go service.PublishEventWrapper(context.Background(), common.EventTypeInstallUpdateError, map[string]string{
-		// 		common.PropertyTypeMessage.Name: err.Error(),
-		// 	})
-
-		// 	logger.Error("error while download migration: %s", zap.Error(err))
-		// 	// 回头这里重做一下，有rauc自己的migration
-		// 	//return
-		// }
-
+		fmt.Println("解压目录:", releasePath)
 		err = service.InstallerService.ExtractRelease(releasePath, *release)
 		if err != nil {
-			go service.PublishEventWrapper(context.Background(), common.EventTypeInstallUpdateError, map[string]string{
-				common.PropertyTypeMessage.Name: err.Error(),
-			})
-
 			logger.Error("error while extract release: %s", zap.Error(err))
 			return
 		}
 
-		go service.UpdateStatusWithMessage(service.InstallBegin, "正式开始安装")
-
 		err = service.InstallerService.Install(*release, sysRoot)
 		if err != nil {
-			go service.PublishEventWrapper(context.Background(), common.EventTypeInstallUpdateError, map[string]string{
-				common.PropertyTypeMessage.Name: err.Error(),
-			})
-
 			logger.Error("error while install system: %s", zap.Error(err))
 			return
 		}
-
 	}()
 
 	message := "release being installed asynchronously"
