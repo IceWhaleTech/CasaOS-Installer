@@ -27,8 +27,8 @@ func (a *api) GetRelease(ctx echo.Context, params codegen.GetReleaseParams) erro
 	packageStatus := ""
 
 	// TODO 考虑一下这个packageStatus的问题
-	go service.UpdateStatusWithMessage(string(service.FetchUpdateBegin), "")
-	defer service.UpdateStatusWithMessage(string(service.FetchUpdateEnd), packageStatus)
+	go service.UpdateStatusWithMessage(service.FetchUpdateBegin, "")
+	defer service.UpdateStatusWithMessage(service.FetchUpdateEnd, packageStatus)
 
 	tag := service.GetReleaseBranch(sysRoot)
 
@@ -68,12 +68,8 @@ func (a *api) GetRelease(ctx echo.Context, params codegen.GetReleaseParams) erro
 }
 
 func (a *api) InstallRelease(ctx echo.Context, params codegen.InstallReleaseParams) error {
-	// go service.UpdateStatus(codegen.Status{
-	// 	Status: codegen.Installing,
-	// })
-	// defer service.UpdateStatus(codegen.Status{
-	// 	Status: codegen.Installed,
-	// })
+	go service.UpdateStatusWithMessage(service.InstallBegin, "")
+	defer service.UpdateStatusWithMessage(service.InstallEnd, "")
 
 	tag := service.GetReleaseBranch(sysRoot)
 

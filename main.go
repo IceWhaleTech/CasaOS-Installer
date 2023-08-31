@@ -46,6 +46,8 @@ var (
 func main() {
 	service.InstallerService = service.NewInstallerService(sysRoot)
 
+	service.UpdateStatusWithMessage(service.Idle, "up-to-date")
+
 	go service.StartFallbackWebsite()
 	// create config
 	{
@@ -207,6 +209,9 @@ func main() {
 
 func cronjob(ctx context.Context) {
 
+	// TODO 考虑一下这个packageStatus的问题
+	go service.UpdateStatusWithMessage(service.FetchUpdateBegin, "开始检测更新")
+
 	// release, err := service.GetRelease(ctx, service.GetReleaseBranch(sysRoot))
 	release, err := service.InstallerService.GetRelease(ctx, service.GetReleaseBranch(sysRoot))
 
@@ -216,12 +221,19 @@ func cronjob(ctx context.Context) {
 	}
 
 	if !service.ShouldUpgrade(*release, sysRoot) {
+		service.UpdateStatusWithMessage(service.FetchUpdateEnd, "up-to-date")
 		logger.Info("no need to upgrade", zap.String("latest version", release.Version))
 		return
+	} else {
+		service.UpdateStatusWithMessage(service.FetchUpdateEnd, "out-of-date")
 	}
 
 	// cache release packages if not already cached
 	if _, err := service.VerifyRelease(*release); err != nil {
+		// TODO 考虑一下这个packageStatus的问题
+		go service.UpdateStatusWithMessage(service.DownloadBegin, "")
+		defer service.UpdateStatusWithMessage(service.DownloadEnd, "ready-to-update")
+
 		logger.Info("error while verifying release - continue to download", zap.Error(err))
 
 		// releaseFilePath, err := service.DownloadRelease(ctx, *release, true)
