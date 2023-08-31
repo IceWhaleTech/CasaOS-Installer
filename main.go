@@ -210,7 +210,7 @@ func main() {
 func cronjob(ctx context.Context) {
 
 	// TODO 考虑一下这个packageStatus的问题
-	go service.UpdateStatusWithMessage(service.FetchUpdateBegin, "开始检测更新")
+	go service.UpdateStatusWithMessage(service.FetchUpdateBegin, "间隔触发更新")
 
 	// release, err := service.GetRelease(ctx, service.GetReleaseBranch(sysRoot))
 	release, err := service.InstallerService.GetRelease(ctx, service.GetReleaseBranch(sysRoot))
@@ -231,7 +231,8 @@ func cronjob(ctx context.Context) {
 	// cache release packages if not already cached
 	if _, err := service.VerifyRelease(*release); err != nil {
 		// TODO 考虑一下这个packageStatus的问题
-		go service.UpdateStatusWithMessage(service.DownloadBegin, "")
+
+		go service.UpdateStatusWithMessage(service.DownloadBegin, "自动触发的下载")
 		defer service.UpdateStatusWithMessage(service.DownloadEnd, "ready-to-update")
 
 		logger.Info("error while verifying release - continue to download", zap.Error(err))

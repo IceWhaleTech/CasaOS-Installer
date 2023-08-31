@@ -24,12 +24,9 @@ func (a *api) GetStatus(ctx echo.Context) error {
 }
 
 func (a *api) GetRelease(ctx echo.Context, params codegen.GetReleaseParams) error {
-	packageStatus := ""
 
 	// TODO 考虑一下这个packageStatus的问题
-	go service.UpdateStatusWithMessage(service.FetchUpdateBegin, "")
-	defer service.UpdateStatusWithMessage(service.FetchUpdateEnd, packageStatus)
-
+	go service.UpdateStatusWithMessage(service.FetchUpdateBegin, "主动触发的更新")
 	tag := service.GetReleaseBranch(sysRoot)
 
 	if params.Version != nil && *params.Version != "latest" {
@@ -56,9 +53,9 @@ func (a *api) GetRelease(ctx echo.Context, params codegen.GetReleaseParams) erro
 
 	upgradable := service.IsUpgradable(*release, "")
 	if upgradable {
-		packageStatus = "out-of-date"
+		service.UpdateStatusWithMessage(service.FetchUpdateEnd, "out-of-date")
 	} else {
-		packageStatus = "up-to-date"
+		service.UpdateStatusWithMessage(service.FetchUpdateEnd, "up-to-date")
 	}
 
 	return ctx.JSON(http.StatusOK, &codegen.ReleaseOK{
@@ -68,8 +65,8 @@ func (a *api) GetRelease(ctx echo.Context, params codegen.GetReleaseParams) erro
 }
 
 func (a *api) InstallRelease(ctx echo.Context, params codegen.InstallReleaseParams) error {
-	go service.UpdateStatusWithMessage(service.InstallBegin, "")
-	defer service.UpdateStatusWithMessage(service.InstallEnd, "")
+	go service.UpdateStatusWithMessage(service.InstallBegin, "主动触发的更新")
+	defer service.UpdateStatusWithMessage(service.InstallEnd, "更新完成")
 
 	tag := service.GetReleaseBranch(sysRoot)
 
@@ -107,18 +104,13 @@ func (a *api) InstallRelease(ctx echo.Context, params codegen.InstallReleasePara
 		// if the err is not nil. It mean should to download
 		contentCtx := context.Background()
 
+		go service.UpdateStatusWithMessage(service.DownloadBegin, "安装触发的下载")
+
 		releasePath, err := service.InstallerService.DownloadRelease(contentCtx, *release, false)
-
 		if err != nil {
-			go service.PublishEventWrapper(context.Background(), common.EventTypeDownloadUpdateError, map[string]string{
-				common.PropertyTypeMessage.Name: err.Error(),
-			})
-
-			logger.Error("error while download release: %s", zap.Error(err))
-			return
 		}
 
-		go service.PublishEventWrapper(contentCtx, common.EventTypeDownloadUpdateEnd, nil)
+		service.UpdateStatusWithMessage(service.DownloadEnd, "ready-to-update")
 
 		// TODO disable migration when rauc install temporarily
 		// // to download migration script
@@ -141,6 +133,8 @@ func (a *api) InstallRelease(ctx echo.Context, params codegen.InstallReleasePara
 			logger.Error("error while extract release: %s", zap.Error(err))
 			return
 		}
+
+		go service.UpdateStatusWithMessage(service.InstallBegin, "正式开始安装")
 
 		err = service.InstallerService.Install(*release, sysRoot)
 		if err != nil {
