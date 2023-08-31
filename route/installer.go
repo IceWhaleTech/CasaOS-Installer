@@ -72,7 +72,6 @@ func (a *api) GetRelease(ctx echo.Context, params codegen.GetReleaseParams) erro
 
 func (a *api) InstallRelease(ctx echo.Context, params codegen.InstallReleaseParams) error {
 	go service.UpdateStatusWithMessage(service.InstallBegin, "主动触发的安装更新1级")
-	defer service.UpdateStatusWithMessage(service.InstallEnd, "更新完成")
 
 	tag := service.GetReleaseBranch(sysRoot)
 
@@ -117,14 +116,14 @@ func (a *api) InstallRelease(ctx echo.Context, params codegen.InstallReleasePara
 		}
 
 		service.UpdateStatusWithMessage(service.DownloadEnd, "ready-to-update")
+		service.UpdateStatusWithMessage(service.InstallBegin, "正式开始安装")
+
 		fmt.Println("解压目录:", releasePath)
 		err = service.InstallerService.ExtractRelease(releasePath, *release)
 		if err != nil {
 			logger.Error("error while extract release: %s", zap.Error(err))
 			return
 		}
-
-		service.UpdateStatusWithMessage(service.InstallBegin, "正式开始安装")
 
 		err = service.InstallerService.Install(*release, sysRoot)
 		if err != nil {
