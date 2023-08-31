@@ -126,20 +126,19 @@ components:
               - properties:
                   data:
                     $ref: "#/components/schemas/Status"
-                  
 
   schemas:
     BaseResponse:
       properties:
-        packageStatus:
-          description: package status - out-to-date, up-to-date, error 
+        message:
+          description: message returned by server side if there is any
           type: string
           example: ""
     Status:
       readOnly: true
       required:
         - status
-        - packageStatus
+        - message
       properties:
         status:
           type: string

@@ -81,7 +81,7 @@ func GetStatus() (codegen.Status, string) {
 	return status, packageStatus
 }
 
-func UpdateStatusWithMessage(eventType, newPackageStatus string) {
+func UpdateStatusWithMessage(eventType EventType, newPackageStatus string) {
 	lock.Lock()
 	defer lock.Unlock()
 
@@ -89,19 +89,19 @@ func UpdateStatusWithMessage(eventType, newPackageStatus string) {
 	InitEventTypeMapStatus()
 
 	switch eventType {
-	case string(DownloadBegin):
+	case DownloadBegin:
 		status = EventTypeMapStatus[DownloadBegin]
-	case string(DownloadEnd):
+	case DownloadEnd:
 		status = EventTypeMapStatus[DownloadEnd]
-	case string(FetchUpdateBegin):
+	case FetchUpdateBegin:
 		status = EventTypeMapStatus[FetchUpdateBegin]
-	case string(FetchUpdateEnd):
+	case FetchUpdateEnd:
 		status = EventTypeMapStatus[FetchUpdateEnd]
-	case string(InstallBegin):
+	case InstallBegin:
 		status = EventTypeMapStatus[InstallBegin]
-	case string(InstallEnd):
+	case InstallEnd:
 		status = EventTypeMapStatus[InstallEnd]
-	case string(InstallError):
+	case InstallError:
 		status = EventTypeMapStatus[InstallError]
 	}
 
@@ -110,7 +110,7 @@ func UpdateStatusWithMessage(eventType, newPackageStatus string) {
 	ctx := context.Background()
 
 	// 这里怎么map一下?🤔
-	event := EventTypeMapMessageType[EventType(eventType)]
+	event := EventTypeMapMessageType[eventType]
 
 	go PublishEventWrapper(ctx, event, map[string]string{
 		common.PropertyTypeMessage.Name: newPackageStatus,
@@ -179,6 +179,10 @@ func NewInstallerService(sysRoot string) InstallerServices {
 	// 这里搞个工厂模式。
 
 	if installMethod == "rauc" {
+		return &RAUCService{
+			InstallRAUCHandler: InstallRAUCHandlerV1,
+		}
+	} else {
 		return &RAUCService{
 			InstallRAUCHandler: InstallRAUCHandlerV1,
 		}
