@@ -126,31 +126,28 @@ components:
               - properties:
                   data:
                     $ref: "#/components/schemas/Status"
+                  
 
   schemas:
     BaseResponse:
       properties:
-        message:
-          description: message returned by server side if there is any
+        packageStatus:
+          description: package status - out-to-date, up-to-date, error 
           type: string
           example: ""
     Status:
       readOnly: true
       required:
         - status
-        - message
+        - packageStatus
       properties:
         status:
           type: string
           enum:
             - "idle"
             - "fetchUpdating"
-            - "fetchUpdated"
             - "downloading"
-            - "downloaded"
             - "installing"
-            - "installed"
-            - "error"
 
     Release:
       readOnly: true
