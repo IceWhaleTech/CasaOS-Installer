@@ -148,6 +148,8 @@ func IsCasaOS(sysRoot string) bool {
 }
 
 func GetReleaseBranch(sysRoot string) string {
+	return "rauc"
+
 	if IsZimaOS(sysRoot) {
 		return "rauc"
 	}

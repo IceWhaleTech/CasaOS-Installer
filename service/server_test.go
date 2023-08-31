@@ -40,6 +40,9 @@ func TestRAUCServer(t *testing.T) {
 	assert.NoError(t, err)
 	assert.FileExists(t, filepath.Join(parentDir, "casaos_ova-0.4.4-1.tar.gz"))
 
+	releasePath, err = service.VerifyRelease(*release)
+	assert.NoError(t, err)
+
 	err = installerServer.ExtractRelease(releasePath, *release)
 	assert.NoError(t, err)
 
