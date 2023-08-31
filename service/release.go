@@ -148,6 +148,8 @@ func IsCasaOS(sysRoot string) bool {
 }
 
 func GetReleaseBranch(sysRoot string) string {
+	return "rauc"
+
 	if IsZimaOS(sysRoot) {
 		return "rauc"
 	}
@@ -323,21 +325,12 @@ func VerifyRelease(release codegen.Release) (string, error) {
 		return "", err
 	}
 
-	checksums, err := GetChecksums(release)
-	if err != nil {
-		return "", err
-	}
-
 	packageURL, err := internal.GetPackageURLByCurrentArch(release, "")
 	if err != nil {
 		return "", err
 	}
 
 	packageFilename := filepath.Base(packageURL)
-
-	// 回头再把这个开一下
-	// packageChecksum := checksums[packageFilename]
-	_ = checksums[packageFilename]
 
 	packageFilePath := filepath.Join(releaseDir, packageFilename)
 
