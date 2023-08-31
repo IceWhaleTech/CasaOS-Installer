@@ -26,7 +26,7 @@ func (a *api) GetStatus(ctx echo.Context) error {
 func (a *api) GetRelease(ctx echo.Context, params codegen.GetReleaseParams) error {
 
 	// TODO 考虑一下这个packageStatus的问题
-	go service.UpdateStatusWithMessage(service.FetchUpdateBegin, "主动触发的更新")
+	go service.UpdateStatusWithMessage(service.FetchUpdateBegin, "主动触发的获取信息")
 	tag := service.GetReleaseBranch(sysRoot)
 
 	if params.Version != nil && *params.Version != "latest" {
@@ -52,8 +52,13 @@ func (a *api) GetRelease(ctx echo.Context, params codegen.GetReleaseParams) erro
 	}
 
 	upgradable := service.IsUpgradable(*release, "")
-	if upgradable {
-		service.UpdateStatusWithMessage(service.FetchUpdateEnd, "out-of-date")
+	if service.ShouldUpgrade(*release, sysRoot) {
+		if upgradable {
+			service.UpdateStatusWithMessage(service.FetchUpdateEnd, "ready-to-update")
+		} else {
+			service.UpdateStatusWithMessage(service.FetchUpdateEnd, "out-of-date")
+		}
+
 	} else {
 		service.UpdateStatusWithMessage(service.FetchUpdateEnd, "up-to-date")
 	}
@@ -65,7 +70,7 @@ func (a *api) GetRelease(ctx echo.Context, params codegen.GetReleaseParams) erro
 }
 
 func (a *api) InstallRelease(ctx echo.Context, params codegen.InstallReleaseParams) error {
-	go service.UpdateStatusWithMessage(service.InstallBegin, "主动触发的更新")
+	go service.UpdateStatusWithMessage(service.InstallBegin, "主动触发的安装更新1级")
 	defer service.UpdateStatusWithMessage(service.InstallEnd, "更新完成")
 
 	tag := service.GetReleaseBranch(sysRoot)
