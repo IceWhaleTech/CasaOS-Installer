@@ -6,7 +6,7 @@
         "generate:local": "openapi-generator-cli generate -g typescript-axios -i ./api/openapi.yaml -o ./generate",
         "generate:npx": "npx @openapitools/openapi-generator-cli generate -g typescript-axios -i ./api/openapi.yaml -o ./generate",
         "generate:ts": "npx openapi-typescript-codegen --input ./api/openapi.yaml --output ./generate",
-        "publish": "npm publish --access public",
+        "publish:public": "npm publish --access public",
         "start": "yarn generate:local && yarn build"
     },
     "homepage": "https://github.com/IceWhaleTech/CasaOS-LocalStorage#readme",
