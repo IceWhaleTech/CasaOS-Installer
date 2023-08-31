@@ -225,7 +225,11 @@ func cronjob(ctx context.Context) {
 		logger.Info("no need to upgrade", zap.String("latest version", release.Version))
 		return
 	} else {
-		service.UpdateStatusWithMessage(service.FetchUpdateEnd, "out-of-date")
+		if service.IsUpgradable(*release, sysRoot) {
+			service.UpdateStatusWithMessage(service.FetchUpdateEnd, "ready-to-update")
+		} else {
+			service.UpdateStatusWithMessage(service.FetchUpdateEnd, "out-of-date")
+		}
 	}
 
 	// cache release packages if not already cached
