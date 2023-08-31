@@ -15,11 +15,31 @@ import (
 	"go.uber.org/zap"
 )
 
+type EventType string
+
+const (
+	DownloadBegin    EventType = "downloadBegin"
+	DownloadEnd      EventType = "downloadEnd"
+	DownloadError    EventType = "downloadError"
+	FetchUpdateEnd   EventType = "fetchUpdateEnd"
+	FetchUpdateBegin EventType = "fetchUpdateBegin"
+	FetchUpdateError EventType = "fetchUpdateError"
+
+	Idle         EventType = "idle"
+	InstallEnd   EventType = "installEnd"
+	InstallBegin EventType = "installBegin"
+	InstallError EventType = "installError"
+)
+
+var EventTypeMapStatus = make(map[EventType]codegen.Status)
+var EventTypeMapMessageType = make(map[EventType]message_bus.EventType)
+
 var MyService Services
 var InstallerService InstallerServices
 
 // TODO move to another place
 var status codegen.Status
+var packageStatus string
 var lock sync.RWMutex
 
 type Services interface {
@@ -42,24 +62,109 @@ type services struct {
 	runtimePath string
 }
 
-func UpdateStatus(newStatus codegen.Status) {
-	// if status move to server. the function can be reuse.
+// func UpdateStatus(newStatus codegen.Status) {
+// 	// if status move to server. the function can be reuse.
+// 	lock.Lock()
+// 	defer lock.Unlock()
+
+// 	status = newStatus
+// 	message = ""
+
+// 	// 把消息总线和状态放在一起。
+// 	ctx := context.Background()
+// 	go PublishEventWrapper(ctx, common.EventTypeDownloadUpdateEnd, nil)
+// }
+
+func GetStatus() (codegen.Status, string) {
+	lock.RLock()
+	defer lock.RUnlock()
+	return status, packageStatus
+}
+
+func UpdateStatusWithMessage(eventType, newPackageStatus string) {
 	lock.Lock()
 	defer lock.Unlock()
 
-	status = newStatus
+	// TODO only run once
+	InitEventTypeMapStatus()
+
+	switch eventType {
+	case string(DownloadBegin):
+		status = EventTypeMapStatus[DownloadBegin]
+	case string(DownloadEnd):
+		status = EventTypeMapStatus[DownloadEnd]
+	case string(FetchUpdateBegin):
+		status = EventTypeMapStatus[FetchUpdateBegin]
+	case string(FetchUpdateEnd):
+		status = EventTypeMapStatus[FetchUpdateEnd]
+	case string(InstallBegin):
+		status = EventTypeMapStatus[InstallBegin]
+	case string(InstallEnd):
+		status = EventTypeMapStatus[InstallEnd]
+	case string(InstallError):
+		status = EventTypeMapStatus[InstallError]
+	}
+
+	packageStatus = newPackageStatus
+
+	ctx := context.Background()
+
+	// 这里怎么map一下?🤔
+	event := EventTypeMapMessageType[EventType(eventType)]
+
+	go PublishEventWrapper(ctx, event, map[string]string{
+		common.PropertyTypeMessage.Name: newPackageStatus,
+	})
 }
 
-func GetStatus() codegen.Status {
-	lock.RLock()
-	defer lock.RUnlock()
-	return status
+func InitEventTypeMapStatus() {
+	EventTypeMapStatus[DownloadBegin] = codegen.Status{
+		Status: codegen.Downloading,
+	}
+	EventTypeMapStatus[DownloadEnd] = codegen.Status{
+		Status: codegen.Idle,
+	}
+	EventTypeMapStatus[DownloadError] = codegen.Status{
+		Status: codegen.Idle,
+	}
+
+	EventTypeMapStatus[FetchUpdateBegin] = codegen.Status{
+		Status: codegen.FetchUpdating,
+	}
+	EventTypeMapStatus[FetchUpdateEnd] = codegen.Status{
+		Status: codegen.Idle,
+	}
+	EventTypeMapStatus[FetchUpdateError] = codegen.Status{
+		Status: codegen.Idle,
+	}
+
+	EventTypeMapStatus[InstallBegin] = codegen.Status{
+		Status: codegen.Installing,
+	}
+	EventTypeMapStatus[InstallEnd] = codegen.Status{
+		Status: codegen.Idle,
+	}
+	EventTypeMapStatus[InstallError] = codegen.Status{
+		Status: codegen.Idle,
+	}
+
+	EventTypeMapMessageType[FetchUpdateBegin] = common.EventTypeCheckUpdateBegin
+	EventTypeMapMessageType[FetchUpdateEnd] = common.EventTypeCheckUpdateEnd
+	EventTypeMapMessageType[FetchUpdateError] = common.EventTypeCheckUpdateError
+
+	EventTypeMapMessageType[DownloadBegin] = common.EventTypeDownloadUpdateBegin
+	EventTypeMapMessageType[DownloadEnd] = common.EventTypeDownloadUpdateEnd
+	EventTypeMapMessageType[DownloadError] = common.EventTypeDownloadUpdateError
+
+	EventTypeMapMessageType[InstallBegin] = common.EventTypeInstallUpdateBegin
+	EventTypeMapMessageType[InstallEnd] = common.EventTypeInstallUpdateEnd
+	EventTypeMapMessageType[InstallError] = common.EventTypeInstallUpdateError
 }
 
 func NewService(RuntimePath string) Services {
-	UpdateStatus(codegen.Status{
-		Status: codegen.Idle,
-	})
+	// UpdateStatus(codegen.Status{
+	// 	Status: codegen.Idle,
+	// })
 	return &services{
 		runtimePath: RuntimePath,
 	}

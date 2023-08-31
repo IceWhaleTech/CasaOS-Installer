@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/IceWhaleTech/CasaOS-Common/utils"
 	"github.com/IceWhaleTech/CasaOS-Common/utils/logger"
 	"github.com/IceWhaleTech/CasaOS-Installer/codegen"
 	"github.com/IceWhaleTech/CasaOS-Installer/common"
@@ -15,25 +16,21 @@ import (
 var sysRoot = "/"
 
 func (a *api) GetStatus(ctx echo.Context) error {
-	status := service.GetStatus()
+	status, packageStatus := service.GetStatus()
 	return ctx.JSON(http.StatusOK, &codegen.StatusOK{
 		Data:    &status,
-		Message: nil,
+		Message: utils.Ptr(packageStatus),
 	})
 }
 
 func (a *api) GetRelease(ctx echo.Context, params codegen.GetReleaseParams) error {
+	packageStatus := ""
+
+	// TODO 考虑一下这个packageStatus的问题
+	go service.UpdateStatusWithMessage(string(service.FetchUpdateBegin), "")
+	defer service.UpdateStatusWithMessage(string(service.FetchUpdateEnd), packageStatus)
 
 	tag := service.GetReleaseBranch(sysRoot)
-
-	go service.PublishEventWrapper(context.Background(), common.EventTypeCheckUpdateBegin, nil)
-	defer service.PublishEventWrapper(context.Background(), common.EventTypeCheckUpdateEnd, nil)
-	go service.UpdateStatus(codegen.Status{
-		Status: codegen.FetchUpdating,
-	})
-	defer service.UpdateStatus(codegen.Status{
-		Status: codegen.FetchUpdated,
-	})
 
 	if params.Version != nil && *params.Version != "latest" {
 		tag = *params.Version
@@ -58,6 +55,11 @@ func (a *api) GetRelease(ctx echo.Context, params codegen.GetReleaseParams) erro
 	}
 
 	upgradable := service.IsUpgradable(*release, "")
+	if upgradable {
+		packageStatus = "out-of-date"
+	} else {
+		packageStatus = "up-to-date"
+	}
 
 	return ctx.JSON(http.StatusOK, &codegen.ReleaseOK{
 		Data:       release,
@@ -66,12 +68,12 @@ func (a *api) GetRelease(ctx echo.Context, params codegen.GetReleaseParams) erro
 }
 
 func (a *api) InstallRelease(ctx echo.Context, params codegen.InstallReleaseParams) error {
-	go service.UpdateStatus(codegen.Status{
-		Status: codegen.Installing,
-	})
-	defer service.UpdateStatus(codegen.Status{
-		Status: codegen.Installed,
-	})
+	// go service.UpdateStatus(codegen.Status{
+	// 	Status: codegen.Installing,
+	// })
+	// defer service.UpdateStatus(codegen.Status{
+	// 	Status: codegen.Installed,
+	// })
 
 	tag := service.GetReleaseBranch(sysRoot)
 
@@ -102,20 +104,12 @@ func (a *api) InstallRelease(ctx echo.Context, params codegen.InstallReleasePara
 	}
 
 	go func() {
-		go service.PublishEventWrapper(context.Background(), common.EventTypeInstallUpdateBegin, nil)
-		defer service.PublishEventWrapper(context.Background(), common.EventTypeInstallUpdateEnd, nil)
-
 		// backgroundCtx, cancel := context.WithCancel(context.Background())
 		// defer cancel()
 		sysRoot := "/"
 
 		// if the err is not nil. It mean should to download
 		contentCtx := context.Background()
-
-		go service.PublishEventWrapper(contentCtx, common.EventTypeDownloadUpdateBegin, nil)
-		go service.UpdateStatus(codegen.Status{
-			Status: codegen.Downloading,
-		})
 
 		releasePath, err := service.InstallerService.DownloadRelease(contentCtx, *release, false)
 
@@ -129,10 +123,6 @@ func (a *api) InstallRelease(ctx echo.Context, params codegen.InstallReleasePara
 		}
 
 		go service.PublishEventWrapper(contentCtx, common.EventTypeDownloadUpdateEnd, nil)
-
-		go service.UpdateStatus(codegen.Status{
-			Status: codegen.Downloaded,
-		})
 
 		// TODO disable migration when rauc install temporarily
 		// // to download migration script
