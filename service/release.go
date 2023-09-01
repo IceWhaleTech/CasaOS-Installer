@@ -25,6 +25,14 @@ var (
 	ErrReleaseNotFound = fmt.Errorf("release not found")
 )
 
+type InstallerType string
+
+const (
+	RAUC        InstallerType = "rauc"
+	RAUCOFFLINE InstallerType = "rauc_offline"
+	TAR         InstallerType = "tar"
+)
+
 func GetRelease(ctx context.Context, tag string) (*codegen.Release, error) {
 	var release *codegen.Release
 	var mirror string
@@ -159,80 +167,22 @@ func GetReleaseBranch(sysRoot string) string {
 	return "main"
 }
 
-func GetInstallMethod(sysRoot string) (string, error) {
+func GetInstallMethod(sysRoot string) (InstallerType, error) {
 	// to check the system is casaos or zimaos
 	// if zimaos, return "rauc"
 	// if casaos, return "tar"
 	if IsZimaOS(sysRoot) {
-		return "rauc", nil
+		// to check file exsit
+		if _, err := os.Stat(filepath.Join(sysRoot, RAUCOfflinePath, RAUCOfflineRAUCFile)); os.IsNotExist(err) {
+			return RAUC, nil
+		} else {
+			return RAUCOFFLINE, nil
+		}
 	}
 	if IsCasaOS(sysRoot) {
-		return "tar", nil
+		return TAR, nil
 	}
 	return "", fmt.Errorf("unknown system")
-}
-
-func InstallSystem(release codegen.Release, sysRoot string) error {
-	installMethod, err := GetInstallMethod(sysRoot)
-	if err != nil {
-		return err
-	}
-
-	err = nil
-	if installMethod == "rauc" {
-		// err = InstallRAUC(release, sysRoot)
-		panic("not support rauc install")
-	}
-	if installMethod == "tar" {
-		err = InstallCasaOSPackages(release, sysRoot)
-	}
-
-	if err != nil {
-		return err
-	}
-	// install setup(only for casaos)
-	if installMethod == "tar" {
-		releaseFilePath, _ := VerifyRelease(release)
-		err = ExecuteModuleInstallScript(releaseFilePath, release)
-	}
-
-	// post install
-	PostReleaseInstall(release, sysRoot)
-
-	// start migration(only for casaos)
-	if installMethod == "tar" {
-		// migration
-		StartMigration(sysRoot)
-		// migration will remove target-release.yaml that generate in post install
-	}
-	if err != nil {
-		return err
-	}
-
-	// restart services(only for casaos)
-	if installMethod == "tar" {
-		if err := LaunchModule(release); err != nil {
-			return err
-		}
-
-		backgroundCtx, cancel := context.WithCancel(context.Background())
-		defer cancel()
-
-		if _, err = DownloadUninstallScript(backgroundCtx, sysRoot); err != nil {
-			return err
-		}
-
-		if present := VerifyUninstallScript(sysRoot); !present {
-			return fmt.Errorf("uninstall script not found")
-		}
-	}
-
-	// reboot(only for zima)
-	if installMethod == "rauc" {
-		RebootSystem()
-	}
-
-	return fmt.Errorf("unknown install method")
 }
 
 func ShouldUpgrade(release codegen.Release, sysrootPath string) bool {

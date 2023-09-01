@@ -149,6 +149,12 @@ func (a *api) InstallRelease(ctx echo.Context, params codegen.InstallReleasePara
 			logger.Error("error while install system: %s", zap.Error(err))
 			return
 		}
+
+		err = service.InstallerService.PostInstall(*release, sysRoot)
+		if err != nil {
+			logger.Error("error while post install system: %s", zap.Error(err))
+			return
+		}
 	}()
 
 	message := "release being installed asynchronously"

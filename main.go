@@ -48,8 +48,13 @@ func main() {
 	service.InstallerService = service.NewInstallerService(sysRoot)
 
 	service.UpdateStatusWithMessage(service.Idle, "up-to-date")
-
 	go service.StartFallbackWebsite()
+
+	err := service.InstallerService.MigrationInLaunch(sysRoot)
+	if err != nil {
+		logger.Error("error when trying to start migration", zap.Error(err))
+	}
+
 	// create config
 	{
 		// create default config file if not exist
@@ -102,10 +107,6 @@ func main() {
 	go service.StopFallbackWebsite()
 
 	// err := service.StartMigration(sysRoot)
-	err := service.InstallerService.MigrationInLaunch(sysRoot)
-	if err != nil {
-		logger.Error("error when trying to start migration", zap.Error(err))
-	}
 
 	{
 		crontab := cron.New(cron.WithSeconds())

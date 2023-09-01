@@ -43,6 +43,17 @@ func (r *RAUCOfflineService) GetRelease(ctx context.Context, tag string) (*codeg
 	}
 	return release, nil
 }
+func (r *RAUCOfflineService) MigrationInLaunch(sysRoot string) error {
+	if _, err := os.Stat(filepath.Join(sysRoot, FlagUpgradeFile)); os.IsNotExist(err) {
+		return nil
+	}
+
+	// remove filepath.Join(sysRoot, FlagUpgradeFile)
+	err := os.Remove(filepath.Join(sysRoot, FlagUpgradeFile))
+
+	return err
+}
+
 func (r *RAUCOfflineService) VerifyRelease(release codegen.Release) (string, error) {
 	return VerifyRAUC(release)
 }
@@ -67,6 +78,10 @@ func (r *RAUCOfflineService) DownloadRelease(ctx context.Context, release codege
 func (r *RAUCOfflineService) ExtractRelease(packageFilepath string, release codegen.Release) error {
 	// 这个offline没有变化
 	return ExtractRAUCRelease(packageFilepath, release)
+}
+
+func (r *RAUCOfflineService) PostInstall(release codegen.Release, sysRoot string) error {
+	return PostInstallRAUC(release, sysRoot)
 }
 
 func (r *RAUCOfflineService) GetMigrationInfo(ctx context.Context, release codegen.Release) error {
