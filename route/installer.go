@@ -74,14 +74,14 @@ func (a *api) InstallRelease(ctx echo.Context, params codegen.InstallReleasePara
 	status, _ := service.GetStatus()
 	if status.Status == codegen.Downloading {
 		message := "downloading"
-		return ctx.JSON(http.StatusConflict, &codegen.ResponseOK{
+		return ctx.JSON(http.StatusOK, &codegen.ResponseOK{
 			Message: &message,
 		})
 	}
 
 	if status.Status == codegen.Installing {
 		message := "installing"
-		return ctx.JSON(http.StatusConflict, &codegen.ResponseOK{
+		return ctx.JSON(http.StatusOK, &codegen.ResponseOK{
 			Message: &message,
 		})
 	}
@@ -93,6 +93,8 @@ func (a *api) InstallRelease(ctx echo.Context, params codegen.InstallReleasePara
 	if params.Version != nil && *params.Version != "latest" {
 		tag = *params.Version
 	}
+
+	go service.UpdateStatusWithMessage(service.InstallBegin, "getRelease中")
 
 	release, err := service.InstallerService.GetRelease(ctx.Request().Context(), tag)
 	if err != nil {
@@ -108,6 +110,8 @@ func (a *api) InstallRelease(ctx echo.Context, params codegen.InstallReleasePara
 			Message: &message,
 		})
 	}
+
+	go service.UpdateStatusWithMessage(service.InstallBegin, "回复完成")
 
 	if release == nil {
 		message := "release not found"
