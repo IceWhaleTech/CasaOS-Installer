@@ -84,6 +84,19 @@ func (r *RAUCOfflineService) PostInstall(release codegen.Release, sysRoot string
 	return PostInstallRAUC(release, sysRoot)
 }
 
+func (r *RAUCOfflineService) ShouldUpgrade(release codegen.Release, sysRoot string) bool {
+	return ShouldUpgrade(release, sysRoot)
+}
+func (r *RAUCOfflineService) IsUpgradable(release codegen.Release, sysrootPath string) bool {
+
+	if !r.ShouldUpgrade(release, sysrootPath) {
+		return false
+	}
+
+	_, err := VerifyRAUC(release)
+	return err == nil
+}
+
 func (r *RAUCOfflineService) GetMigrationInfo(ctx context.Context, release codegen.Release) error {
 	return nil
 }

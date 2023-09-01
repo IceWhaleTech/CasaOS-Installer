@@ -148,7 +148,7 @@ func SetCasaOS(sysRoot string) {
 
 func SetOfflineRAUC(sysRoot string, RAUCOfflinePath string, RAUCOfflineRAUCFile string) {
 	ctx := context.Background()
-	internal.DownloadAs(ctx, filepath.Join(sysRoot, RAUCOfflinePath, RAUCOfflineRAUCFile), "https://github.com/raller1028/test_rauc/releases/download/v0.4.4-1/casaos_ova-0.4.4-1.tar.gz")
+	internal.DownloadAs(ctx, filepath.Join(sysRoot, RAUCOfflinePath, RAUCOfflineRAUCFile), "https://github.com/raller1028/test_rauc/releases/download/v0.4.8_offline/rauc.tar.gz")
 	fmt.Println(filepath.Join(sysRoot, RAUCOfflinePath, RAUCOfflineRAUCFile))
 	if _, err := os.Stat(filepath.Join(sysRoot, RAUCOfflinePath, RAUCOfflineRAUCFile)); os.IsNotExist(err) {
 		panic("not found offline install package")

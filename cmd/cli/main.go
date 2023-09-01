@@ -58,10 +58,10 @@ func main() {
 		_logger.Info("Root privileges are required to run this program.")
 		os.Exit(1)
 	}
-  
+
 	tag := service.GetReleaseBranch(sysRoot)
 
-  if tagFlag != nil && *tagFlag != "" {
+	if tagFlag != nil && *tagFlag != "" {
 		tag = *tagFlag
 	}
 
@@ -130,11 +130,11 @@ func main() {
 	_logger.Info("🟩 Release verified.")
 
 	_logger.Info("🟨 Installing release...")
-	if err := service.InstallCasaOSPackages(*release, sysRoot); err != nil {
-		_logger.Error("🟥 Failed to install release: %s", err.Error())
-		os.Exit(1)
-	}
-	_logger.Info("🟩 Release installed.")
+	// if err := service.InstallCasaOSPackages(*release, sysRoot); err != nil {
+	// 	_logger.Error("🟥 Failed to install release: %s", err.Error())
+	// 	os.Exit(1)
+	// }
+	// _logger.Info("🟩 Release installed.")
 
 	// post install release
 	_logger.Info("🟨 Handle Post Release Install ...")

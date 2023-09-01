@@ -1,7 +1,6 @@
 package service
 
 import (
-	"context"
 	"fmt"
 	"log"
 	"os"
@@ -21,39 +20,6 @@ const (
 	FlagUpgradeFile = "/var/lib/casaos/upgradInfo.txt"
 )
 
-type RAUCService struct {
-	InstallRAUCHandler func(raucPath string) error
-}
-
-func (r *RAUCService) Install(release codegen.Release, sysRoot string) error {
-	return InstallRAUC(release, sysRoot, r.InstallRAUCHandler)
-}
-
-func (r *RAUCService) GetRelease(ctx context.Context, tag string) (*codegen.Release, error) {
-	return GetRelease(ctx, tag)
-}
-
-func (r *RAUCService) VerifyRelease(release codegen.Release) (string, error) {
-	return VerifyRAUC(release)
-}
-
-func (r *RAUCService) DownloadRelease(ctx context.Context, release codegen.Release, force bool) (string, error) {
-	// TODO 这里重做，不做额外的功能
-	return DownloadRelease(ctx, release, force)
-}
-
-func (r *RAUCService) ExtractRelease(packageFilepath string, release codegen.Release) error {
-	return ExtractRAUCRelease(packageFilepath, release)
-}
-
-func (r *RAUCService) GetMigrationInfo(ctx context.Context, release codegen.Release) error {
-	return nil
-}
-
-func (r *RAUCService) DownloadAllMigrationTools(ctx context.Context, release codegen.Release) error {
-	return nil
-}
-
 func ExtractRAUCRelease(packageFilepath string, release codegen.Release) error {
 	releaseDir, err := ReleaseDir(release)
 	if err != nil {
@@ -61,21 +27,6 @@ func ExtractRAUCRelease(packageFilepath string, release codegen.Release) error {
 	}
 
 	return internal.BulkExtract(releaseDir)
-}
-
-func (r *RAUCService) MigrationInLaunch(sysRoot string) error {
-	if _, err := os.Stat(filepath.Join(sysRoot, FlagUpgradeFile)); os.IsNotExist(err) {
-		return nil
-	}
-
-	// remove filepath.Join(sysRoot, FlagUpgradeFile)
-	err := os.Remove(filepath.Join(sysRoot, FlagUpgradeFile))
-
-	return err
-}
-
-func (r *RAUCService) PostInstall(release codegen.Release, sysRoot string) error {
-	return PostInstallRAUC(release, sysRoot)
 }
 
 func LoadReleaseFromLocal(sysRoot string) (*codegen.Release, error) {
