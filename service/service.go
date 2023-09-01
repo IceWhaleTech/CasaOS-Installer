@@ -56,6 +56,7 @@ type InstallerServices interface {
 	DownloadAllMigrationTools(ctx context.Context, release codegen.Release) error
 	Install(release codegen.Release, sysRoot string) error
 	MigrationInLaunch(sysRoot string) error
+	PostInstall(release codegen.Release, sysRoot string) error
 }
 
 type services struct {
@@ -178,19 +179,26 @@ func NewInstallerService(sysRoot string) InstallerServices {
 
 	// 这里搞个工厂模式。
 
-	if installMethod == "rauc" {
-		return &RAUCService{
-			InstallRAUCHandler: InstallRAUCHandlerV1,
-		}
-	} else {
+	if installMethod == RAUC {
 		return &RAUCService{
 			InstallRAUCHandler: InstallRAUCHandlerV1,
 		}
 	}
+
+	if installMethod == RAUCOFFLINE {
+		return &RAUCOfflineService{
+			SysRoot:            sysRoot,
+			InstallRAUCHandler: InstallRAUCHandlerV1,
+		}
+	}
+
 	// 回头做这个社区版。
-	// if installMethod == "tar" {
-	// 	return &TarService{}
-	// }
+	if installMethod == TAR {
+		// 暂时先用 rauc mock 一下
+		return &RAUCService{
+			InstallRAUCHandler: InstallRAUCHandlerV1,
+		}
+	}
 
 	panic(fmt.Errorf("install method %s not supported", installMethod))
 }
