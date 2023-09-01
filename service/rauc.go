@@ -117,14 +117,6 @@ func VerifyRAUC(release codegen.Release) (string, error) {
 
 	packageFilePath := filepath.Join(releaseDir, packageFilename)
 
-	// 不能判断tar.gz在不在，因为离线包的名字不一样
-	// if _, err := os.Stat(packageFilePath); err != nil {
-	// 	return "", fmt.Errorf("rauc %s not found", packageFilePath)
-	// }
-
-	// 这里需要注意raucb的名字必须和包名一致
-	// TODO 更好的包信息，不能只有包名，没有rauc名。
-	// replace tar.gz to raucb of packageFilePath
 	packageFilePath = packageFilePath[:len(packageFilePath)-len(".tar.gz")] + ".raucb"
 	return packageFilePath, nil
 }
