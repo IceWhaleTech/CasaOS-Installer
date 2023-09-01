@@ -58,10 +58,6 @@ func ExtractRAUCRelease(packageFilepath string, release codegen.Release) error {
 		return err
 	}
 
-	if err := internal.Extract(packageFilepath, releaseDir); err != nil {
-		return err
-	}
-
 	return internal.BulkExtract(releaseDir)
 }
 
