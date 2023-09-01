@@ -17,6 +17,8 @@ const (
 	RAUCOfflinePath        = "/Data/rauc/"
 	RAUCOfflineReleaseFile = "release.yaml"
 	RAUCOfflineRAUCFile    = "rauc.tar.gz"
+
+	FlagUpgradeFile = "/var/lib/casaos/upgradInfo.txt"
 )
 
 type RAUCService struct {
@@ -62,7 +64,14 @@ func ExtractRAUCRelease(packageFilepath string, release codegen.Release) error {
 }
 
 func (r *RAUCService) MigrationInLaunch(sysRoot string) error {
-	return StartMigration(sysRoot)
+	if _, err := os.Stat(filepath.Join(sysRoot, FlagUpgradeFile)); os.IsNotExist(err) {
+		return nil
+	}
+
+	// remove filepath.Join(sysRoot, FlagUpgradeFile)
+	err := os.Remove(filepath.Join(sysRoot, FlagUpgradeFile))
+
+	return err
 }
 
 func LoadReleaseFromLocal(sysRoot string) (*codegen.Release, error) {
@@ -128,6 +137,13 @@ func InstallRAUCTest(raucfilepath string) error {
 	}
 
 	return nil
+}
+
+func PostInstallRAUC(release codegen.Release, sysRoot string) error {
+	// write 1+1=2  to sysRoot + FlagUpgradeFile
+	d1 := []byte("1+1=2")
+	err := os.WriteFile(filepath.Join(sysRoot, FlagUpgradeFile), d1, 0644)
+	return err
 }
 
 func VerifyRAUC(release codegen.Release) (string, error) {
