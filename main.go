@@ -19,6 +19,7 @@ import (
 	"github.com/IceWhaleTech/CasaOS-Common/utils/logger"
 
 	util_http "github.com/IceWhaleTech/CasaOS-Common/utils/http"
+	"github.com/IceWhaleTech/CasaOS-Installer/codegen"
 	"github.com/IceWhaleTech/CasaOS-Installer/common"
 	"github.com/IceWhaleTech/CasaOS-Installer/internal/config"
 	"github.com/IceWhaleTech/CasaOS-Installer/route"
@@ -208,6 +209,15 @@ func main() {
 }
 
 func cronjob(ctx context.Context) {
+
+	status, _ := service.GetStatus()
+	if status.Status == codegen.Downloading {
+		return
+	}
+
+	if status.Status == codegen.Installing {
+		return
+	}
 
 	// TODO 考虑一下这个packageStatus的问题
 	go service.UpdateStatusWithMessage(service.FetchUpdateBegin, "间隔触发更新")

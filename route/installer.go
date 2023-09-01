@@ -27,7 +27,7 @@ func (a *api) GetStatus(ctx echo.Context) error {
 func (a *api) GetRelease(ctx echo.Context, params codegen.GetReleaseParams) error {
 
 	// TODO 考虑一下这个packageStatus的问题
-	go service.UpdateStatusWithMessage(service.FetchUpdateBegin, "主动触发的获取信息")
+	// go service.UpdateStatusWithMessage(service.FetchUpdateBegin, "主动触发的获取信息")
 	tag := service.GetReleaseBranch(sysRoot)
 
 	if params.Version != nil && *params.Version != "latest" {
@@ -53,16 +53,16 @@ func (a *api) GetRelease(ctx echo.Context, params codegen.GetReleaseParams) erro
 	}
 
 	upgradable := service.IsUpgradable(*release, "")
-	if service.ShouldUpgrade(*release, sysRoot) {
-		if upgradable {
-			service.UpdateStatusWithMessage(service.FetchUpdateEnd, "ready-to-update")
-		} else {
-			service.UpdateStatusWithMessage(service.FetchUpdateEnd, "out-of-date")
-		}
 
-	} else {
-		service.UpdateStatusWithMessage(service.FetchUpdateEnd, "up-to-date")
-	}
+	// if service.ShouldUpgrade(*release, sysRoot) {
+	// 	if upgradable {
+	// 		service.UpdateStatusWithMessage(service.FetchUpdateEnd, "ready-to-update")
+	// 	} else {
+	// 		service.UpdateStatusWithMessage(service.FetchUpdateEnd, "out-of-date")
+	// 	}
+	// } else {
+	// 	service.UpdateStatusWithMessage(service.FetchUpdateEnd, "up-to-date")
+	// }
 
 	return ctx.JSON(http.StatusOK, &codegen.ReleaseOK{
 		Data:       release,
@@ -71,6 +71,21 @@ func (a *api) GetRelease(ctx echo.Context, params codegen.GetReleaseParams) erro
 }
 
 func (a *api) InstallRelease(ctx echo.Context, params codegen.InstallReleaseParams) error {
+	status, _ := service.GetStatus()
+	if status.Status == codegen.Downloading {
+		message := "downloading"
+		return ctx.JSON(http.StatusConflict, &codegen.ResponseOK{
+			Message: &message,
+		})
+	}
+
+	if status.Status == codegen.Installing {
+		message := "installing"
+		return ctx.JSON(http.StatusConflict, &codegen.ResponseOK{
+			Message: &message,
+		})
+	}
+
 	go service.UpdateStatusWithMessage(service.InstallBegin, "主动触发的安装更新1级")
 
 	tag := service.GetReleaseBranch(sysRoot)
@@ -115,8 +130,7 @@ func (a *api) InstallRelease(ctx echo.Context, params codegen.InstallReleasePara
 		if err != nil {
 		}
 
-		service.UpdateStatusWithMessage(service.DownloadEnd, "ready-to-update")
-		service.UpdateStatusWithMessage(service.InstallBegin, "正式开始安装")
+		service.UpdateStatusWithMessage(service.InstallBegin, "开始解压")
 
 		fmt.Println("解压目录:", releasePath)
 		err = service.InstallerService.ExtractRelease(releasePath, *release)
@@ -125,6 +139,7 @@ func (a *api) InstallRelease(ctx echo.Context, params codegen.InstallReleasePara
 			return
 		}
 
+		service.UpdateStatusWithMessage(service.InstallBegin, "开始安装")
 		err = service.InstallerService.Install(*release, sysRoot)
 		if err != nil {
 			logger.Error("error while install system: %s", zap.Error(err))
