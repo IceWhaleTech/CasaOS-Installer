@@ -51,8 +51,11 @@ func TestRAUCOfflineServer(t *testing.T) {
 	releasePath, err := installerServer.DownloadRelease(ctx, *release, false)
 	parentDir := filepath.Dir(releasePath)
 	fmt.Println("下载目录:", releasePath)
-
 	assert.NoError(t, err)
+
+	_, err = installerServer.VerifyRelease(*release)
+	assert.NoError(t, err)
+
 	assert.FileExists(t, filepath.Join(parentDir, "rauc.tar.gz"))
 
 	err = installerServer.ExtractRelease(releasePath, *release)

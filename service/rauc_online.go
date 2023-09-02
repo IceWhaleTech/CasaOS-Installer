@@ -22,6 +22,7 @@ func (r *RAUCService) GetRelease(ctx context.Context, tag string) (*codegen.Rele
 }
 
 func (r *RAUCService) VerifyRelease(release codegen.Release) (string, error) {
+	// 这个是验证下载包的，验证的是下载之前的包。
 	return VerifyRAUCRelease(release)
 }
 

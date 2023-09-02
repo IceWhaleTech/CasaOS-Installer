@@ -109,6 +109,7 @@ func VerifyRAUCRelease(release codegen.Release) (string, error) {
 }
 
 func VerifyRAUC(release codegen.Release) (string, error) {
+	// 这个是验证解压之后的包。
 	releaseDir, err := ReleaseDir(release)
 	if err != nil {
 		return "", err

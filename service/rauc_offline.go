@@ -57,7 +57,23 @@ func (r *RAUCOfflineService) MigrationInLaunch(sysRoot string) error {
 }
 
 func (r *RAUCOfflineService) VerifyRelease(release codegen.Release) (string, error) {
-	return VerifyRAUC(release)
+	return VerifyRAUCOfflineRelease(release)
+}
+func VerifyRAUCOfflineRelease(release codegen.Release) (string, error) {
+	releaseDir, err := ReleaseDir(release)
+	if err != nil {
+		return "", err
+	}
+
+	packageFilePath := filepath.Join(releaseDir, RAUC_OFFLINE_RAUC_FILENAME)
+
+	// to check file exist
+	fmt.Println("rauc verify:", packageFilePath)
+	if _, err := os.Stat(packageFilePath); os.IsNotExist(err) {
+		return "", fmt.Errorf("not found offline rauc release package")
+	}
+	return packageFilePath, nil
+
 }
 
 func (r *RAUCOfflineService) DownloadRelease(ctx context.Context, release codegen.Release, force bool) (string, error) {
