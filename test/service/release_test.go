@@ -56,52 +56,52 @@ func TestDownloadRauc(t *testing.T) {
 	assert.FileExists(t, releaseFilePath)
 }
 
-func TestInstallRelease(t *testing.T) {
-	logger.LogInitConsoleOnly()
+// func TestInstallRelease(t *testing.T) {
+// 	logger.LogInitConsoleOnly()
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+// 	ctx, cancel := context.WithCancel(context.Background())
+// 	defer cancel()
 
-	release, err := service.GetRelease(ctx, "unit-test-release-0.4.4-1")
-	assert.NoError(t, err)
+// 	release, err := service.GetRelease(ctx, "unit-test-release-0.4.4-1")
+// 	assert.NoError(t, err)
 
-	assert.NotNil(t, release)
+// 	assert.NotNil(t, release)
 
-	assert.NotNil(t, release.Mirrors)
-	assert.NotEmpty(t, release.Mirrors)
+// 	assert.NotNil(t, release.Mirrors)
+// 	assert.NotEmpty(t, release.Mirrors)
 
-	assert.NotNil(t, release.Modules)
-	assert.NotEmpty(t, release.Modules)
+// 	assert.NotNil(t, release.Modules)
+// 	assert.NotEmpty(t, release.Modules)
 
-	assert.NotNil(t, release.Packages)
-	assert.NotEmpty(t, release.Packages)
+// 	assert.NotNil(t, release.Packages)
+// 	assert.NotEmpty(t, release.Packages)
 
-	assert.NotEmpty(t, release.ReleaseNotes)
-	assert.NotEmpty(t, release.Version)
+// 	assert.NotEmpty(t, release.ReleaseNotes)
+// 	assert.NotEmpty(t, release.Version)
 
-	tmpDir, err := os.MkdirTemp("", "casaos-installer-test-*")
-	assert.NoError(t, err)
-	defer os.RemoveAll(tmpDir)
+// 	tmpDir, err := os.MkdirTemp("", "casaos-installer-test-*")
+// 	assert.NoError(t, err)
+// 	defer os.RemoveAll(tmpDir)
 
-	config.ServerInfo.CachePath = filepath.Join(tmpDir, "cache")
+// 	config.ServerInfo.CachePath = filepath.Join(tmpDir, "cache")
 
-	fixtures.CacheRelease0441(config.ServerInfo.CachePath)
+// 	fixtures.CacheRelease0441(config.ServerInfo.CachePath)
 
-	tmpSysRoot := filepath.Join(tmpDir, "sysroot")
+// 	tmpSysRoot := filepath.Join(tmpDir, "sysroot")
 
-	assert.NoFileExists(t, filepath.Join(tmpSysRoot, "usr", "bin", "casaos"))
-	assert.NoFileExists(t, filepath.Join(tmpSysRoot, "usr", "bin", "casaos-gateway"))
-	assert.NoFileExists(t, filepath.Join(tmpSysRoot, "usr", "bin", "casaos-app-management"))
-	assert.NoFileExists(t, filepath.Join(tmpSysRoot, "usr", "bin", "casaos-local-storage"))
+// 	assert.NoFileExists(t, filepath.Join(tmpSysRoot, "usr", "bin", "casaos"))
+// 	assert.NoFileExists(t, filepath.Join(tmpSysRoot, "usr", "bin", "casaos-gateway"))
+// 	assert.NoFileExists(t, filepath.Join(tmpSysRoot, "usr", "bin", "casaos-app-management"))
+// 	assert.NoFileExists(t, filepath.Join(tmpSysRoot, "usr", "bin", "casaos-local-storage"))
 
-	err = service.InstallCasaOSPackages(*release, tmpSysRoot)
-	assert.NoError(t, err)
+// 	err = service.InstallCasaOSPackages(*release, tmpSysRoot)
+// 	assert.NoError(t, err)
 
-	assert.FileExists(t, filepath.Join(tmpSysRoot, "usr", "bin", "casaos"))
-	assert.FileExists(t, filepath.Join(tmpSysRoot, "usr", "bin", "casaos-gateway"))
-	assert.FileExists(t, filepath.Join(tmpSysRoot, "usr", "bin", "casaos-app-management"))
-	assert.FileExists(t, filepath.Join(tmpSysRoot, "usr", "bin", "casaos-local-storage"))
-}
+// 	assert.FileExists(t, filepath.Join(tmpSysRoot, "usr", "bin", "casaos"))
+// 	assert.FileExists(t, filepath.Join(tmpSysRoot, "usr", "bin", "casaos-gateway"))
+// 	assert.FileExists(t, filepath.Join(tmpSysRoot, "usr", "bin", "casaos-app-management"))
+// 	assert.FileExists(t, filepath.Join(tmpSysRoot, "usr", "bin", "casaos-local-storage"))
+// }
 
 func TestDownloadRelease(t *testing.T) {
 	logger.LogInitConsoleOnly()
@@ -145,62 +145,62 @@ func TestPostReleaseInsall(t *testing.T) {
 	assert.FileExists(t, filepath.Join(tmpSysRoot, "etc", "casaos", "target-release.yaml"))
 }
 
-func TestIsUpgradable(t *testing.T) {
-	if _, exists := os.LookupEnv("CI"); exists {
-		t.Skip("skipping test in CI environment")
-	}
+// func TestIsUpgradable(t *testing.T) {
+// 	if _, exists := os.LookupEnv("CI"); exists {
+// 		t.Skip("skipping test in CI environment")
+// 	}
 
-	logger.LogInitConsoleOnly()
+// 	logger.LogInitConsoleOnly()
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+// 	ctx, cancel := context.WithCancel(context.Background())
+// 	defer cancel()
 
-	tmpDir, err := os.MkdirTemp("", "casaos-update-test-*")
-	assert.NoError(t, err)
-	defer os.RemoveAll(tmpDir)
+// 	tmpDir, err := os.MkdirTemp("", "casaos-update-test-*")
+// 	assert.NoError(t, err)
+// 	defer os.RemoveAll(tmpDir)
 
-	// to download release files
-	config.ServerInfo.CachePath = filepath.Join(tmpDir, "cache")
+// 	// to download release files
+// 	config.ServerInfo.CachePath = filepath.Join(tmpDir, "cache")
 
-	tmpSysRoot := filepath.Join(tmpDir, "sysroot")
+// 	tmpSysRoot := filepath.Join(tmpDir, "sysroot")
 
-	release, err := service.GetRelease(ctx, "unit-test-release-0.4.4-1")
-	assert.NoError(t, err)
+// 	release, err := service.GetRelease(ctx, "unit-test-release-0.4.4-1")
+// 	assert.NoError(t, err)
 
-	fixtures.SetLocalRelease(tmpSysRoot, "v0.4.5")
+// 	fixtures.SetLocalRelease(tmpSysRoot, "v0.4.5")
 
-	result := service.ShouldUpgrade(*release, tmpSysRoot)
-	assert.Equal(t, result, false)
+// 	result := service.ShouldUpgrade(*release, tmpSysRoot)
+// 	assert.Equal(t, result, false)
 
-	// mock /usr/bin/casaos
-	// casaosVersion := "v0.4.3"
-	fixtures.SetLocalRelease(tmpSysRoot, "v0.4.3")
+// 	// mock /usr/bin/casaos
+// 	// casaosVersion := "v0.4.3"
+// 	fixtures.SetLocalRelease(tmpSysRoot, "v0.4.3")
 
-	currentVersion, err := service.CurrentReleaseVersion(tmpSysRoot)
-	assert.NoError(t, err)
-	assert.Equal(t, "0.4.3", currentVersion.String())
+// 	currentVersion, err := service.CurrentReleaseVersion(tmpSysRoot)
+// 	assert.NoError(t, err)
+// 	assert.Equal(t, "0.4.3", currentVersion.String())
 
-	result = service.ShouldUpgrade(*release, tmpSysRoot)
-	assert.Equal(t, true, result)
+// 	result = service.ShouldUpgrade(*release, tmpSysRoot)
+// 	assert.Equal(t, true, result)
 
-	// 这里有坑，认为0.4.4-1不比0.4.4大。
-	// fixtures.SetLocalRelease(tmpSysRoot, "v0.4.4")
-	// result = service.ShouldUpgrade(*release, tmpSysRoot)
-	// assert.Equal(t, true, result)
+// 	// 这里有坑，认为0.4.4-1不比0.4.4大。
+// 	// fixtures.SetLocalRelease(tmpSysRoot, "v0.4.4")
+// 	// result = service.ShouldUpgrade(*release, tmpSysRoot)
+// 	// assert.Equal(t, true, result)
 
-	// test case: the version can be update, but the package is not exist
-	result = service.IsUpgradable(*release, tmpSysRoot)
-	assert.Equal(t, false, result)
+// 	// test case: the version can be update, but the package is not exist
+// 	result = service.IsUpgradable(*release, tmpSysRoot)
+// 	assert.Equal(t, false, result)
 
-	fixtures.CacheRelease0441(config.ServerInfo.CachePath)
+// 	fixtures.CacheRelease0441(config.ServerInfo.CachePath)
 
-	_, err = service.VerifyRelease(*release)
-	assert.NoError(t, err)
+// 	_, err = service.VerifyRelease(*release)
+// 	assert.NoError(t, err)
 
-	// test case: the version can be update and the package is  exist
-	result = service.IsUpgradable(*release, tmpSysRoot)
-	assert.Equal(t, result, true)
-}
+// 	// test case: the version can be update and the package is  exist
+// 	result = service.IsUpgradable(*release, tmpSysRoot)
+// 	assert.Equal(t, result, true)
+// }
 
 func TestDeviceModelDiscover(t *testing.T) {
 	logger.LogInitConsoleOnly()

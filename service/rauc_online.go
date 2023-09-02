@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"path/filepath"
 
@@ -21,12 +22,19 @@ func (r *RAUCService) GetRelease(ctx context.Context, tag string) (*codegen.Rele
 }
 
 func (r *RAUCService) VerifyRelease(release codegen.Release) (string, error) {
-	return VerifyRAUC(release)
+	return VerifyRAUCRelease(release)
 }
 
 func (r *RAUCService) DownloadRelease(ctx context.Context, release codegen.Release, force bool) (string, error) {
-	// TODO 这里重做，不做额外的功能
-	return DownloadRelease(ctx, release, force)
+	filepath, err := r.VerifyRelease(release)
+	if err != nil {
+		fmt.Println("重新下载")
+		return DownloadRelease(ctx, release, force)
+	} else {
+		fmt.Println("不用下载")
+	}
+
+	return filepath, nil
 }
 
 func (r *RAUCService) ExtractRelease(packageFilepath string, release codegen.Release) error {

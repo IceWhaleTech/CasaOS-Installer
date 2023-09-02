@@ -35,14 +35,17 @@ func TestRAUCOfflineServer(t *testing.T) {
 
 	// 构建假文件放到目录
 
-	os.MkdirAll(filepath.Join(tmpDir, service.RAUCOfflinePath), 0755)
-	fixtures.SetOfflineRAUC(tmpDir, service.RAUCOfflinePath, service.RAUCOfflineRAUCFile)
+	os.MkdirAll(filepath.Join(tmpDir, service.RAUC_OFFLINE_PATH), 0755)
+	fixtures.SetOfflineRAUC(tmpDir, service.RAUC_OFFLINE_PATH, service.RAUC_OFFLINE_RAUC_FILENAME)
 
 	release, err := installerServer.GetRelease(ctx, "any thing")
 	assert.NoError(t, err)
 
 	assert.Equal(t, "v0.4.8", release.Version)
 	assert.Equal(t, "rauc offline update test package", release.ReleaseNotes)
+
+	assert.FileExists(t, filepath.Join(tmpDir, service.RAUC_OFFLINE_PATH, service.RAUC_OFFLINE_RAUC_FILENAME))
+	assert.FileExists(t, filepath.Join(tmpDir, service.OFFLINE_RAUC_TEMP_PATH, service.RAUC_OFFLINE_RELEASE_FILENAME))
 
 	// 这个是一个假文件，只有2.6mb
 	releasePath, err := installerServer.DownloadRelease(ctx, *release, false)

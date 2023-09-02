@@ -11,6 +11,13 @@ import (
 	"github.com/IceWhaleTech/CasaOS-Installer/internal"
 )
 
+const (
+	RAUC_OFFLINE_PATH             = "/Data/rauc/"
+	RAUC_OFFLINE_RELEASE_FILENAME = "release.yaml"
+	RAUC_OFFLINE_RAUC_FILENAME    = "rauc.tar.gz"
+	OFFLINE_RAUC_TEMP_PATH        = "/tmp/offline_rauc"
+)
+
 type RAUCOfflineService struct {
 	SysRoot            string
 	InstallRAUCHandler func(raucPath string) error
@@ -23,26 +30,21 @@ func (r *RAUCOfflineService) Install(release codegen.Release, sysRoot string) er
 func (r *RAUCOfflineService) GetRelease(ctx context.Context, tag string) (*codegen.Release, error) {
 
 	// to check file exist
-	fmt.Println(filepath.Join(r.SysRoot, RAUCOfflinePath, RAUCOfflineRAUCFile))
+	fmt.Println(filepath.Join(r.SysRoot, RAUC_OFFLINE_PATH, RAUC_OFFLINE_RAUC_FILENAME))
 
-	if _, err := os.Stat(filepath.Join(r.SysRoot, RAUCOfflinePath, RAUCOfflineRAUCFile)); os.IsNotExist(err) {
+	if _, err := os.Stat(filepath.Join(r.SysRoot, RAUC_OFFLINE_PATH, RAUC_OFFLINE_RAUC_FILENAME)); os.IsNotExist(err) {
 		return nil, fmt.Errorf("not found offline install package")
 	} else {
 		fmt.Println("found offline install package")
 	}
 
-	err := internal.Extract(filepath.Join(r.SysRoot, RAUCOfflinePath, RAUCOfflineRAUCFile), filepath.Join(r.SysRoot, RAUCOfflinePath))
-	if err != nil {
-		return nil, err
-	}
-
-	// TODO 这里改成去解压拿release
-	release, err := LoadReleaseFromLocal(r.SysRoot)
+	release, err := r.LoadReleaseFromOfflineRAUC(r.SysRoot)
 	if err != nil {
 		return nil, err
 	}
 	return release, nil
 }
+
 func (r *RAUCOfflineService) MigrationInLaunch(sysRoot string) error {
 	if _, err := os.Stat(filepath.Join(sysRoot, FlagUpgradeFile)); os.IsNotExist(err) {
 		return nil
@@ -59,20 +61,24 @@ func (r *RAUCOfflineService) VerifyRelease(release codegen.Release) (string, err
 }
 
 func (r *RAUCOfflineService) DownloadRelease(ctx context.Context, release codegen.Release, force bool) (string, error) {
-	// 这里多做一步，从本地读release
-	// 把前面的zip复制到/var/cache/casaos下面。
-	releaseDir, err := ReleaseDir(release)
+	releasepath, err := r.VerifyRelease(release)
 	if err != nil {
-		return "", err
-	}
-	//copy file to /var/cache/casaos
-	os.MkdirAll(releaseDir, 0755)
-	_, err = copy(filepath.Join(r.SysRoot, RAUCOfflinePath, RAUCOfflineRAUCFile), filepath.Join(releaseDir, RAUCOfflineRAUCFile))
-	if err != nil {
-		return "", err
-	}
+		// 这里多做一步，从本地读release
+		// 把前面的zip复制到/var/cache/casaos下面。
+		releaseDir, err := ReleaseDir(release)
+		if err != nil {
+			return "", err
+		}
+		//copy file to /var/cache/casaos
+		os.MkdirAll(releaseDir, 0755)
+		_, err = copy(filepath.Join(r.SysRoot, RAUC_OFFLINE_PATH, RAUC_OFFLINE_RAUC_FILENAME), filepath.Join(releaseDir, RAUC_OFFLINE_RAUC_FILENAME))
+		if err != nil {
+			return "", err
+		}
 
-	return filepath.Join(releaseDir, RAUCOfflineRAUCFile), nil
+		return filepath.Join(releaseDir, RAUC_OFFLINE_RAUC_FILENAME), nil
+	}
+	return releasepath, nil
 }
 
 func (r *RAUCOfflineService) ExtractRelease(packageFilepath string, release codegen.Release) error {
@@ -128,4 +134,40 @@ func copy(src, dst string) (int64, error) {
 	defer destination.Close()
 	nBytes, err := io.Copy(destination, source)
 	return nBytes, err
+}
+
+func ExtractOfflineRAUCToTemp(sysRoot string) error {
+	// to check temp file exist.
+	// TODO should also check rauc file
+	if _, err := os.Stat(filepath.Join(sysRoot, OFFLINE_RAUC_TEMP_PATH, RAUC_OFFLINE_RELEASE_FILENAME)); os.IsNotExist(err) {
+		err := os.MkdirAll(filepath.Join(sysRoot, OFFLINE_RAUC_TEMP_PATH), 0755)
+		if err != nil {
+			return err
+		}
+
+		err = internal.Extract(filepath.Join(sysRoot, RAUC_OFFLINE_PATH, RAUC_OFFLINE_RAUC_FILENAME), filepath.Join(sysRoot, OFFLINE_RAUC_TEMP_PATH))
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (r *RAUCOfflineService) LoadReleaseFromOfflineRAUC(sysRoot string) (*codegen.Release, error) {
+	err := ExtractOfflineRAUCToTemp(sysRoot)
+	if err != nil {
+		return nil, err
+	}
+
+	fmt.Println(filepath.Join(sysRoot, OFFLINE_RAUC_TEMP_PATH, RAUC_OFFLINE_RELEASE_FILENAME))
+	if _, err := os.Stat(filepath.Join(sysRoot, OFFLINE_RAUC_TEMP_PATH, RAUC_OFFLINE_RELEASE_FILENAME)); err != nil {
+		return nil, fmt.Errorf("rauc release file not found")
+	}
+
+	release, err := internal.GetReleaseFromLocal(filepath.Join(sysRoot, OFFLINE_RAUC_TEMP_PATH, RAUC_OFFLINE_RELEASE_FILENAME))
+	if err != nil {
+		return nil, err
+	}
+	return release, nil
 }

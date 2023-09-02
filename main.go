@@ -252,7 +252,6 @@ func cronjob(ctx context.Context) {
 
 		logger.Info("error while verifying release - continue to download", zap.Error(err))
 
-		// releaseFilePath, err := service.DownloadRelease(ctx, *release, true)
 		releaseFilePath, err := service.InstallerService.DownloadRelease(ctx, *release, true)
 
 		if err != nil {
@@ -262,7 +261,7 @@ func cronjob(ctx context.Context) {
 		logger.Info("downloaded release", zap.String("release file path", releaseFilePath))
 	}
 
-	// TOOD disable migration when rauc install temporarily
+	// TODO disable migration when rauc install temporarily
 	// // cache migration tools if not already cached
 	// {
 	// 	if service.VerifyAllMigrationTools(*release, sysRoot) {
