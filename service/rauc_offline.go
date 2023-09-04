@@ -68,7 +68,7 @@ func VerifyRAUCOfflineRelease(release codegen.Release) (string, error) {
 	packageFilePath := filepath.Join(releaseDir, RAUC_OFFLINE_RAUC_FILENAME)
 
 	// to check file exist
-	fmt.Println("rauc verify:", packageFilePath)
+	fmt.Println("rauc  offline verify in cache:", packageFilePath)
 	if _, err := os.Stat(packageFilePath); os.IsNotExist(err) {
 		return "", fmt.Errorf("not found offline rauc release package")
 	}

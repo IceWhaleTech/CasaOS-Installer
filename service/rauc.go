@@ -100,7 +100,7 @@ func VerifyRAUCRelease(release codegen.Release) (string, error) {
 	packageFilePath := filepath.Join(releaseDir, packageFilename)
 
 	// to check file exist
-	fmt.Println("rauc verify:", packageFilePath)
+	fmt.Println("rauc verify release:", packageFilePath)
 	if _, err := os.Stat(packageFilePath); os.IsNotExist(err) {
 		return "", fmt.Errorf("not found rauc release  package")
 	}
@@ -126,7 +126,7 @@ func VerifyRAUC(release codegen.Release) (string, error) {
 
 	packageFilePath = packageFilePath[:len(packageFilePath)-len(".tar.gz")] + ".raucb"
 	// to check file exist
-	fmt.Println("rauc verify:", packageFilePath)
+	fmt.Println("rauc verify in cache:", packageFilePath)
 	if _, err := os.Stat(packageFilePath); os.IsNotExist(err) {
 		return "", fmt.Errorf("not found rauc install package")
 	}

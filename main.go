@@ -51,6 +51,9 @@ func main() {
 	service.UpdateStatusWithMessage(service.Idle, "up-to-date")
 	go service.StartFallbackWebsite()
 
+	// 这个是临时放这里，为了watch里不会没有东西。
+	os.MkdirAll(service.RAUC_OFFLINE_PATH, os.ModePerm)
+
 	// 在这里会把状态更新为installing或者继续idle
 	err := service.InstallerService.MigrationInLaunch(sysRoot)
 	if err != nil {
@@ -73,13 +76,17 @@ func main() {
 					if !ok {
 						return
 					}
-					log.Println("event:", event)
-					if event.Has(fsnotify.Write) {
+					// log.Println("event:", event)
+					// TODO 怎么只执行一次
+					if event.Has(fsnotify.Create) {
 						log.Println("modified file:", event.Name)
-
-						// 更新installer的实现
 						service.InstallerService = service.NewInstallerService(sysRoot)
 					}
+					if event.Has(fsnotify.Remove) {
+						log.Println("modified file:", event.Name)
+						service.InstallerService = service.NewInstallerService(sysRoot)
+					}
+
 				case err, ok := <-watcher.Errors:
 					if !ok {
 						return
@@ -90,7 +97,7 @@ func main() {
 		}()
 
 		// Add a path.
-		err = watcher.Add(filepath.Join(sysRoot, service.RAUC_OFFLINE_PATH, service.RAUC_OFFLINE_RAUC_FILENAME))
+		err = watcher.Add(filepath.Join(sysRoot, service.RAUC_OFFLINE_PATH))
 		if err != nil {
 			log.Fatal(err)
 		}

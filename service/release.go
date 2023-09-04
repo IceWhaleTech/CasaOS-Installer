@@ -131,6 +131,8 @@ func DownloadRelease(ctx context.Context, release codegen.Release, force bool) (
 }
 
 func IsZimaOS(sysRoot string) bool {
+	// TODO 临时手段，回头要改
+	return true
 	// read sysRoot/etc/os-release
 	// if the file have "MODEL="Zima" return true
 	// else return false
@@ -171,6 +173,7 @@ func GetInstallMethod(sysRoot string) (InstallerType, error) {
 	// to check the system is casaos or zimaos
 	// if zimaos, return "rauc"
 	// if casaos, return "tar"
+
 	if IsZimaOS(sysRoot) {
 		// to check file exsit
 		if _, err := os.Stat(filepath.Join(sysRoot, RAUC_OFFLINE_PATH, RAUC_OFFLINE_RAUC_FILENAME)); os.IsNotExist(err) {
