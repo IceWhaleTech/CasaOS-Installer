@@ -8,6 +8,7 @@ import (
 	_ "embed"
 	"flag"
 	"fmt"
+	"log"
 	"net"
 	"net/http"
 	"os"
@@ -17,6 +18,7 @@ import (
 	"github.com/IceWhaleTech/CasaOS-Common/model"
 	"github.com/IceWhaleTech/CasaOS-Common/utils/constants"
 	"github.com/IceWhaleTech/CasaOS-Common/utils/logger"
+	"github.com/fsnotify/fsnotify"
 
 	util_http "github.com/IceWhaleTech/CasaOS-Common/utils/http"
 	"github.com/IceWhaleTech/CasaOS-Installer/codegen"
@@ -46,13 +48,52 @@ var (
 
 func main() {
 	service.InstallerService = service.NewInstallerService(sysRoot)
-
 	service.UpdateStatusWithMessage(service.Idle, "up-to-date")
 	go service.StartFallbackWebsite()
 
+	// 在这里会把状态更新为installing或者继续idle
 	err := service.InstallerService.MigrationInLaunch(sysRoot)
 	if err != nil {
 		logger.Error("error when trying to start migration", zap.Error(err))
+	}
+
+	// watch rauc offline
+	{
+		watcher, err := fsnotify.NewWatcher()
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer watcher.Close()
+
+		// Start listening for events.
+		go func() {
+			for {
+				select {
+				case event, ok := <-watcher.Events:
+					if !ok {
+						return
+					}
+					log.Println("event:", event)
+					if event.Has(fsnotify.Write) {
+						log.Println("modified file:", event.Name)
+
+						// 更新installer的实现
+						service.InstallerService = service.NewInstallerService(sysRoot)
+					}
+				case err, ok := <-watcher.Errors:
+					if !ok {
+						return
+					}
+					log.Println("error:", err)
+				}
+			}
+		}()
+
+		// Add a path.
+		err = watcher.Add(filepath.Join(sysRoot, service.RAUC_OFFLINE_PATH, service.RAUC_OFFLINE_RAUC_FILENAME))
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
 
 	// create config
