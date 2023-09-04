@@ -131,8 +131,6 @@ func DownloadRelease(ctx context.Context, release codegen.Release, force bool) (
 }
 
 func IsZimaOS(sysRoot string) bool {
-	// TODO 临时手段，回头要改
-	return true
 	// read sysRoot/etc/os-release
 	// if the file have "MODEL="Zima" return true
 	// else return false
