@@ -115,7 +115,7 @@ func (r *RAUCOfflineService) IsUpgradable(release codegen.Release, sysrootPath s
 		return false
 	}
 
-	_, err := VerifyRAUC(release)
+	_, err := r.VerifyRelease(release)
 	return err == nil
 }
 
