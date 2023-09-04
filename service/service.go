@@ -59,7 +59,7 @@ type InstallerServices interface {
 	PostInstall(release codegen.Release, sysRoot string) error
 
 	ShouldUpgrade(release codegen.Release, sysRoot string) bool
-	IsUpgradable(release codegen.Release, sysrootPath string) bool // 检测预下载的包好了没有
+	IsUpgradable(release codegen.Release, sysRootPath string) bool // 检测预下载的包好了没有
 }
 
 type services struct {
@@ -183,12 +183,15 @@ func NewInstallerService(sysRoot string) InstallerServices {
 	// 这里搞个工厂模式。
 
 	if installMethod == RAUC {
+		fmt.Println("RAUC Online 模式")
 		return &RAUCService{
 			InstallRAUCHandler: InstallRAUCHandlerV1,
 		}
 	}
 
 	if installMethod == RAUCOFFLINE {
+		fmt.Println("RAUC Offline 模式")
+
 		return &RAUCOfflineService{
 			SysRoot:            sysRoot,
 			InstallRAUCHandler: InstallRAUCHandlerV1,

@@ -7,6 +7,7 @@ require (
 	github.com/Masterminds/semver/v3 v3.2.1
 	github.com/coreos/go-systemd v0.0.0-20191104093116-d3cd4ed1dbcf
 	github.com/deepmap/oapi-codegen v1.12.4
+	github.com/fsnotify/fsnotify v1.6.0
 	github.com/getkin/kin-openapi v0.117.0
 	github.com/hashicorp/go-getter v1.7.1
 	github.com/labstack/echo/v4 v4.10.2
@@ -86,7 +87,6 @@ require (
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826 // indirect
 	github.com/nwaples/rardecode v1.1.3 // indirect
-	github.com/otiai10/copy v1.12.0
 	github.com/pelletier/go-toml/v2 v2.0.8 // indirect
 	github.com/perimeterx/marshmallow v1.1.4 // indirect
 	github.com/pierrec/lz4/v4 v4.1.17 // indirect
