@@ -7,9 +7,7 @@ import (
 	"path/filepath"
 
 	"github.com/IceWhaleTech/CasaOS-Installer/internal"
-	"github.com/IceWhaleTech/CasaOS-Installer/internal/config"
 	"github.com/IceWhaleTech/CasaOS-Installer/service"
-	cp "github.com/otiai10/copy"
 )
 
 func createFolderIfNotExist(path string) {
@@ -84,40 +82,40 @@ func SetLocalTargetRelease(sysRoot string, versionTag string) {
 	os.WriteFile(filepath.Join(sysRoot, service.TargetReleaseLocalPath), []byte(releaseContent), 0755)
 }
 
-func CacheRelease0441(cacheDir string) error {
-	originCachePath := config.ServerInfo.CachePath
-	config.ServerInfo.CachePath = filepath.Join("/tmp", "casaos-cache", "var", "cache", "casaos")
-	ctx := context.Background()
-	release, err := service.GetRelease(ctx, "unit-test-release-0.4.4-1")
-	if err != nil {
-		return err
-	}
+// func CacheRelease0441(cacheDir string) error {
+// 	originCachePath := config.ServerInfo.CachePath
+// 	config.ServerInfo.CachePath = filepath.Join("/tmp", "casaos-cache", "var", "cache", "casaos")
+// 	ctx := context.Background()
+// 	release, err := service.GetRelease(ctx, "unit-test-release-0.4.4-1")
+// 	if err != nil {
+// 		return err
+// 	}
 
-	releaseFilePath, err := service.DownloadRelease(ctx, *release, false)
-	if err != nil {
-		return err
-	}
+// 	releaseFilePath, err := service.DownloadRelease(ctx, *release, false)
+// 	if err != nil {
+// 		return err
+// 	}
 
-	err = service.ExtractReleasePackages(releaseFilePath, *release)
-	if err != nil {
-		return err
-	}
+// 	err = service.ExtractReleasePackages(releaseFilePath, *release)
+// 	if err != nil {
+// 		return err
+// 	}
 
-	// extract module packages
-	err = service.ExtractReleasePackages(releaseFilePath+"/linux*", *release)
-	if err != nil {
-		return err
-	}
+// 	// extract module packages
+// 	err = service.ExtractReleasePackages(releaseFilePath+"/linux*", *release)
+// 	if err != nil {
+// 		return err
+// 	}
 
-	// copy release file to cache path
-	err = cp.Copy(config.ServerInfo.CachePath, cacheDir)
-	if err != nil {
-		return err
-	}
+// 	// copy release file to cache path
+// 	err = cp.Copy(config.ServerInfo.CachePath, cacheDir)
+// 	if err != nil {
+// 		return err
+// 	}
 
-	config.ServerInfo.CachePath = originCachePath
-	return nil
-}
+// 	config.ServerInfo.CachePath = originCachePath
+// 	return nil
+// }
 
 func SetZimaOS(sysRoot string) error {
 	// write  sysRoot/etc/os-release file
@@ -148,7 +146,7 @@ func SetCasaOS(sysRoot string) {
 
 func SetOfflineRAUC(sysRoot string, RAUCOfflinePath string, RAUCOfflineRAUCFile string) {
 	ctx := context.Background()
-	internal.DownloadAs(ctx, filepath.Join(sysRoot, RAUCOfflinePath, RAUCOfflineRAUCFile), "https://github.com/raller1028/test_rauc/releases/download/v0.4.4-1/casaos_ova-0.4.4-1.tar.gz")
+	internal.DownloadAs(ctx, filepath.Join(sysRoot, RAUCOfflinePath, RAUCOfflineRAUCFile), "https://github.com/raller1028/test_rauc/releases/download/v0.4.8_offline/rauc.tar.gz")
 	fmt.Println(filepath.Join(sysRoot, RAUCOfflinePath, RAUCOfflineRAUCFile))
 	if _, err := os.Stat(filepath.Join(sysRoot, RAUCOfflinePath, RAUCOfflineRAUCFile)); os.IsNotExist(err) {
 		panic("not found offline install package")

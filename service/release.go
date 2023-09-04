@@ -66,14 +66,14 @@ func GetRelease(ctx context.Context, tag string) (*codegen.Release, error) {
 func DownloadRelease(ctx context.Context, release codegen.Release, force bool) (string, error) {
 
 	// check and verify existing packages
-	if !force {
-		if packageFilePath, err := VerifyRelease(release); err != nil {
-			logger.Info("error while verifying release - continue to download", zap.Error(err))
-		} else {
-			logger.Info("package already exists - skipping")
-			return packageFilePath, nil
-		}
-	}
+	// if !force {
+	// 	if packageFilePath, err := VerifyRelease(release); err != nil {
+	// 		logger.Info("error while verifying release - continue to download", zap.Error(err))
+	// 	} else {
+	// 		logger.Info("package already exists - skipping")
+	// 		return packageFilePath, nil
+	// 	}
+	// }
 
 	if release.Mirrors == nil {
 		return "", fmt.Errorf("no mirror found")
@@ -173,7 +173,7 @@ func GetInstallMethod(sysRoot string) (InstallerType, error) {
 	// if casaos, return "tar"
 	if IsZimaOS(sysRoot) {
 		// to check file exsit
-		if _, err := os.Stat(filepath.Join(sysRoot, RAUCOfflinePath, RAUCOfflineRAUCFile)); os.IsNotExist(err) {
+		if _, err := os.Stat(filepath.Join(sysRoot, RAUC_OFFLINE_PATH, RAUC_OFFLINE_RAUC_FILENAME)); os.IsNotExist(err) {
 			return RAUC, nil
 		} else {
 			return RAUCOFFLINE, nil

@@ -1,4 +1,4 @@
-package service
+package service_test
 
 import (
 	"context"
@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/IceWhaleTech/CasaOS-Common/utils/logger"
+	"github.com/IceWhaleTech/CasaOS-Installer/service"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -19,12 +20,12 @@ func TestUninstallScript(t *testing.T) {
 
 	tmpSysRoot := filepath.Join(tmpDir, "sysroot")
 
-	value := VerifyUninstallScript(tmpSysRoot)
+	value := service.VerifyUninstallScript(tmpSysRoot)
 	assert.Equal(t, false, value)
 
 	ctx := context.Background()
-	DownloadUninstallScript(ctx, tmpSysRoot)
+	service.DownloadUninstallScript(ctx, tmpSysRoot)
 
-	value = VerifyUninstallScript(tmpSysRoot)
+	value = service.VerifyUninstallScript(tmpSysRoot)
 	assert.Equal(t, true, value)
 }

@@ -8,7 +8,6 @@ import (
 	"github.com/IceWhaleTech/CasaOS-Common/utils"
 	"github.com/IceWhaleTech/CasaOS-Common/utils/logger"
 	"github.com/IceWhaleTech/CasaOS-Installer/codegen"
-	"github.com/IceWhaleTech/CasaOS-Installer/common"
 	"github.com/IceWhaleTech/CasaOS-Installer/service"
 	"github.com/labstack/echo/v4"
 	"go.uber.org/zap"
@@ -34,35 +33,30 @@ func (a *api) GetRelease(ctx echo.Context, params codegen.GetReleaseParams) erro
 		tag = *params.Version
 	}
 
-	release, err := service.GetRelease(ctx.Request().Context(), tag)
+	release, err := service.InstallerService.GetRelease(ctx.Request().Context(), tag)
 	if err != nil {
 		message := err.Error()
-		service.PublishEventWrapper(context.Background(), common.EventTypeCheckUpdateError, map[string]string{
-			common.PropertyTypeMessage.Name: err.Error(),
-		})
-
 		if err == service.ErrReleaseNotFound {
 			return ctx.JSON(http.StatusNotFound, &codegen.ResponseNotFound{
 				Message: &message,
 			})
 		}
-
 		return ctx.JSON(http.StatusInternalServerError, &codegen.ResponseInternalServerError{
 			Message: &message,
 		})
 	}
 
-	upgradable := service.IsUpgradable(*release, "")
+	upgradable := service.InstallerService.IsUpgradable(*release, "")
 
-	// if service.ShouldUpgrade(*release, sysRoot) {
-	// 	if upgradable {
-	// 		service.UpdateStatusWithMessage(service.FetchUpdateEnd, "ready-to-update")
-	// 	} else {
-	// 		service.UpdateStatusWithMessage(service.FetchUpdateEnd, "out-of-date")
-	// 	}
-	// } else {
-	// 	service.UpdateStatusWithMessage(service.FetchUpdateEnd, "up-to-date")
-	// }
+	if service.ShouldUpgrade(*release, sysRoot) {
+		if upgradable {
+			service.UpdateStatusWithMessage(service.FetchUpdateEnd, "ready-to-update")
+		} else {
+			service.UpdateStatusWithMessage(service.FetchUpdateEnd, "out-of-date")
+		}
+	} else {
+		service.UpdateStatusWithMessage(service.FetchUpdateEnd, "up-to-date")
+	}
 
 	return ctx.JSON(http.StatusOK, &codegen.ReleaseOK{
 		Data:       release,

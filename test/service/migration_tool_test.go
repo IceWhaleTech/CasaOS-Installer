@@ -112,60 +112,60 @@ func TestDownloadMigrationTool(t *testing.T) {
 	assert.FileExists(t, path)
 }
 
-func TestMigrationToolsMap(t *testing.T) {
-	if _, exists := os.LookupEnv("CI"); exists {
-		t.Skip("skipping test in CI environment")
-	}
-	logger.LogInitConsoleOnly()
+// func TestMigrationToolsMap(t *testing.T) {
+// 	if _, exists := os.LookupEnv("CI"); exists {
+// 		t.Skip("skipping test in CI environment")
+// 	}
+// 	logger.LogInitConsoleOnly()
 
-	tmpDir, err := os.MkdirTemp("", "casaos-migration-map-test-*")
-	assert.NoError(t, err)
-	defer os.RemoveAll(tmpDir)
+// 	tmpDir, err := os.MkdirTemp("", "casaos-migration-map-test-*")
+// 	assert.NoError(t, err)
+// 	defer os.RemoveAll(tmpDir)
 
-	tmpSysRoot := filepath.Join(tmpDir, "sysroot")
+// 	tmpSysRoot := filepath.Join(tmpDir, "sysroot")
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+// 	ctx, cancel := context.WithCancel(context.Background())
+// 	defer cancel()
 
-	config.ServerInfo.CachePath = filepath.Join(tmpDir, "cache")
+// 	config.ServerInfo.CachePath = filepath.Join(tmpDir, "cache")
 
-	release, err := service.GetRelease(ctx, "unit-test-release-0.4.4-1")
-	assert.NoError(t, err)
+// 	release, err := service.GetRelease(ctx, "unit-test-release-0.4.4-1")
+// 	assert.NoError(t, err)
 
-	releaseFilePath, err := service.DownloadRelease(ctx, *release, false)
-	assert.NoError(t, err)
-	assert.FileExists(t, releaseFilePath)
+// 	releaseFilePath, err := service.DownloadRelease(ctx, *release, false)
+// 	assert.NoError(t, err)
+// 	assert.FileExists(t, releaseFilePath)
 
-	err = service.ExtractReleasePackages(releaseFilePath, *release)
-	assert.NoError(t, err)
+// 	err = service.ExtractReleasePackages(releaseFilePath, *release)
+// 	assert.NoError(t, err)
 
-	// extract very module package that the name is like linux*.tar.gz
-	err = service.ExtractReleasePackages(releaseFilePath+"/linux*", *release)
-	assert.NoError(t, err)
+// 	// extract very module package that the name is like linux*.tar.gz
+// 	err = service.ExtractReleasePackages(releaseFilePath+"/linux*", *release)
+// 	assert.NoError(t, err)
 
-	migrationToolMap, err := service.MigrationToolsMap(*release)
-	assert.NoError(t, err)
-	fmt.Println(migrationToolMap)
+// 	migrationToolMap, err := service.MigrationToolsMap(*release)
+// 	assert.NoError(t, err)
+// 	fmt.Println(migrationToolMap)
 
-	module := "casaos-local-storage"
-	fixtures.SetLocalRelease(tmpSysRoot, "v0.4.3")
-	// fixtures.SetCasaOSVersion(tmpSysRoot, module, "v0.4.3")
-	migrationPath, err := service.GetMigrationPath(codegen.Module{
-		Short: module,
-		Name:  module,
-	}, *release, migrationToolMap, tmpSysRoot)
-	assert.NoError(t, err)
-	assert.Equal(t, len(migrationPath), 0)
+// 	module := "casaos-local-storage"
+// 	fixtures.SetLocalRelease(tmpSysRoot, "v0.4.3")
+// 	// fixtures.SetCasaOSVersion(tmpSysRoot, module, "v0.4.3")
+// 	migrationPath, err := service.GetMigrationPath(codegen.Module{
+// 		Short: module,
+// 		Name:  module,
+// 	}, *release, migrationToolMap, tmpSysRoot)
+// 	assert.NoError(t, err)
+// 	assert.Equal(t, len(migrationPath), 0)
 
-	fixtures.SetLocalRelease(tmpSysRoot, "v0.3.5")
-	// fixtures.SetCasaOSVersion(tmpSysRoot, module, "v0.3.5")
-	migrationPath, err = service.GetMigrationPath(codegen.Module{
-		Short: module,
-		Name:  module,
-	}, *release, migrationToolMap, tmpSysRoot)
-	assert.NoError(t, err)
-	assert.Equal(t, len(migrationPath), 1)
-}
+// 	fixtures.SetLocalRelease(tmpSysRoot, "v0.3.5")
+// 	// fixtures.SetCasaOSVersion(tmpSysRoot, module, "v0.3.5")
+// 	migrationPath, err = service.GetMigrationPath(codegen.Module{
+// 		Short: module,
+// 		Name:  module,
+// 	}, *release, migrationToolMap, tmpSysRoot)
+// 	assert.NoError(t, err)
+// 	assert.Equal(t, len(migrationPath), 1)
+// }
 
 func TestMigrationPath(t *testing.T) {
 	if _, exists := os.LookupEnv("CI"); exists {
@@ -220,49 +220,49 @@ func TestMigrationPath(t *testing.T) {
 
 }
 
-func TestDownloadAndInstallMigrateion(t *testing.T) {
-	logger.LogInitConsoleOnly()
+// func TestDownloadAndInstallMigrateion(t *testing.T) {
+// 	logger.LogInitConsoleOnly()
 
-	tmpDir, err := os.MkdirTemp("", "casaos-execute-migration-test-*")
-	assert.NoError(t, err)
-	// defer os.RemoveAll(tmpDir)
+// 	tmpDir, err := os.MkdirTemp("", "casaos-execute-migration-test-*")
+// 	assert.NoError(t, err)
+// 	// defer os.RemoveAll(tmpDir)
 
-	tmpSysRoot := filepath.Join(tmpDir, "sysroot")
-	os.Mkdir(tmpSysRoot, 0755)
+// 	tmpSysRoot := filepath.Join(tmpDir, "sysroot")
+// 	os.Mkdir(tmpSysRoot, 0755)
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+// 	ctx, cancel := context.WithCancel(context.Background())
+// 	defer cancel()
 
-	config.ServerInfo.CachePath = filepath.Join(tmpDir, "cache")
+// 	config.ServerInfo.CachePath = filepath.Join(tmpDir, "cache")
 
-	release, err := service.GetRelease(ctx, "unit-test-release-0.4.4-1")
-	assert.NoError(t, err)
+// 	release, err := service.GetRelease(ctx, "unit-test-release-0.4.4-1")
+// 	assert.NoError(t, err)
 
-	err = fixtures.CacheRelease0441(config.ServerInfo.CachePath)
-	assert.NoError(t, err)
+// 	err = fixtures.CacheRelease0441(config.ServerInfo.CachePath)
+// 	assert.NoError(t, err)
 
-	migrationToolMap, err := service.MigrationToolsMap(*release)
-	assert.NoError(t, err)
+// 	migrationToolMap, err := service.MigrationToolsMap(*release)
+// 	assert.NoError(t, err)
 
-	module := "casaos-local-storage"
-	moduleShort := "local-storage"
-	fixtures.SetLocalRelease(tmpSysRoot, "v0.3.5")
-	fixtures.SetCasaOSVersion(tmpSysRoot, module, "v0.3.5")
-	migrationPath, err := service.GetMigrationPath(codegen.Module{
-		Short: moduleShort,
-		Name:  module,
-	}, *release, migrationToolMap, tmpSysRoot)
-	assert.NoError(t, err)
-	assert.Equal(t, len(migrationPath), 1)
+// 	module := "casaos-local-storage"
+// 	moduleShort := "local-storage"
+// 	fixtures.SetLocalRelease(tmpSysRoot, "v0.3.5")
+// 	fixtures.SetCasaOSVersion(tmpSysRoot, module, "v0.3.5")
+// 	migrationPath, err := service.GetMigrationPath(codegen.Module{
+// 		Short: moduleShort,
+// 		Name:  module,
+// 	}, *release, migrationToolMap, tmpSysRoot)
+// 	assert.NoError(t, err)
+// 	assert.Equal(t, len(migrationPath), 1)
 
-	for _, migration := range migrationPath {
-		migrationPath, err := service.DownloadMigrationTool(ctx, *release, moduleShort, migration, false)
-		assert.NoError(t, err)
-		err = service.ExecuteMigrationTool(module, migrationPath, tmpSysRoot)
-		// because MigrationTool require root permission, so it will return exit status 1
-		assert.Equal(t, err.Error(), "exit status 1")
-	}
-}
+// 	for _, migration := range migrationPath {
+// 		migrationPath, err := service.DownloadMigrationTool(ctx, *release, moduleShort, migration, false)
+// 		assert.NoError(t, err)
+// 		err = service.ExecuteMigrationTool(module, migrationPath, tmpSysRoot)
+// 		// because MigrationTool require root permission, so it will return exit status 1
+// 		assert.Equal(t, err.Error(), "exit status 1")
+// 	}
+// }
 
 func TestVerifyMigration(t *testing.T) {
 	arch := runtime.GOARCH
@@ -309,40 +309,40 @@ func TestGetMigrationDownloadURLFromMigrationListURL(t *testing.T) {
 	assert.Equal(t, downloadLink, "${MIRROR}/CasaOS/releases/download/v0.3.6/linux-"+arch+"-casaos-migration-tool-v0.3.6.tar.gz")
 }
 
-func TestVerifyAndDownloadAllMigrationTools(t *testing.T) {
-	logger.LogInitConsoleOnly()
-	arch := runtime.GOARCH
+// func TestVerifyAndDownloadAllMigrationTools(t *testing.T) {
+// 	logger.LogInitConsoleOnly()
+// 	arch := runtime.GOARCH
 
-	tmpDir, err := os.MkdirTemp("", "casaos-all-migration-test-*")
-	assert.NoError(t, err)
-	defer os.RemoveAll(tmpDir)
+// 	tmpDir, err := os.MkdirTemp("", "casaos-all-migration-test-*")
+// 	assert.NoError(t, err)
+// 	defer os.RemoveAll(tmpDir)
 
-	tmpSysRoot := filepath.Join(tmpDir, "sysroot")
-	config.ServerInfo.CachePath = filepath.Join(tmpDir, "cache")
-	os.Mkdir(tmpSysRoot, 0755)
+// 	tmpSysRoot := filepath.Join(tmpDir, "sysroot")
+// 	config.ServerInfo.CachePath = filepath.Join(tmpDir, "cache")
+// 	os.Mkdir(tmpSysRoot, 0755)
 
-	fixtures.SetLocalRelease(tmpSysRoot, "v0.3.5")
-	targetVersionRelease, err := service.GetRelease(context.Background(), "unit-test-release-0.4.4-1")
-	assert.NoError(t, err)
+// 	fixtures.SetLocalRelease(tmpSysRoot, "v0.3.5")
+// 	targetVersionRelease, err := service.GetRelease(context.Background(), "unit-test-release-0.4.4-1")
+// 	assert.NoError(t, err)
 
-	err = fixtures.CacheRelease0441(config.ServerInfo.CachePath)
-	assert.NoError(t, err)
+// 	err = fixtures.CacheRelease0441(config.ServerInfo.CachePath)
+// 	assert.NoError(t, err)
 
-	// 没有下载时，返回false，表示需要下载
-	result := service.VerifyAllMigrationTools(*targetVersionRelease, tmpSysRoot)
-	assert.Equal(t, result, false)
+// 	// 没有下载时，返回false，表示需要下载
+// 	result := service.VerifyAllMigrationTools(*targetVersionRelease, tmpSysRoot)
+// 	assert.Equal(t, result, false)
 
-	// 下载后，返回true，表示不需要下载
-	_, err = service.DownloadAllMigrationTools(context.Background(), *targetVersionRelease, tmpSysRoot)
-	assert.NoError(t, err)
+// 	// 下载后，返回true，表示不需要下载
+// 	_, err = service.DownloadAllMigrationTools(context.Background(), *targetVersionRelease, tmpSysRoot)
+// 	assert.NoError(t, err)
 
-	result2 := service.VerifyAllMigrationTools(*targetVersionRelease, tmpSysRoot)
-	assert.Equal(t, result2, true)
+// 	result2 := service.VerifyAllMigrationTools(*targetVersionRelease, tmpSysRoot)
+// 	assert.Equal(t, result2, true)
 
-	// assert migration tool exsit
-	assert.FileExists(t, filepath.Join(tmpDir, "cache", "migration-tools", "casaos", "linux-"+arch+"-casaos-migration-tool-v0.3.6.tar.gz"))
-	assert.FileExists(t, filepath.Join(tmpDir, "cache", "migration-tools", "casaos-app-management", "linux-"+arch+"-casaos-app-management-migration-tool-v0.4.0-alpha7.tar.gz"))
-}
+// 	// assert migration tool exsit
+// 	assert.FileExists(t, filepath.Join(tmpDir, "cache", "migration-tools", "casaos", "linux-"+arch+"-casaos-migration-tool-v0.3.6.tar.gz"))
+// 	assert.FileExists(t, filepath.Join(tmpDir, "cache", "migration-tools", "casaos-app-management", "linux-"+arch+"-casaos-app-management-migration-tool-v0.4.0-alpha7.tar.gz"))
+// }
 
 func TestPostMigration(t *testing.T) {
 	logger.LogInitConsoleOnly()

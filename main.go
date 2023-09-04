@@ -236,7 +236,7 @@ func cronjob(ctx context.Context) {
 		logger.Info("no need to upgrade", zap.String("latest version", release.Version))
 		return
 	} else {
-		if service.IsUpgradable(*release, sysRoot) {
+		if service.InstallerService.IsUpgradable(*release, sysRoot) {
 			service.UpdateStatusWithMessage(service.FetchUpdateEnd, "ready-to-update")
 		} else {
 			service.UpdateStatusWithMessage(service.FetchUpdateEnd, "out-of-date")
@@ -244,7 +244,7 @@ func cronjob(ctx context.Context) {
 	}
 
 	// cache release packages if not already cached
-	if _, err := service.VerifyRelease(*release); err != nil {
+	if _, err := service.InstallerService.VerifyRelease(*release); err != nil {
 		// TODO 考虑一下这个packageStatus的问题
 
 		go service.UpdateStatusWithMessage(service.DownloadBegin, "自动触发的下载")
@@ -252,7 +252,6 @@ func cronjob(ctx context.Context) {
 
 		logger.Info("error while verifying release - continue to download", zap.Error(err))
 
-		// releaseFilePath, err := service.DownloadRelease(ctx, *release, true)
 		releaseFilePath, err := service.InstallerService.DownloadRelease(ctx, *release, true)
 
 		if err != nil {
@@ -262,7 +261,7 @@ func cronjob(ctx context.Context) {
 		logger.Info("downloaded release", zap.String("release file path", releaseFilePath))
 	}
 
-	// TOOD disable migration when rauc install temporarily
+	// TODO disable migration when rauc install temporarily
 	// // cache migration tools if not already cached
 	// {
 	// 	if service.VerifyAllMigrationTools(*release, sysRoot) {

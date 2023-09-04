@@ -1,7 +1,6 @@
 package service
 
 import (
-	"context"
 	"fmt"
 	"log"
 	"os"
@@ -14,45 +13,8 @@ import (
 )
 
 const (
-	RAUCOfflinePath        = "/Data/rauc/"
-	RAUCOfflineReleaseFile = "release.yaml"
-	RAUCOfflineRAUCFile    = "rauc.tar.gz"
-
 	FlagUpgradeFile = "/var/lib/casaos/upgradInfo.txt"
 )
-
-type RAUCService struct {
-	InstallRAUCHandler func(raucPath string) error
-}
-
-func (r *RAUCService) Install(release codegen.Release, sysRoot string) error {
-	return InstallRAUC(release, sysRoot, r.InstallRAUCHandler)
-}
-
-func (r *RAUCService) GetRelease(ctx context.Context, tag string) (*codegen.Release, error) {
-	return GetRelease(ctx, tag)
-}
-
-func (r *RAUCService) VerifyRelease(release codegen.Release) (string, error) {
-	return VerifyRAUC(release)
-}
-
-func (r *RAUCService) DownloadRelease(ctx context.Context, release codegen.Release, force bool) (string, error) {
-	// TODO 这里重做，不做额外的功能
-	return DownloadRelease(ctx, release, force)
-}
-
-func (r *RAUCService) ExtractRelease(packageFilepath string, release codegen.Release) error {
-	return ExtractRAUCRelease(packageFilepath, release)
-}
-
-func (r *RAUCService) GetMigrationInfo(ctx context.Context, release codegen.Release) error {
-	return nil
-}
-
-func (r *RAUCService) DownloadAllMigrationTools(ctx context.Context, release codegen.Release) error {
-	return nil
-}
 
 func ExtractRAUCRelease(packageFilepath string, release codegen.Release) error {
 	releaseDir, err := ReleaseDir(release)
@@ -61,35 +23,6 @@ func ExtractRAUCRelease(packageFilepath string, release codegen.Release) error {
 	}
 
 	return internal.BulkExtract(releaseDir)
-}
-
-func (r *RAUCService) MigrationInLaunch(sysRoot string) error {
-	if _, err := os.Stat(filepath.Join(sysRoot, FlagUpgradeFile)); os.IsNotExist(err) {
-		return nil
-	}
-
-	// remove filepath.Join(sysRoot, FlagUpgradeFile)
-	err := os.Remove(filepath.Join(sysRoot, FlagUpgradeFile))
-
-	return err
-}
-
-func (r *RAUCService) PostInstall(release codegen.Release, sysRoot string) error {
-	return PostInstallRAUC(release, sysRoot)
-}
-
-func LoadReleaseFromLocal(sysRoot string) (*codegen.Release, error) {
-	// to check RAUCOfflinePath + RAUCOfflineReleaseFile
-	fmt.Println(filepath.Join(sysRoot, RAUCOfflinePath, RAUCOfflineReleaseFile))
-	if _, err := os.Stat(filepath.Join(sysRoot, RAUCOfflinePath, RAUCOfflineReleaseFile)); err != nil {
-		return nil, fmt.Errorf("rauc release file not found")
-	}
-
-	release, err := internal.GetReleaseFromLocal(filepath.Join(sysRoot, RAUCOfflinePath, RAUCOfflineReleaseFile))
-	if err != nil {
-		return nil, err
-	}
-	return release, nil
 }
 
 // dependent config.ServerInfo.CachePath
@@ -136,7 +69,7 @@ func InstallRAUCTest(raucfilepath string) error {
 	// to check file exist
 	fmt.Println("文件名为", raucfilepath)
 	if _, err := os.Stat(raucfilepath); os.IsNotExist(err) {
-		return fmt.Errorf("not found offline install package")
+		return fmt.Errorf("not found rauc install package")
 	}
 
 	return nil
@@ -151,7 +84,7 @@ func PostInstallRAUC(release codegen.Release, sysRoot string) error {
 	return err
 }
 
-func VerifyRAUC(release codegen.Release) (string, error) {
+func VerifyRAUCRelease(release codegen.Release) (string, error) {
 	releaseDir, err := ReleaseDir(release)
 	if err != nil {
 		return "", err
@@ -166,15 +99,37 @@ func VerifyRAUC(release codegen.Release) (string, error) {
 
 	packageFilePath := filepath.Join(releaseDir, packageFilename)
 
-	// 不能判断tar.gz在不在，因为离线包的名字不一样
-	// if _, err := os.Stat(packageFilePath); err != nil {
-	// 	return "", fmt.Errorf("rauc %s not found", packageFilePath)
-	// }
+	// to check file exist
+	fmt.Println("rauc verify:", packageFilePath)
+	if _, err := os.Stat(packageFilePath); os.IsNotExist(err) {
+		return "", fmt.Errorf("not found rauc release  package")
+	}
+	return packageFilePath, nil
 
-	// 这里需要注意raucb的名字必须和包名一致
-	// TODO 更好的包信息，不能只有包名，没有rauc名。
-	// replace tar.gz to raucb of packageFilePath
+}
+
+func VerifyRAUC(release codegen.Release) (string, error) {
+	// 这个是验证解压之后的包。
+	releaseDir, err := ReleaseDir(release)
+	if err != nil {
+		return "", err
+	}
+
+	packageURL, err := internal.GetPackageURLByCurrentArch(release, "")
+	if err != nil {
+		return "", err
+	}
+
+	packageFilename := filepath.Base(packageURL)
+
+	packageFilePath := filepath.Join(releaseDir, packageFilename)
+
 	packageFilePath = packageFilePath[:len(packageFilePath)-len(".tar.gz")] + ".raucb"
+	// to check file exist
+	fmt.Println("rauc verify:", packageFilePath)
+	if _, err := os.Stat(packageFilePath); os.IsNotExist(err) {
+		return "", fmt.Errorf("not found rauc install package")
+	}
 	return packageFilePath, nil
 }
 

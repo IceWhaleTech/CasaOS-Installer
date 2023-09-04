@@ -57,6 +57,9 @@ type InstallerServices interface {
 	Install(release codegen.Release, sysRoot string) error
 	MigrationInLaunch(sysRoot string) error
 	PostInstall(release codegen.Release, sysRoot string) error
+
+	ShouldUpgrade(release codegen.Release, sysRoot string) bool
+	IsUpgradable(release codegen.Release, sysrootPath string) bool // 检测预下载的包好了没有
 }
 
 type services struct {
