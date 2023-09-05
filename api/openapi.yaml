@@ -48,6 +48,16 @@ paths:
           $ref: "#/components/responses/StatusOK"
         "500":
           $ref: "#/components/responses/ResponseInternalServerError"
+    
+  /reset:
+    put:
+      summary: Change error status to idle
+      operationId: resetStatus
+      responses:
+        "200":
+          $ref: "#/components/responses/ResponseOK"
+        "500":
+          $ref: "#/components/responses/ResponseInternalServerError"
           
 components:
   securitySchemes:
@@ -145,8 +155,11 @@ components:
           enum:
             - "idle"
             - "fetchUpdating"
+            - "fetchError"
             - "downloading"
+            - "downloadError"
             - "installing"
+            - "installError"
 
     Release:
       readOnly: true

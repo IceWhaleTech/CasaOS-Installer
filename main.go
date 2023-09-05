@@ -55,10 +55,13 @@ func main() {
 	os.MkdirAll(service.RAUC_OFFLINE_PATH, os.ModePerm)
 
 	// 在这里会把状态更新为installing或者继续idle
+	service.UpdateStatusWithMessage(service.InstallBegin, "migration")
 	err := service.InstallerService.MigrationInLaunch(sysRoot)
 	if err != nil {
 		logger.Error("error when trying to start migration", zap.Error(err))
 	}
+
+	// 这里应该还要把文件删一下
 
 	// watch rauc offline
 	{
@@ -250,6 +253,8 @@ func main() {
 		ReadHeaderTimeout: 5 * time.Second, // fix G112: Potential slowloris attack (see https://github.com/securego/gosec)
 	}
 
+	service.UpdateStatusWithMessage(service.Idle, "up-to-date")
+
 	logger.Info("installer service is listening...", zap.String("address", listener.Addr().String()))
 	if err := s.Serve(listener); err != nil {
 		panic(err)
@@ -303,6 +308,7 @@ func cronjob(ctx context.Context) {
 		releaseFilePath, err := service.InstallerService.DownloadRelease(ctx, *release, true)
 
 		if err != nil {
+			go service.UpdateStatusWithMessage(service.DownloadError, fmt.Sprintf("下载失败：%s", err.Error()))
 			logger.Error("error when trying to download release", zap.Error(err))
 			return
 		}

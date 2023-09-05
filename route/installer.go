@@ -122,31 +122,39 @@ func (a *api) InstallRelease(ctx echo.Context, params codegen.InstallReleasePara
 		// if the err is not nil. It mean should to download
 		contentCtx := context.Background()
 
-		service.UpdateStatusWithMessage(service.DownloadBegin, "安装触发的下载")
+		service.UpdateStatusWithMessage(service.DownloadBegin, "downloading")
 
 		releasePath, err := service.InstallerService.DownloadRelease(contentCtx, *release, false)
 		if err != nil {
+			logger.Error("error while downloading release: %s", zap.Error(err))
+			service.UpdateStatusWithMessage(service.InstallError, fmt.Sprintf("安装时下载失败:%s", err.Error()))
+			return
 		}
 
-		service.UpdateStatusWithMessage(service.InstallBegin, "开始解压")
+		service.UpdateStatusWithMessage(service.InstallBegin, "decompress")
 
 		fmt.Println("解压目录:", releasePath)
 		err = service.InstallerService.ExtractRelease(releasePath, *release)
 		if err != nil {
 			logger.Error("error while extract release: %s", zap.Error(err))
+			service.UpdateStatusWithMessage(service.InstallError, fmt.Sprintf("安装时解压失败:%s", err.Error()))
 			return
 		}
 
-		service.UpdateStatusWithMessage(service.InstallBegin, "开始安装")
+		service.UpdateStatusWithMessage(service.InstallBegin, "installing")
 		err = service.InstallerService.Install(*release, sysRoot)
 		if err != nil {
 			logger.Error("error while install system: %s", zap.Error(err))
+			service.UpdateStatusWithMessage(service.InstallError, fmt.Sprintf("安装失败:%s", err.Error()))
 			return
 		}
+
+		service.UpdateStatusWithMessage(service.InstallBegin, "restarting")
 
 		err = service.InstallerService.PostInstall(*release, sysRoot)
 		if err != nil {
 			logger.Error("error while post install system: %s", zap.Error(err))
+			service.UpdateStatusWithMessage(service.InstallError, fmt.Sprintf("后安装失败:%s", err.Error()))
 			return
 		}
 	}()
@@ -155,4 +163,8 @@ func (a *api) InstallRelease(ctx echo.Context, params codegen.InstallReleasePara
 	return ctx.JSON(http.StatusOK, &codegen.ResponseOK{
 		Message: &message,
 	})
+}
+
+func (a *api) ResetStatus(ctx echo.Context) error {
+	return ctx.JSON(http.StatusOK, &codegen.ResponseOK{})
 }

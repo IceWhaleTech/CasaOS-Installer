@@ -97,10 +97,14 @@ func UpdateStatusWithMessage(eventType EventType, newPackageStatus string) {
 		status = EventTypeMapStatus[DownloadBegin]
 	case DownloadEnd:
 		status = EventTypeMapStatus[DownloadEnd]
+	case DownloadError:
+		status = EventTypeMapStatus[DownloadError]
 	case FetchUpdateBegin:
 		status = EventTypeMapStatus[FetchUpdateBegin]
 	case FetchUpdateEnd:
 		status = EventTypeMapStatus[FetchUpdateEnd]
+	case FetchUpdateError:
+		status = EventTypeMapStatus[FetchUpdateError]
 	case InstallBegin:
 		status = EventTypeMapStatus[InstallBegin]
 	case InstallEnd:
@@ -129,7 +133,7 @@ func InitEventTypeMapStatus() {
 		Status: codegen.Idle,
 	}
 	EventTypeMapStatus[DownloadError] = codegen.Status{
-		Status: codegen.Idle,
+		Status: codegen.DownloadError,
 	}
 
 	EventTypeMapStatus[FetchUpdateBegin] = codegen.Status{
@@ -139,7 +143,7 @@ func InitEventTypeMapStatus() {
 		Status: codegen.Idle,
 	}
 	EventTypeMapStatus[FetchUpdateError] = codegen.Status{
-		Status: codegen.Idle,
+		Status: codegen.FetchError,
 	}
 
 	EventTypeMapStatus[InstallBegin] = codegen.Status{
@@ -149,7 +153,7 @@ func InitEventTypeMapStatus() {
 		Status: codegen.Idle,
 	}
 	EventTypeMapStatus[InstallError] = codegen.Status{
-		Status: codegen.Idle,
+		Status: codegen.InstallError,
 	}
 
 	EventTypeMapMessageType[FetchUpdateBegin] = common.EventTypeCheckUpdateBegin
