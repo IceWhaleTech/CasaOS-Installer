@@ -277,7 +277,9 @@ func cronjob(ctx context.Context) {
 	}
 
 	// cache release packages if not already cached
-	if service.ShouldUpgrade(*release, sysRoot) && !service.IsUpgradable(*release, sysRoot) {
+	shouldUpgrade := service.InstallerService.ShouldUpgrade(*release, sysRoot)
+	isUpgradable := service.InstallerService.IsUpgradable(*release, sysRoot)
+	if shouldUpgrade && !isUpgradable {
 
 		logger.Info("error while verifying release - continue to download", zap.Error(err))
 
@@ -288,6 +290,9 @@ func cronjob(ctx context.Context) {
 			return
 		}
 		logger.Info("downloaded release", zap.String("release file path", releaseFilePath))
+	} else {
+		fmt.Println("不需要更新")
+		fmt.Println("service.ShouldUpgrade", shouldUpgrade)
+		fmt.Println("service.IsUpgradable", isUpgradable)
 	}
-
 }

@@ -24,11 +24,11 @@ mirrors:
   - http://casaos.io/does/not/exist/test
   - https://github.com/IceWhaleTech
 packages:
-  - path: /get/releases/download/v0.4.4-alpha2/casaos-amd64-v0.4.4-alpha2.tar.gz
+  - path: /get/releases/download/v0.4.4-alpha2/casaos-amd64-v0.4.4-alpha2.tar
     architecture: amd64
-  - path: /get/releases/download/v0.4.4-alpha2/casaos-arm64-v0.4.4-alpha2.tar.gz
+  - path: /get/releases/download/v0.4.4-alpha2/casaos-arm64-v0.4.4-alpha2.tar
     architecture: arm64
-  - path: /get/releases/download/v0.4.4-alpha2/casaos-arm-7-v0.4.4-alpha2.tar.gz
+  - path: /get/releases/download/v0.4.4-alpha2/casaos-arm-7-v0.4.4-alpha2.tar
     architecture: armv7
 checksums: /get/releases/download/v0.4.4-alpha2/checksums.txt
 modules:
