@@ -14,7 +14,7 @@ import (
 const (
 	RAUC_OFFLINE_PATH             = "/DATA/rauc/"
 	RAUC_OFFLINE_RELEASE_FILENAME = "release.yaml"
-	RAUC_OFFLINE_RAUC_FILENAME    = "rauc.tar.gz"
+	RAUC_OFFLINE_RAUC_FILENAME    = "rauc.tar"
 	OFFLINE_RAUC_TEMP_PATH        = "/tmp/offline_rauc"
 )
 

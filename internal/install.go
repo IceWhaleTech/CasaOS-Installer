@@ -73,11 +73,21 @@ func Extract(tarFilePath, destinationFolder string) error {
 	// to check tarFilePath is a tar.gz file and destinationFolder is a folder
 	if strings.HasSuffix(tarFilePath, ".tar.gz") {
 		exec.Command("tar", "-xzf", tarFilePath, "-C", destinationFolder).Run()
+		return nil
 	}
+	if strings.HasSuffix(tarFilePath, ".tar") {
+		fmt.Printf("tar -xf %s -C %s \n", tarFilePath, destinationFolder)
+
+		exec.Command("tar", "xf", tarFilePath, "-C", destinationFolder).Run()
+		return nil
+	}
+
 	if strings.HasSuffix(tarFilePath, ".zip") {
 		exec.Command("unzip", tarFilePath, "-d", destinationFolder).Run()
+		return nil
 	}
-	return nil
+
+	return fmt.Errorf("not support file type")
 }
 
 // extract each archive in dir

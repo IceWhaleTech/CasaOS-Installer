@@ -124,7 +124,7 @@ func VerifyRAUC(release codegen.Release) (string, error) {
 
 	packageFilePath := filepath.Join(releaseDir, packageFilename)
 
-	packageFilePath = packageFilePath[:len(packageFilePath)-len(".tar.gz")] + ".raucb"
+	packageFilePath = packageFilePath[:len(packageFilePath)-len(".tar")] + ".raucb"
 	// to check file exist
 	fmt.Println("rauc verify in cache:", packageFilePath)
 	if _, err := os.Stat(packageFilePath); os.IsNotExist(err) {
