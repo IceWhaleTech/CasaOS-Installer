@@ -19,7 +19,7 @@ func (r *StatusService) Install(release codegen.Release, sysRoot string) error {
 
 func (r *StatusService) GetRelease(ctx context.Context, tag string) (*codegen.Release, error) {
 	release := &codegen.Release{}
-	UpdateStatusWithMessage(FetchUpdateBegin, "间隔触发更新")
+	UpdateStatusWithMessage(FetchUpdateBegin, "触发更新")
 	defer func() {
 		if r.ShouldUpgrade(*release, r.SysRoot) {
 			UpdateStatusWithMessage(FetchUpdateEnd, "up-to-date")
@@ -31,7 +31,7 @@ func (r *StatusService) GetRelease(ctx context.Context, tag string) (*codegen.Re
 				UpdateStatusWithMessage(FetchUpdateEnd, "out-of-date")
 			}
 		}
-		UpdateStatusWithMessage(FetchUpdateEnd, "间隔触发更新")
+		UpdateStatusWithMessage(FetchUpdateEnd, "触发更新")
 	}()
 
 	release, err := r.ImplementService.GetRelease(ctx, tag)
