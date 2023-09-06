@@ -42,7 +42,7 @@ func TestRAUCOfflineServer(t *testing.T) {
 	assert.NoError(t, err)
 
 	assert.Equal(t, "v0.4.8", release.Version)
-	assert.Equal(t, "rauc offline update test package", release.ReleaseNotes)
+	assert.Equal(t, "## offline update test\n", release.ReleaseNotes)
 
 	assert.FileExists(t, filepath.Join(tmpDir, service.RAUC_OFFLINE_PATH, service.RAUC_OFFLINE_RAUC_FILENAME))
 	assert.FileExists(t, filepath.Join(tmpDir, service.OFFLINE_RAUC_TEMP_PATH, service.RAUC_OFFLINE_RELEASE_FILENAME))
@@ -56,7 +56,7 @@ func TestRAUCOfflineServer(t *testing.T) {
 	_, err = installerServer.VerifyRelease(*release)
 	assert.NoError(t, err)
 
-	assert.FileExists(t, filepath.Join(parentDir, "rauc.tar.gz"))
+	assert.FileExists(t, filepath.Join(parentDir, "rauc.tar"))
 
 	err = installerServer.ExtractRelease(releasePath, *release)
 	assert.NoError(t, err)
@@ -66,7 +66,7 @@ func TestRAUCOfflineServer(t *testing.T) {
 
 	// ensure rauc file exists
 	// get parent dir of releaseDir
-	assert.FileExists(t, filepath.Join(parentDir, "casaos_ova-0.4.8.raucb"))
+	assert.FileExists(t, filepath.Join(parentDir, "casaos_ova-0.4.4.raucb"))
 
 	err = installerServer.Install(*release, tmpDir)
 	assert.NoError(t, err)
