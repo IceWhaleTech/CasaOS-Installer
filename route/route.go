@@ -65,7 +65,11 @@ func InitV2Router() http.Handler {
 
 	e.Use(echo_middleware.Gzip())
 
-	e.Use(echo_middleware.Logger())
+	e.Use(echo_middleware.RequestLoggerWithConfig(echo_middleware.RequestLoggerConfig{
+		Skipper: func(c echo.Context) bool {
+			return strings.Contains(c.Request().URL.Path, "status")
+		},
+	}))
 
 	e.Use(echo_middleware.JWTWithConfig(echo_middleware.JWTConfig{
 		Skipper: func(c echo.Context) bool {
