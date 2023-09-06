@@ -80,7 +80,7 @@ func (a *api) InstallRelease(ctx echo.Context, params codegen.InstallReleasePara
 		})
 	}
 
-	go service.UpdateStatusWithMessage(service.InstallBegin, "主动触发的安装更新1级")
+	// go service.UpdateStatusWithMessage(service.InstallBegin, "主动触发的安装更新1级")
 
 	tag := service.GetReleaseBranch(sysRoot)
 
@@ -88,7 +88,7 @@ func (a *api) InstallRelease(ctx echo.Context, params codegen.InstallReleasePara
 		tag = *params.Version
 	}
 
-	go service.UpdateStatusWithMessage(service.InstallBegin, "getRelease中")
+	// go service.UpdateStatusWithMessage(service.InstallBegin, "getRelease中")
 
 	release, err := service.InstallerService.GetRelease(ctx.Request().Context(), tag)
 	if err != nil {
@@ -122,16 +122,12 @@ func (a *api) InstallRelease(ctx echo.Context, params codegen.InstallReleasePara
 		// if the err is not nil. It mean should to download
 		contentCtx := context.Background()
 
-		service.UpdateStatusWithMessage(service.DownloadBegin, "downloading")
-
 		releasePath, err := service.InstallerService.DownloadRelease(contentCtx, *release, false)
 		if err != nil {
 			logger.Error("error while downloading release: %s", zap.Error(err))
 			service.UpdateStatusWithMessage(service.InstallError, fmt.Sprintf("安装时下载失败:%s", err.Error()))
 			return
 		}
-
-		service.UpdateStatusWithMessage(service.InstallBegin, "decompress")
 
 		fmt.Println("解压目录:", releasePath)
 		err = service.InstallerService.ExtractRelease(releasePath, *release)
@@ -141,15 +137,12 @@ func (a *api) InstallRelease(ctx echo.Context, params codegen.InstallReleasePara
 			return
 		}
 
-		service.UpdateStatusWithMessage(service.InstallBegin, "installing")
 		err = service.InstallerService.Install(*release, sysRoot)
 		if err != nil {
 			logger.Error("error while install system: %s", zap.Error(err))
 			service.UpdateStatusWithMessage(service.InstallError, fmt.Sprintf("安装失败:%s", err.Error()))
 			return
 		}
-
-		service.UpdateStatusWithMessage(service.InstallBegin, "restarting")
 
 		err = service.InstallerService.PostInstall(*release, sysRoot)
 		if err != nil {

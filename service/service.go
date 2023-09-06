@@ -35,11 +35,14 @@ var EventTypeMapStatus = make(map[EventType]codegen.Status)
 var EventTypeMapMessageType = make(map[EventType]message_bus.EventType)
 
 var MyService Services
-var InstallerService InstallerServices
+var InstallerService InstallerServiceInterface
 
 // TODO move to another place
-var status codegen.Status
-var packageStatus string
+var status codegen.Status = codegen.Status{
+	Status: codegen.Idle,
+}
+
+var packageStatus string = ""
 var lock sync.RWMutex
 
 type Services interface {
@@ -47,7 +50,7 @@ type Services interface {
 	MessageBus() (*message_bus.ClientWithResponses, error)
 }
 
-type InstallerServices interface {
+type InstallerServiceInterface interface {
 	GetRelease(ctx context.Context, tag string) (*codegen.Release, error)
 	VerifyRelease(release codegen.Release) (string, error)
 	DownloadRelease(ctx context.Context, release codegen.Release, force bool) (string, error)
@@ -55,8 +58,10 @@ type InstallerServices interface {
 	GetMigrationInfo(ctx context.Context, release codegen.Release) error
 	DownloadAllMigrationTools(ctx context.Context, release codegen.Release) error
 	Install(release codegen.Release, sysRoot string) error
-	MigrationInLaunch(sysRoot string) error
 	PostInstall(release codegen.Release, sysRoot string) error
+
+	MigrationInLaunch(sysRoot string) error
+	PostMigration(sysRoot string) error
 
 	ShouldUpgrade(release codegen.Release, sysRoot string) bool
 	IsUpgradable(release codegen.Release, sysRootPath string) bool // 检测预下载的包好了没有
@@ -178,7 +183,7 @@ func NewService(RuntimePath string) Services {
 	}
 }
 
-func NewInstallerService(sysRoot string) InstallerServices {
+func NewInstallerService(sysRoot string) InstallerServiceInterface {
 	installMethod, err := GetInstallMethod(sysRoot)
 	if err != nil {
 		panic(err)

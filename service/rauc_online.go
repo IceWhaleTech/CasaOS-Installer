@@ -77,3 +77,7 @@ func (r *RAUCService) MigrationInLaunch(sysRoot string) error {
 func (r *RAUCService) PostInstall(release codegen.Release, sysRoot string) error {
 	return PostInstallRAUC(release, sysRoot)
 }
+
+func (r *RAUCService) PostMigration(sysRoot string) error {
+	return nil
+}
