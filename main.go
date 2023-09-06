@@ -60,6 +60,7 @@ func main() {
 	os.MkdirAll(service.RAUC_OFFLINE_PATH, os.ModePerm)
 
 	service.InstallerService.MigrationInLaunch(sysRoot)
+	service.InstallerService.PostMigration(sysRoot)
 	// 这里应该还要把文件删一下
 
 	// watch rauc offline

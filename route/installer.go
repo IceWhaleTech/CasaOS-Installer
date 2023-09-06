@@ -24,6 +24,19 @@ func (a *api) GetStatus(ctx echo.Context) error {
 }
 
 func (a *api) GetRelease(ctx echo.Context, params codegen.GetReleaseParams) error {
+	status, _ := service.GetStatus()
+	if status.Status == codegen.Downloading {
+		message := "downloading"
+		return ctx.JSON(http.StatusOK, &codegen.ResponseOK{
+			Message: &message,
+		})
+	}
+	if status.Status == codegen.Installing {
+		message := "downloading"
+		return ctx.JSON(http.StatusOK, &codegen.ResponseOK{
+			Message: &message,
+		})
+	}
 
 	// TODO 考虑一下这个packageStatus的问题
 	// go service.UpdateStatusWithMessage(service.FetchUpdateBegin, "主动触发的获取信息")
@@ -53,6 +66,7 @@ func (a *api) GetRelease(ctx echo.Context, params codegen.GetReleaseParams) erro
 			service.UpdateStatusWithMessage(service.FetchUpdateEnd, "ready-to-update")
 		} else {
 			service.UpdateStatusWithMessage(service.FetchUpdateEnd, "out-of-date")
+			service.InstallerService.DownloadRelease(context.Background(), *release, false)
 		}
 	} else {
 		service.UpdateStatusWithMessage(service.FetchUpdateEnd, "up-to-date")
