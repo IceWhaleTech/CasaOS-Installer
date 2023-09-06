@@ -32,13 +32,13 @@ func TestRAUCServer(t *testing.T) {
 	release, err := installerServer.GetRelease(ctx, "unit-test-rauc-0.4.4-1")
 	assert.NoError(t, err)
 	assert.Equal(t, "v0.4.4-1", release.Version)
-
+	fmt.Println(release)
 	// 这个是一个假文件，只有2.6mb
 	releasePath, err := installerServer.DownloadRelease(ctx, *release, false)
 	parentDir := filepath.Dir(releasePath)
 
 	assert.NoError(t, err)
-	assert.FileExists(t, filepath.Join(parentDir, "casaos_ova-0.4.4-1.tar.gz"))
+	assert.FileExists(t, filepath.Join(parentDir, "casaos_ova-0.4.4-1.tar"))
 	// run shell in golang
 
 	releasePath, err = installerServer.VerifyRelease(*release)

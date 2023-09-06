@@ -15,7 +15,6 @@ import (
 )
 
 func TestRAUCOfflineServer(t *testing.T) {
-
 	logger.LogInitConsoleOnly()
 
 	tmpDir, err := os.MkdirTemp("", "casaos-rauc-offline-extract-test-*")
