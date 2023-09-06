@@ -87,7 +87,7 @@ func Extract(tarFilePath, destinationFolder string) error {
 		return nil
 	}
 
-	return fmt.Errorf("not support file type")
+	return nil
 }
 
 // extract each archive in dir
