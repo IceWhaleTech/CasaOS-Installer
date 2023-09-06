@@ -19,7 +19,7 @@ func TestRAUCServer(t *testing.T) {
 
 	tmpDir, err := os.MkdirTemp("", "casaos-rauc-download-extract-test-*")
 	assert.NoError(t, err)
-	// defer os.RemoveAll(tmpDir)
+	defer os.RemoveAll(tmpDir)
 
 	ctx := context.Background()
 	assert.NoError(t, err)

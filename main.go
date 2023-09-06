@@ -19,6 +19,7 @@ import (
 	"github.com/IceWhaleTech/CasaOS-Common/utils/constants"
 	"github.com/IceWhaleTech/CasaOS-Common/utils/logger"
 	"github.com/fsnotify/fsnotify"
+	"github.com/robfig/cron/v3"
 
 	util_http "github.com/IceWhaleTech/CasaOS-Common/utils/http"
 	"github.com/IceWhaleTech/CasaOS-Installer/codegen"
@@ -27,7 +28,6 @@ import (
 	"github.com/IceWhaleTech/CasaOS-Installer/route"
 	"github.com/IceWhaleTech/CasaOS-Installer/service"
 	"github.com/coreos/go-systemd/daemon"
-	"github.com/robfig/cron/v3"
 	"go.uber.org/zap"
 )
 
@@ -47,20 +47,19 @@ var (
 )
 
 func main() {
-	service.InstallerService = service.NewInstallerService(sysRoot)
-	service.UpdateStatusWithMessage(service.Idle, "up-to-date")
+	service.InstallerService = &service.StatusService{
+		ImplementService: service.NewInstallerService(sysRoot),
+		SysRoot:          sysRoot,
+	}
+
+	// service.UpdateStatusWithMessage(service.Idle, "up-to-date")
+
 	go service.StartFallbackWebsite()
 
 	// 这个是临时放这里，为了watch里不会没有东西。
 	os.MkdirAll(service.RAUC_OFFLINE_PATH, os.ModePerm)
 
-	// 在这里会把状态更新为installing或者继续idle
-	service.UpdateStatusWithMessage(service.InstallBegin, "migration")
-	err := service.InstallerService.MigrationInLaunch(sysRoot)
-	if err != nil {
-		logger.Error("error when trying to start migration", zap.Error(err))
-	}
-
+	service.InstallerService.MigrationInLaunch(sysRoot)
 	// 这里应该还要把文件删一下
 
 	// watch rauc offline
@@ -79,8 +78,6 @@ func main() {
 					if !ok {
 						return
 					}
-					// log.Println("event:", event)
-					// TODO 怎么只执行一次
 					if event.Has(fsnotify.Create) {
 						log.Println("modified file:", event.Name)
 						service.InstallerService = service.NewInstallerService(sysRoot)
@@ -159,25 +156,6 @@ func main() {
 
 	// err := service.StartMigration(sysRoot)
 
-	{
-		crontab := cron.New(cron.WithSeconds())
-
-		go cronjob(ctx) // run once immediately
-
-		if _, err := crontab.AddFunc("@every 20m", func() { cronjob(ctx) }); err != nil {
-			panic(err)
-		}
-
-		// every 10 seconds for debug
-		if _, err := crontab.AddFunc("@every 1s", func() {
-		}); err != nil {
-			panic(err)
-		}
-
-		crontab.Start()
-		defer crontab.Stop()
-	}
-
 	go func() {
 		for {
 			// register at message bus
@@ -253,7 +231,24 @@ func main() {
 		ReadHeaderTimeout: 5 * time.Second, // fix G112: Potential slowloris attack (see https://github.com/securego/gosec)
 	}
 
-	service.UpdateStatusWithMessage(service.Idle, "up-to-date")
+	{
+		crontab := cron.New(cron.WithSeconds())
+
+		go cronjob(ctx) // run once immediately
+
+		if _, err := crontab.AddFunc("@every 20m", func() { cronjob(ctx) }); err != nil {
+			panic(err)
+		}
+
+		// every 10 seconds for debug
+		if _, err := crontab.AddFunc("@every 1s", func() {
+		}); err != nil {
+			panic(err)
+		}
+
+		crontab.Start()
+		defer crontab.Stop()
+	}
 
 	logger.Info("installer service is listening...", zap.String("address", listener.Addr().String()))
 	if err := s.Serve(listener); err != nil {
@@ -273,9 +268,6 @@ func cronjob(ctx context.Context) {
 		return
 	}
 
-	// TODO 考虑一下这个packageStatus的问题
-	go service.UpdateStatusWithMessage(service.FetchUpdateBegin, "间隔触发更新")
-
 	// release, err := service.GetRelease(ctx, service.GetReleaseBranch(sysRoot))
 	release, err := service.InstallerService.GetRelease(ctx, service.GetReleaseBranch(sysRoot))
 
@@ -284,48 +276,18 @@ func cronjob(ctx context.Context) {
 		return
 	}
 
-	if !service.ShouldUpgrade(*release, sysRoot) {
-		service.UpdateStatusWithMessage(service.FetchUpdateEnd, "up-to-date")
-		logger.Info("no need to upgrade", zap.String("latest version", release.Version))
-		return
-	} else {
-		if service.InstallerService.IsUpgradable(*release, sysRoot) {
-			service.UpdateStatusWithMessage(service.FetchUpdateEnd, "ready-to-update")
-		} else {
-			service.UpdateStatusWithMessage(service.FetchUpdateEnd, "out-of-date")
-		}
-	}
-
 	// cache release packages if not already cached
-	if _, err := service.InstallerService.VerifyRelease(*release); err != nil {
-		// TODO 考虑一下这个packageStatus的问题
-
-		go service.UpdateStatusWithMessage(service.DownloadBegin, "自动触发的下载")
-		defer service.UpdateStatusWithMessage(service.DownloadEnd, "ready-to-update")
+	if service.ShouldUpgrade(*release, sysRoot) && !service.IsUpgradable(*release, sysRoot) {
 
 		logger.Info("error while verifying release - continue to download", zap.Error(err))
 
 		releaseFilePath, err := service.InstallerService.DownloadRelease(ctx, *release, true)
 
 		if err != nil {
-			go service.UpdateStatusWithMessage(service.DownloadError, fmt.Sprintf("下载失败：%s", err.Error()))
 			logger.Error("error when trying to download release", zap.Error(err))
 			return
 		}
 		logger.Info("downloaded release", zap.String("release file path", releaseFilePath))
 	}
 
-	// TODO disable migration when rauc install temporarily
-	// // cache migration tools if not already cached
-	// {
-	// 	if service.VerifyAllMigrationTools(*release, sysRoot) {
-	// 		logger.Info("all migration tools exist", zap.String("version", release.Version))
-	// 		return
-	// 	}
-
-	// 	if _, err := service.DownloadAllMigrationTools(ctx, *release, sysRoot); err != nil {
-	// 		logger.Error("error when trying to download migration tools", zap.Error(err))
-	// 		return
-	// 	}
-	// }
 }
