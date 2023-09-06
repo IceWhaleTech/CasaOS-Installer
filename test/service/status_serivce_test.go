@@ -3,12 +3,14 @@ package service_test
 import (
 	"context"
 	"os"
+	"path/filepath"
 	"testing"
 	"time"
 
 	"github.com/IceWhaleTech/CasaOS-Common/utils/logger"
 	"github.com/IceWhaleTech/CasaOS-Installer/codegen"
 	"github.com/IceWhaleTech/CasaOS-Installer/common/fixtures"
+	"github.com/IceWhaleTech/CasaOS-Installer/internal/config"
 	"github.com/IceWhaleTech/CasaOS-Installer/service"
 	"github.com/stretchr/testify/assert"
 )
@@ -52,12 +54,12 @@ func Test_Status_Case1_Launch_have_Update(t *testing.T) {
 	time.Sleep(1 * time.Second)
 	value, msg = service.GetStatus()
 	assert.Equal(t, codegen.FetchUpdating, value.Status)
-	assert.Equal(t, "间隔触发更新", msg)
+	assert.Equal(t, "触发更新", msg)
 
-	time.Sleep(3 * time.Second)
+	time.Sleep(2 * time.Second)
 	value, msg = service.GetStatus()
 	assert.Equal(t, codegen.Downloading, value.Status)
-	assert.Equal(t, "自动触发的下载", msg)
+	assert.Equal(t, "下载中", msg)
 
 	time.Sleep(2 * time.Second)
 	value, msg = service.GetStatus()
@@ -65,18 +67,41 @@ func Test_Status_Case1_Launch_have_Update(t *testing.T) {
 	assert.Equal(t, "ready-to-update", msg)
 }
 
-func Test_Status_Case2_Install(t *testing.T) {
+func Test_Status_Case2_Upgradable(t *testing.T) {
 	logger.LogInitConsoleOnly()
 
 	tmpDir, err := os.MkdirTemp("", "casaos-status-test-case-2")
 	assert.NoError(t, err)
 	sysRoot := tmpDir
+	config.ServerInfo.CachePath = filepath.Join(tmpDir, "cache")
 
 	fixtures.SetLocalRelease(sysRoot, "v0.4.4")
 
-	_ = &service.StatusService{
-		ImplementService: &service.TestService{},
-		SysRoot:          sysRoot,
+	statusService := &service.StatusService{
+		ImplementService: &service.RAUCService{
+			InstallRAUCHandler: service.InstallRAUCTest,
+		},
+		SysRoot: sysRoot,
 	}
+
+	fixtures.SetLocalRelease(sysRoot, "v0.4.3")
+
+	value, msg := service.GetStatus()
+	assert.Equal(t, codegen.Idle, value.Status)
+	assert.Equal(t, "", msg)
+
+	release, err := statusService.GetRelease(context.TODO(), "unit-test-rauc-0.4.4-1")
+	assert.NoError(t, err)
+
+	value, msg = service.GetStatus()
+	assert.Equal(t, codegen.Idle, value.Status)
+	assert.Equal(t, "out-of-date", msg)
+
+	_, err = statusService.DownloadRelease(context.TODO(), *release, false)
+	assert.NoError(t, err)
+
+	value, msg = service.GetStatus()
+	assert.Equal(t, codegen.Idle, value.Status)
+	assert.Equal(t, "ready-to-update", msg)
 
 }

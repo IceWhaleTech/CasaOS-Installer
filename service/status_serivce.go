@@ -21,7 +21,7 @@ func (r *StatusService) GetRelease(ctx context.Context, tag string) (*codegen.Re
 	release := &codegen.Release{}
 	UpdateStatusWithMessage(FetchUpdateBegin, "触发更新")
 	defer func() {
-		if r.ShouldUpgrade(*release, r.SysRoot) {
+		if !r.ShouldUpgrade(*release, r.SysRoot) {
 			UpdateStatusWithMessage(FetchUpdateEnd, "up-to-date")
 			return
 		} else {
@@ -31,7 +31,6 @@ func (r *StatusService) GetRelease(ctx context.Context, tag string) (*codegen.Re
 				UpdateStatusWithMessage(FetchUpdateEnd, "out-of-date")
 			}
 		}
-		UpdateStatusWithMessage(FetchUpdateEnd, "触发更新")
 	}()
 
 	release, err := r.ImplementService.GetRelease(ctx, tag)
@@ -50,7 +49,7 @@ func (r *StatusService) VerifyRelease(release codegen.Release) (string, error) {
 }
 
 func (r *StatusService) DownloadRelease(ctx context.Context, release codegen.Release, force bool) (string, error) {
-	UpdateStatusWithMessage(DownloadBegin, "自动触发的下载")
+	UpdateStatusWithMessage(DownloadBegin, "下载中")
 	// TODO 这里想一下错误怎么处理?
 	defer UpdateStatusWithMessage(DownloadEnd, "ready-to-update")
 	return r.ImplementService.DownloadRelease(ctx, release, force)
