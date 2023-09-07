@@ -27,6 +27,7 @@ import (
 	"github.com/IceWhaleTech/CasaOS-Installer/internal/config"
 	"github.com/IceWhaleTech/CasaOS-Installer/route"
 	"github.com/IceWhaleTech/CasaOS-Installer/service"
+	"github.com/IceWhaleTech/CasaOS-Installer/types"
 	"github.com/coreos/go-systemd/daemon"
 	"go.uber.org/zap"
 )
@@ -47,24 +48,44 @@ var (
 )
 
 func main() {
+	// parse arguments and intialize
+	{
+		configFlag := flag.String("c", "", "config file path")
+		versionFlag := flag.Bool("v", false, "version")
+
+		flag.Parse()
+
+		if *versionFlag {
+			fmt.Printf("v%s\n", common.InstallerVersion)
+			os.Exit(0)
+		}
+
+		println("git commit:", commit)
+		println("build date:", date)
+
+		config.InitSetup(*configFlag)
+
+		logger.LogInit(config.AppInfo.LogPath, config.AppInfo.LogSaveName, config.AppInfo.LogFileExt)
+
+		service.MyService = service.NewService(config.CommonInfo.RuntimePath)
+	}
+
 	service.InstallerService = &service.StatusService{
 		ImplementService: service.NewInstallerService(sysRoot),
 		SysRoot:          sysRoot,
 	}
 
-	// service.UpdateStatusWithMessage(service.Idle, "up-to-date")
-
 	go service.StartFallbackWebsite()
 
-	// 这个是临时放这里，为了watch里不会没有东西。
-	os.MkdirAll(service.RAUC_OFFLINE_PATH, os.ModePerm)
-
 	service.InstallerService.MigrationInLaunch(sysRoot)
-	service.InstallerService.PostMigration(sysRoot)
 	// 这里应该还要把文件删一下
+	service.InstallerService.PostMigration(sysRoot)
 
 	// watch rauc offline
 	{
+		// 这个是临时放这里，为了watch里不会没有东西。
+		os.MkdirAll(service.RAUC_OFFLINE_PATH, os.ModePerm)
+
 		watcher, err := fsnotify.NewWatcher()
 		if err != nil {
 			log.Fatal(err)
@@ -81,7 +102,7 @@ func main() {
 					}
 					if event.Has(fsnotify.Create) {
 						log.Println("modified file:", event.Name)
-						service.InstallerService = service.NewInstallerService(sysRoot)
+						service.InstallerService = service.NewInstallerService(sysRoot) // 这里能不能优化一下?
 					}
 					if event.Has(fsnotify.Remove) {
 						log.Println("modified file:", event.Name)
@@ -125,38 +146,30 @@ func main() {
 		}
 	}
 
-	// parse arguments and intialize
-	{
-		configFlag := flag.String("c", "", "config file path")
-		versionFlag := flag.Bool("v", false, "version")
-
-		flag.Parse()
-
-		if *versionFlag {
-			fmt.Printf("v%s\n", common.InstallerVersion)
-			os.Exit(0)
-		}
-
-		println("git commit:", commit)
-		println("build date:", date)
-
-		config.InitSetup(*configFlag)
-
-		logger.LogInit(config.AppInfo.LogPath, config.AppInfo.LogSaveName, config.AppInfo.LogFileExt)
-
-		service.MyService = service.NewService(config.CommonInfo.RuntimePath)
-	}
-
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	// start migration.
-	// only ZIMA OS should do this.
-	// if it is CasaOS. the migration will be done by the installer. and will skip this.
+	mux := &util_http.HandlerMultiplexer{
+		HandlerMap: map[string]http.Handler{
+			"v2":  route.InitV2Router(),
+			"doc": route.InitV2DocRouter(_docHTML, _docYAML),
+		},
+	}
+
 	go service.StopFallbackWebsite()
 
-	// err := service.StartMigration(sysRoot)
+	// notify systemd that we are ready
+	{
+		if supported, err := daemon.SdNotify(false, daemon.SdNotifyReady); err != nil {
+			logger.Error("Failed to notify systemd that installer service is ready", zap.Any("error", err))
+		} else if supported {
+			logger.Info("Notified systemd that installer service is ready")
+		} else {
+			logger.Info("This process is not running as a systemd service.")
+		}
+	}
 
+	// 上面notify之后，才有必要去注册
 	go func() {
 		for {
 			// register at message bus
@@ -209,24 +222,6 @@ func main() {
 		}
 	}()
 
-	mux := &util_http.HandlerMultiplexer{
-		HandlerMap: map[string]http.Handler{
-			"v2":  route.InitV2Router(),
-			"doc": route.InitV2DocRouter(_docHTML, _docYAML),
-		},
-	}
-
-	// notify systemd that we are ready
-	{
-		if supported, err := daemon.SdNotify(false, daemon.SdNotifyReady); err != nil {
-			logger.Error("Failed to notify systemd that installer service is ready", zap.Any("error", err))
-		} else if supported {
-			logger.Info("Notified systemd that installer service is ready")
-		} else {
-			logger.Info("This process is not running as a systemd service.")
-		}
-	}
-
 	s := &http.Server{
 		Handler:           mux,
 		ReadHeaderTimeout: 5 * time.Second, // fix G112: Potential slowloris attack (see https://github.com/securego/gosec)
@@ -270,7 +265,8 @@ func cronjob(ctx context.Context) {
 	}
 
 	// release, err := service.GetRelease(ctx, service.GetReleaseBranch(sysRoot))
-	release, err := service.InstallerService.GetRelease(ctx, service.GetReleaseBranch(sysRoot))
+
+	release, err := service.InstallerService.GetRelease(context.WithValue(ctx, types.Trigger, types.CRON_JOB), service.GetReleaseBranch(sysRoot))
 
 	if err != nil {
 		logger.Error("error when trying to get release", zap.Error(err))

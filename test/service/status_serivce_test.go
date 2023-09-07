@@ -12,6 +12,7 @@ import (
 	"github.com/IceWhaleTech/CasaOS-Installer/common/fixtures"
 	"github.com/IceWhaleTech/CasaOS-Installer/internal/config"
 	"github.com/IceWhaleTech/CasaOS-Installer/service"
+	"github.com/IceWhaleTech/CasaOS-Installer/types"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -47,8 +48,9 @@ func Test_Status_Case1_Launch_have_Update(t *testing.T) {
 
 	// 模拟cron
 	go func() {
-		statusService.GetRelease(context.TODO(), "latest")
-		statusService.DownloadRelease(context.TODO(), codegen.Release{}, false)
+		ctx := context.WithValue(context.Background(), types.Trigger, types.CRON_JOB)
+		statusService.GetRelease(ctx, "latest")
+		statusService.DownloadRelease(ctx, codegen.Release{}, false)
 	}()
 
 	time.Sleep(1 * time.Second)
@@ -65,6 +67,42 @@ func Test_Status_Case1_Launch_have_Update(t *testing.T) {
 	value, msg = service.GetStatus()
 	assert.Equal(t, codegen.Idle, value.Status)
 	assert.Equal(t, "ready-to-update", msg)
+}
+
+func Test_Status_Case2_HTTP_GET_Release(t *testing.T) {
+	logger.LogInitConsoleOnly()
+
+	tmpDir, err := os.MkdirTemp("", "casaos-status-test-case-2")
+	assert.NoError(t, err)
+
+	sysRoot := tmpDir
+	fixtures.SetLocalRelease(sysRoot, "v0.4.3")
+
+	statusService := &service.StatusService{
+		ImplementService: &service.TestService{},
+		SysRoot:          sysRoot,
+	}
+
+	service.UpdateStatusWithMessage(service.DownloadEnd, "ready-to-update")
+	value, msg := service.GetStatus()
+	assert.Equal(t, codegen.Idle, value.Status)
+	assert.Equal(t, "ready-to-update", msg)
+
+	ctx := context.WithValue(context.Background(), types.Trigger, types.HTTP_REQUEST)
+	// 现在模仿HTTP请求拿更新
+	go statusService.GetRelease(ctx, "latest")
+
+	time.Sleep(1 * time.Second)
+	// HTTP 请求的getRelease不会更新状态
+	value, msg = service.GetStatus()
+	assert.Equal(t, codegen.Idle, value.Status)
+	assert.Equal(t, string(types.READY_TO_UPDATE), msg)
+
+	time.Sleep(3 * time.Second)
+	// 但是应该会说需要更新
+	value, msg = service.GetStatus()
+	assert.Equal(t, codegen.Idle, value.Status)
+	assert.Equal(t, string(types.OUT_OF_DATE), msg)
 }
 
 func Test_Status_Case2_Upgradable(t *testing.T) {
@@ -86,18 +124,22 @@ func Test_Status_Case2_Upgradable(t *testing.T) {
 
 	fixtures.SetLocalRelease(sysRoot, "v0.4.3")
 
+	ctx := context.WithValue(context.Background(), types.Trigger, types.CRON_JOB)
+
+	service.UpdateStatusWithMessage(service.FetchUpdateEnd, "")
+
 	value, msg := service.GetStatus()
 	assert.Equal(t, codegen.Idle, value.Status)
 	assert.Equal(t, "", msg)
 
-	release, err := statusService.GetRelease(context.TODO(), "unit-test-rauc-0.4.4-1")
+	release, err := statusService.GetRelease(ctx, "unit-test-rauc-0.4.4-1")
 	assert.NoError(t, err)
 
 	value, msg = service.GetStatus()
 	assert.Equal(t, codegen.Idle, value.Status)
-	assert.Equal(t, "out-of-date", msg)
+	assert.Equal(t, string(types.OUT_OF_DATE), msg)
 
-	_, err = statusService.DownloadRelease(context.TODO(), *release, false)
+	_, err = statusService.DownloadRelease(ctx, *release, false)
 	assert.NoError(t, err)
 
 	value, msg = service.GetStatus()

@@ -9,6 +9,7 @@ import (
 
 type TestService struct {
 	InstallRAUCHandler func(raucPath string) error
+	downloaded         bool
 }
 
 func (r *TestService) Install(release codegen.Release, sysRoot string) error {
@@ -17,6 +18,7 @@ func (r *TestService) Install(release codegen.Release, sysRoot string) error {
 
 func (r *TestService) GetRelease(ctx context.Context, tag string) (*codegen.Release, error) {
 	time.Sleep(2 * time.Second)
+	r.downloaded = false
 	return &codegen.Release{
 		Version: "v0.4.8",
 	}, nil
@@ -28,6 +30,7 @@ func (r *TestService) VerifyRelease(release codegen.Release) (string, error) {
 
 func (r *TestService) DownloadRelease(ctx context.Context, release codegen.Release, force bool) (string, error) {
 	time.Sleep(2 * time.Second)
+	r.downloaded = true
 	return "", nil
 }
 
@@ -47,8 +50,8 @@ func (r *TestService) ShouldUpgrade(release codegen.Release, sysRoot string) boo
 	return true
 }
 
-func (r *TestService) IsUpgradable(release codegen.Release, sysrootPath string) bool {
-	return true
+func (r *TestService) IsUpgradable(release codegen.Release, sysRootPath string) bool {
+	return r.ShouldUpgrade(release, sysRootPath) && r.downloaded
 }
 
 func (r *TestService) MigrationInLaunch(sysRoot string) error {

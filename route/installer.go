@@ -9,6 +9,7 @@ import (
 	"github.com/IceWhaleTech/CasaOS-Common/utils/logger"
 	"github.com/IceWhaleTech/CasaOS-Installer/codegen"
 	"github.com/IceWhaleTech/CasaOS-Installer/service"
+	"github.com/IceWhaleTech/CasaOS-Installer/types"
 	"github.com/labstack/echo/v4"
 	"go.uber.org/zap"
 )
@@ -46,7 +47,7 @@ func (a *api) GetRelease(ctx echo.Context, params codegen.GetReleaseParams) erro
 		tag = *params.Version
 	}
 
-	release, err := service.InstallerService.GetRelease(ctx.Request().Context(), tag)
+	release, err := service.InstallerService.GetRelease(context.WithValue(ctx.Request().Context(), types.Trigger, types.HTTP_REQUEST), tag)
 	if err != nil {
 		message := err.Error()
 		if err == service.ErrReleaseNotFound {
@@ -104,7 +105,7 @@ func (a *api) InstallRelease(ctx echo.Context, params codegen.InstallReleasePara
 
 	// go service.UpdateStatusWithMessage(service.InstallBegin, "getRelease中")
 
-	release, err := service.InstallerService.GetRelease(ctx.Request().Context(), tag)
+	release, err := service.InstallerService.GetRelease(context.WithValue(ctx.Request().Context(), types.INSTALL, types.INSTALL), tag)
 	if err != nil {
 		message := err.Error()
 

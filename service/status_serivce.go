@@ -2,8 +2,10 @@ package service
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/IceWhaleTech/CasaOS-Installer/codegen"
+	"github.com/IceWhaleTech/CasaOS-Installer/types"
 )
 
 type StatusService struct {
@@ -19,19 +21,46 @@ func (r *StatusService) Install(release codegen.Release, sysRoot string) error {
 
 func (r *StatusService) GetRelease(ctx context.Context, tag string) (*codegen.Release, error) {
 	release := &codegen.Release{}
-	UpdateStatusWithMessage(FetchUpdateBegin, "触发更新")
-	defer func() {
-		if !r.ShouldUpgrade(*release, r.SysRoot) {
-			UpdateStatusWithMessage(FetchUpdateEnd, "up-to-date")
-			return
-		} else {
-			if r.IsUpgradable(*release, r.SysRoot) {
-				UpdateStatusWithMessage(FetchUpdateEnd, "ready-to-update")
+
+	if ctx.Value(types.Trigger) == types.CRON_JOB {
+		UpdateStatusWithMessage(FetchUpdateBegin, "触发更新")
+		defer func() {
+			if !r.ShouldUpgrade(*release, r.SysRoot) {
+				UpdateStatusWithMessage(FetchUpdateEnd, "up-to-date")
+				return
 			} else {
-				UpdateStatusWithMessage(FetchUpdateEnd, "out-of-date")
+				if r.IsUpgradable(*release, r.SysRoot) {
+					UpdateStatusWithMessage(FetchUpdateEnd, "ready-to-update")
+				} else {
+					UpdateStatusWithMessage(FetchUpdateEnd, "out-of-date")
+				}
 			}
-		}
-	}()
+		}()
+	}
+
+	if ctx.Value(types.Trigger) == types.HTTP_REQUEST {
+		// 如果是HTTP请求的话，则不更新状态
+		defer func() {
+			if !r.ShouldUpgrade(*release, r.SysRoot) {
+				fmt.Println("不需要更新")
+				UpdateStatusWithMessage(FetchUpdateEnd, "up-to-date")
+				return
+			} else {
+				if r.IsUpgradable(*release, r.SysRoot) {
+					fmt.Println("准备好")
+					UpdateStatusWithMessage(FetchUpdateEnd, "ready-to-update")
+				} else {
+					fmt.Println("需要更新")
+					UpdateStatusWithMessage(FetchUpdateEnd, "out-of-date")
+				}
+			}
+		}()
+	}
+
+	if ctx.Value(types.Trigger) == types.INSTALL {
+		// 如果是HTTP请求的话，则不更新状态
+		UpdateStatusWithMessage(InstallBegin, "fetching")
+	}
 
 	release, err := r.ImplementService.GetRelease(ctx, tag)
 	return release, err
