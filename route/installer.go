@@ -47,7 +47,8 @@ func (a *api) GetRelease(ctx echo.Context, params codegen.GetReleaseParams) erro
 		tag = *params.Version
 	}
 
-	release, err := service.InstallerService.GetRelease(context.WithValue(ctx.Request().Context(), types.Trigger, types.HTTP_REQUEST), tag)
+	http_trigger_context := context.WithValue(ctx.Request().Context(), types.Trigger, types.HTTP_REQUEST)
+	release, err := service.InstallerService.GetRelease(http_trigger_context, tag)
 	if err != nil {
 		message := err.Error()
 		if err == service.ErrReleaseNotFound {
@@ -67,7 +68,7 @@ func (a *api) GetRelease(ctx echo.Context, params codegen.GetReleaseParams) erro
 			service.UpdateStatusWithMessage(service.FetchUpdateEnd, "ready-to-update")
 		} else {
 			service.UpdateStatusWithMessage(service.FetchUpdateEnd, "out-of-date")
-			service.InstallerService.DownloadRelease(context.Background(), *release, false)
+			service.InstallerService.DownloadRelease(http_trigger_context, *release, false)
 		}
 	} else {
 		service.UpdateStatusWithMessage(service.FetchUpdateEnd, "up-to-date")

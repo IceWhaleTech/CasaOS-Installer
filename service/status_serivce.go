@@ -78,9 +78,21 @@ func (r *StatusService) VerifyRelease(release codegen.Release) (string, error) {
 }
 
 func (r *StatusService) DownloadRelease(ctx context.Context, release codegen.Release, force bool) (string, error) {
-	UpdateStatusWithMessage(DownloadBegin, "下载中")
+	if ctx.Value(types.Trigger) == types.CRON_JOB {
+		UpdateStatusWithMessage(DownloadBegin, "下载中")
+		defer UpdateStatusWithMessage(DownloadEnd, "ready-to-update")
+
+	}
+
+	if ctx.Value(types.Trigger) == types.HTTP_REQUEST {
+		UpdateStatusWithMessage(DownloadBegin, "http 触发的下载")
+	}
+
+	if ctx.Value(types.Trigger) == types.INSTALL {
+		UpdateStatusWithMessage(InstallBegin, "downloading")
+	}
+
 	// TODO 这里想一下错误怎么处理?
-	defer UpdateStatusWithMessage(DownloadEnd, "ready-to-update")
 	return r.ImplementService.DownloadRelease(ctx, release, force)
 }
 

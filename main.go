@@ -265,8 +265,8 @@ func cronjob(ctx context.Context) {
 	}
 
 	// release, err := service.GetRelease(ctx, service.GetReleaseBranch(sysRoot))
-
-	release, err := service.InstallerService.GetRelease(context.WithValue(ctx, types.Trigger, types.CRON_JOB), service.GetReleaseBranch(sysRoot))
+	ctx = context.WithValue(ctx, types.Trigger, types.CRON_JOB)
+	release, err := service.InstallerService.GetRelease(ctx, service.GetReleaseBranch(sysRoot))
 
 	if err != nil {
 		logger.Error("error when trying to get release", zap.Error(err))
