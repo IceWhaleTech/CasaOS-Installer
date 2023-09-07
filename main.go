@@ -48,6 +48,27 @@ var (
 )
 
 func main() {
+	// create config
+	{
+		// create default config file if not exist
+		ConfigFilePath := filepath.Join(constants.DefaultConfigPath, common.InstallerName+"."+common.InstallerConfigType)
+		if _, err := os.Stat(ConfigFilePath); os.IsNotExist(err) {
+			fmt.Println("config file not exist, create it")
+			// create config file
+			file, err := os.Create(ConfigFilePath)
+			if err != nil {
+				panic(err)
+			}
+			defer file.Close()
+
+			// write default config
+			_, err = file.WriteString(_confSample)
+			if err != nil {
+				panic(err)
+			}
+		}
+	}
+
 	// parse arguments and intialize
 	{
 		configFlag := flag.String("c", "", "config file path")
@@ -122,27 +143,6 @@ func main() {
 		err = watcher.Add(filepath.Join(sysRoot, service.RAUC_OFFLINE_PATH))
 		if err != nil {
 			log.Fatal(err)
-		}
-	}
-
-	// create config
-	{
-		// create default config file if not exist
-		ConfigFilePath := filepath.Join(constants.DefaultConfigPath, common.InstallerName+"."+common.InstallerConfigType)
-		if _, err := os.Stat(ConfigFilePath); os.IsNotExist(err) {
-			fmt.Println("config file not exist, create it")
-			// create config file
-			file, err := os.Create(ConfigFilePath)
-			if err != nil {
-				panic(err)
-			}
-			defer file.Close()
-
-			// write default config
-			_, err = file.WriteString(_confSample)
-			if err != nil {
-				panic(err)
-			}
 		}
 	}
 
