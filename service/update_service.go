@@ -6,7 +6,7 @@ import (
 	"github.com/IceWhaleTech/CasaOS-Installer/codegen"
 )
 
-type InstallerServiceInterface interface {
+type UpdaterServiceInterface interface {
 	GetRelease(ctx context.Context, tag string) (*codegen.Release, error)
 	VerifyRelease(release codegen.Release) (string, error)
 	DownloadRelease(ctx context.Context, release codegen.Release, force bool) (string, error)

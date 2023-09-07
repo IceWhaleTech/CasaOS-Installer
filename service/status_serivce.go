@@ -9,7 +9,7 @@ import (
 )
 
 type StatusService struct {
-	ImplementService InstallerServiceInterface
+	ImplementService UpdaterServiceInterface
 	SysRoot          string
 }
 

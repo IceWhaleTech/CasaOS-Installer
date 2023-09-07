@@ -35,7 +35,7 @@ var EventTypeMapStatus = make(map[EventType]codegen.Status)
 var EventTypeMapMessageType = make(map[EventType]message_bus.EventType)
 
 var MyService Services
-var InstallerService InstallerServiceInterface
+var InstallerService UpdaterServiceInterface
 
 // TODO move to another place
 var status codegen.Status = codegen.Status{
@@ -166,7 +166,7 @@ func NewService(RuntimePath string) Services {
 	}
 }
 
-func NewInstallerService(sysRoot string) InstallerServiceInterface {
+func NewInstallerService(sysRoot string) UpdaterServiceInterface {
 	installMethod, err := GetInstallMethod(sysRoot)
 	if err != nil {
 		panic(err)
