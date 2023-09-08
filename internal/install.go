@@ -11,6 +11,7 @@ import (
 
 	"github.com/hashicorp/go-getter"
 	"github.com/samber/lo"
+	"go.uber.org/zap"
 
 	"github.com/IceWhaleTech/CasaOS-Common/utils/file"
 	"github.com/IceWhaleTech/CasaOS-Common/utils/logger"
@@ -50,7 +51,7 @@ func DownloadAs(ctx context.Context, filepath, url string) error {
 	url = url + "?archive=false" // disable automatic archive extraction
 
 	// download package
-	client := getter.Client{
+	getClient := getter.Client{
 		Ctx:   ctx,
 		Dst:   filepath,
 		Mode:  getter.ClientModeFile,
@@ -60,13 +61,13 @@ func DownloadAs(ctx context.Context, filepath, url string) error {
 			getter.WithProgress(NewTracker(
 				func(downladed, totalSize int64) {
 					// TODO: send progress event to message bus if it exists
-					// logger.Info("Downloading package", zap.String("url", url), zap.Int64("downloaded", downladed), zap.Int64("totalSize", totalSize))
+					logger.Info("Downloading package", zap.String("url", url), zap.Int64("downloaded", downladed), zap.Int64("totalSize", totalSize))
 				},
 			)),
 		},
 	}
 
-	return client.Get()
+	return getClient.Get()
 }
 
 func Extract(tarFilePath, destinationFolder string) error {

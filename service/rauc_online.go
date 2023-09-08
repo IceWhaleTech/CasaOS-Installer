@@ -27,7 +27,7 @@ func (r *RAUCService) VerifyRelease(release codegen.Release) (string, error) {
 }
 
 func (r *RAUCService) DownloadRelease(ctx context.Context, release codegen.Release, force bool) (string, error) {
-	filepath, err := r.VerifyRelease(release)
+	filePath, err := r.VerifyRelease(release)
 	if err != nil {
 		fmt.Println("重新下载")
 		return DownloadRelease(ctx, release, force)
@@ -35,7 +35,7 @@ func (r *RAUCService) DownloadRelease(ctx context.Context, release codegen.Relea
 		fmt.Println("不用下载")
 	}
 
-	return filepath, nil
+	return filePath, nil
 }
 
 func (r *RAUCService) ExtractRelease(packageFilepath string, release codegen.Release) error {
