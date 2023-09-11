@@ -99,8 +99,6 @@ func main() {
 	go service.StartFallbackWebsite()
 
 	service.InstallerService.MigrationInLaunch(sysRoot)
-	// 这里应该还要把文件删一下
-	service.InstallerService.PostMigration(sysRoot)
 
 	// watch rauc offline
 	{
@@ -221,6 +219,10 @@ func main() {
 			time.Sleep(10 * time.Second)
 		}
 	}()
+
+	time.Sleep(15 * time.Second)
+	// 这里应该还要把文件删一下
+	service.InstallerService.PostMigration(sysRoot)
 
 	s := &http.Server{
 		Handler:           mux,

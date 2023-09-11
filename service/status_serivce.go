@@ -69,6 +69,7 @@ func (r *StatusService) GetRelease(ctx context.Context, tag string) (*codegen.Re
 func (r *StatusService) MigrationInLaunch(sysRoot string) error {
 	// 在这里会把状态更新为installing或者继续idle
 	UpdateStatusWithMessage(InstallBegin, "migration")
+	defer UpdateStatusWithMessage(InstallBegin, "other")
 	// defer UpdateStatusWithMessage(InstallEnd, "migration")
 	return r.ImplementService.MigrationInLaunch(sysRoot)
 }
@@ -124,7 +125,8 @@ func (r *StatusService) DownloadAllMigrationTools(ctx context.Context, release c
 }
 
 func (r *StatusService) PostMigration(sysRoot string) error {
-	UpdateStatusWithMessage(InstallEnd, "up-to-date")
+	UpdateStatusWithMessage(InstallBegin, "other")
+	defer UpdateStatusWithMessage(InstallEnd, "up-to-date")
 	return r.ImplementService.PostMigration(sysRoot)
 }
 
