@@ -11,7 +11,6 @@ import (
 
 	"github.com/hashicorp/go-getter"
 	"github.com/samber/lo"
-	"go.uber.org/zap"
 
 	"github.com/IceWhaleTech/CasaOS-Common/utils/file"
 	"github.com/IceWhaleTech/CasaOS-Common/utils/logger"
@@ -61,7 +60,7 @@ func DownloadAs(ctx context.Context, filepath, url string) error {
 			getter.WithProgress(NewTracker(
 				func(downladed, totalSize int64) {
 					// TODO: send progress event to message bus if it exists
-					logger.Info("Downloading package", zap.String("url", url), zap.Int64("downloaded", downladed), zap.Int64("totalSize", totalSize))
+					// logger.Info("Downloading package", zap.String("url", url), zap.Int64("downloaded", downladed), zap.Int64("totalSize", totalSize))
 				},
 			)),
 		},

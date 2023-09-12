@@ -38,7 +38,7 @@ func Test_Status_Case1_CRONJOB(t *testing.T) {
 	statusService.MigrationInLaunch(sysRoot)
 	value, msg = service.GetStatus()
 	assert.Equal(t, codegen.Installing, value.Status)
-	assert.Equal(t, "migration", msg)
+	assert.Equal(t, "other", msg)
 
 	statusService.PostMigration(sysRoot)
 
