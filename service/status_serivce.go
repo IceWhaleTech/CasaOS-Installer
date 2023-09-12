@@ -164,7 +164,7 @@ func (r *StatusService) PostMigration(sysRoot string) error {
 	UpdateStatusWithMessage(InstallBegin, "other")
 	err := r.ImplementService.PostMigration(sysRoot)
 	defer func() {
-		if err != nil {
+		if err == nil {
 			UpdateStatusWithMessage(InstallEnd, "up-to-date")
 		} else {
 			UpdateStatusWithMessage(InstallError, err.Error())
