@@ -15,8 +15,13 @@ type StatusService struct {
 
 func (r *StatusService) Install(release codegen.Release, sysRoot string) error {
 	UpdateStatusWithMessage(InstallBegin, "installing")
-
-	return r.ImplementService.Install(release, sysRoot)
+	err := r.ImplementService.Install(release, sysRoot)
+	defer func() {
+		if err != nil {
+			UpdateStatusWithMessage(InstallError, err.Error())
+		}
+	}()
+	return err
 }
 
 func (r *StatusService) GetRelease(ctx context.Context, tag string) (*codegen.Release, error) {
@@ -79,32 +84,63 @@ func (r *StatusService) VerifyRelease(release codegen.Release) (string, error) {
 }
 
 func (r *StatusService) DownloadRelease(ctx context.Context, release codegen.Release, force bool) (string, error) {
+	result, err := "", error(nil)
 	if ctx.Value(types.Trigger) == types.CRON_JOB {
 		UpdateStatusWithMessage(DownloadBegin, "下载中")
-		defer UpdateStatusWithMessage(DownloadEnd, "ready-to-update")
+		defer func() {
+			if err == nil {
+				UpdateStatusWithMessage(DownloadEnd, "ready-to-update")
+			} else {
+				UpdateStatusWithMessage(DownloadError, err.Error())
+			}
+		}()
 
 	}
 
 	if ctx.Value(types.Trigger) == types.HTTP_REQUEST {
 		UpdateStatusWithMessage(DownloadBegin, "http 触发的下载")
+		defer func() {
+			if err == nil {
+				UpdateStatusWithMessage(DownloadEnd, "ready-to-update")
+			} else {
+				UpdateStatusWithMessage(DownloadError, err.Error())
+			}
+		}()
 	}
 
 	if ctx.Value(types.Trigger) == types.INSTALL {
 		UpdateStatusWithMessage(InstallBegin, "downloading")
+		defer func() {
+			if err != nil {
+				UpdateStatusWithMessage(InstallError, err.Error())
+			}
+		}()
 	}
 
-	// TODO 这里想一下错误怎么处理?
-	return r.ImplementService.DownloadRelease(ctx, release, force)
+	result, err = r.ImplementService.DownloadRelease(ctx, release, force)
+	return result, err
 }
 
 func (r *StatusService) ExtractRelease(packageFilepath string, release codegen.Release) error {
 	UpdateStatusWithMessage(InstallBegin, "decompress")
-	return r.ImplementService.ExtractRelease(packageFilepath, release)
+	err := r.ImplementService.ExtractRelease(packageFilepath, release)
+	defer func() {
+		if err != nil {
+			UpdateStatusWithMessage(InstallError, err.Error())
+		}
+	}()
+	return err
 }
 
 func (r *StatusService) PostInstall(release codegen.Release, sysRoot string) error {
 	UpdateStatusWithMessage(InstallBegin, "restarting")
-	return r.ImplementService.PostInstall(release, sysRoot)
+	err := r.ImplementService.PostInstall(release, sysRoot)
+	defer func() {
+		if err != nil {
+			UpdateStatusWithMessage(InstallError, err.Error())
+		}
+	}()
+	return err
 }
 
 func (r *StatusService) ShouldUpgrade(release codegen.Release, sysRoot string) bool {
@@ -126,8 +162,15 @@ func (r *StatusService) DownloadAllMigrationTools(ctx context.Context, release c
 
 func (r *StatusService) PostMigration(sysRoot string) error {
 	UpdateStatusWithMessage(InstallBegin, "other")
-	defer UpdateStatusWithMessage(InstallEnd, "up-to-date")
-	return r.ImplementService.PostMigration(sysRoot)
+	err := r.ImplementService.PostMigration(sysRoot)
+	defer func() {
+		if err != nil {
+			UpdateStatusWithMessage(InstallEnd, "up-to-date")
+		} else {
+			UpdateStatusWithMessage(InstallError, err.Error())
+		}
+	}()
+	return err
 }
 
 func (r *StatusService) Cronjob(sysRoot string) error {

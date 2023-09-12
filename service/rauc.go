@@ -133,6 +133,10 @@ func VerifyRAUC(release codegen.Release) (string, error) {
 	return packageFilePath, nil
 }
 
+func MarkGood() error {
+	return exec.Command("rauc", "status", "mark-good").Run()
+}
+
 func RebootSystem() {
 	exec.Command("reboot").Run()
 }

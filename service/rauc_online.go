@@ -79,5 +79,5 @@ func (r *RAUCService) PostInstall(release codegen.Release, sysRoot string) error
 }
 
 func (r *RAUCService) PostMigration(sysRoot string) error {
-	return nil
+	return MarkGood()
 }

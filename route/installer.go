@@ -175,5 +175,7 @@ func (a *api) InstallRelease(ctx echo.Context, params codegen.InstallReleasePara
 }
 
 func (a *api) ResetStatus(ctx echo.Context) error {
+	http_trigger_context := context.WithValue(ctx.Request().Context(), types.Trigger, types.HTTP_REQUEST)
+	service.InstallerService.GetRelease(http_trigger_context, "latest")
 	return ctx.JSON(http.StatusOK, &codegen.ResponseOK{})
 }

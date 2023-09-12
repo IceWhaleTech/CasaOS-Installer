@@ -189,5 +189,5 @@ func (r *RAUCOfflineService) LoadReleaseFromOfflineRAUC(sysRoot string) (*codege
 }
 
 func (r *RAUCOfflineService) PostMigration(sysRoot string) error {
-	return nil
+	return MarkGood()
 }
