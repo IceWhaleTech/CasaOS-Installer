@@ -121,11 +121,17 @@ func main() {
 					}
 					if event.Has(fsnotify.Create) {
 						log.Println("modified file:", event.Name)
-						service.InstallerService = service.NewInstallerService(sysRoot) // 这里能不能优化一下?
+						service.InstallerService = &service.StatusService{
+							ImplementService: service.NewInstallerService(sysRoot),
+							SysRoot:          sysRoot,
+						}
 					}
 					if event.Has(fsnotify.Remove) {
 						log.Println("modified file:", event.Name)
-						service.InstallerService = service.NewInstallerService(sysRoot)
+						service.InstallerService = &service.StatusService{
+							ImplementService: service.NewInstallerService(sysRoot),
+							SysRoot:          sysRoot,
+						}
 					}
 
 				case err, ok := <-watcher.Errors:
