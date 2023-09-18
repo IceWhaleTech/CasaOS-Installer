@@ -43,10 +43,13 @@ func (r *RAUCService) ExtractRelease(packageFilepath string, release codegen.Rel
 }
 
 func (r *RAUCService) GetMigrationInfo(ctx context.Context, release codegen.Release) error {
+
 	return nil
 }
 
 func (r *RAUCService) DownloadAllMigrationTools(ctx context.Context, release codegen.Release) error {
+	// 到 /var/cache/casaos/ 下面里拿migration信息
+
 	return nil
 }
 
