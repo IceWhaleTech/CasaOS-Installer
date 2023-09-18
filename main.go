@@ -53,7 +53,7 @@ func main() {
 		// create default config file if not exist
 		ConfigFilePath := filepath.Join(constants.DefaultConfigPath, common.InstallerName+"."+common.InstallerConfigType)
 		if _, err := os.Stat(ConfigFilePath); os.IsNotExist(err) {
-			fmt.Println("config file not exist, create it")
+			logger.Info("config file not exist, create it")
 			// create config file
 			file, err := os.Create(ConfigFilePath)
 			if err != nil {
@@ -107,7 +107,8 @@ func main() {
 
 		watcher, err := fsnotify.NewWatcher()
 		if err != nil {
-			log.Fatal(err)
+			logger.Error(err.Error())
+			panic(err)
 		}
 		defer watcher.Close()
 
@@ -138,7 +139,7 @@ func main() {
 					if !ok {
 						return
 					}
-					log.Println("error:", err)
+					logger.Error(err.Error())
 				}
 			}
 		}()
@@ -146,7 +147,8 @@ func main() {
 		// Add a path.
 		err = watcher.Add(filepath.Join(sysRoot, service.RAUC_OFFLINE_PATH))
 		if err != nil {
-			log.Fatal(err)
+			logger.Error(err.Error())
+			panic(err)
 		}
 	}
 
@@ -219,7 +221,7 @@ func main() {
 						panic(err)
 					}
 				}
-				fmt.Println("gateway register success")
+				logger.Info("gateway register success")
 				break
 			}
 			time.Sleep(10 * time.Second)
@@ -296,8 +298,8 @@ func cronjob(ctx context.Context) {
 		}
 		logger.Info("downloaded release", zap.String("release file path", releaseFilePath))
 	} else {
-		fmt.Println("不需要更新")
-		fmt.Println("service.ShouldUpgrade", shouldUpgrade)
-		fmt.Println("service.IsUpgradable", isUpgradable)
+		// fmt.Println("不需要更新")
+		// fmt.Println("service.ShouldUpgrade", shouldUpgrade)
+		// fmt.Println("service.IsUpgradable", isUpgradable)
 	}
 }
