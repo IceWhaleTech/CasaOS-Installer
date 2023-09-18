@@ -53,7 +53,7 @@ func main() {
 		// create default config file if not exist
 		ConfigFilePath := filepath.Join(constants.DefaultConfigPath, common.InstallerName+"."+common.InstallerConfigType)
 		if _, err := os.Stat(ConfigFilePath); os.IsNotExist(err) {
-			logger.Info("config file not exist, create it")
+			println("config file not exist, create it")
 			// create config file
 			file, err := os.Create(ConfigFilePath)
 			if err != nil {
