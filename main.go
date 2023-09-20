@@ -103,7 +103,11 @@ func main() {
 	// watch rauc offline
 	{
 		// 这个是临时放这里，为了watch里不会没有东西。
-		os.MkdirAll(service.RAUC_OFFLINE_PATH, os.ModePerm)
+		err := os.MkdirAll(service.RAUC_OFFLINE_PATH, os.ModePerm)
+		if err != nil {
+			fmt.Println(err)
+			os.MkdirAll(service.RAUC_OFFLINE_PATH, os.ModePerm)
+		}
 
 		watcher, err := fsnotify.NewWatcher()
 		if err != nil {
@@ -148,7 +152,7 @@ func main() {
 		err = watcher.Add(filepath.Join(sysRoot, service.RAUC_OFFLINE_PATH))
 		if err != nil {
 			logger.Error(err.Error())
-			panic(err)
+			os.MkdirAll(service.RAUC_OFFLINE_PATH, os.ModePerm)
 		}
 	}
 
