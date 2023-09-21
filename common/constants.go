@@ -3,7 +3,7 @@ package common
 const (
 	Localhost = "127.0.0.1"
 
-	InstallerVersion     = "0.1.2"
+	InstallerVersion     = "0.2.0"
 	InstallerServiceName = "installer"
 
 	ReleaseYAMLFileName   = "release.yaml"
