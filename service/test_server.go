@@ -54,7 +54,7 @@ func (r *TestService) IsUpgradable(release codegen.Release, sysRootPath string) 
 	return r.ShouldUpgrade(release, sysRootPath) && r.downloaded
 }
 
-func (r *TestService) MigrationInLaunch(sysRoot string) error {
+func (r *TestService) Launch(sysRoot string) error {
 	return nil
 }
 

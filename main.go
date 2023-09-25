@@ -98,7 +98,7 @@ func main() {
 
 	go service.StartFallbackWebsite()
 
-	service.InstallerService.MigrationInLaunch(sysRoot)
+	service.InstallerService.Launch(sysRoot)
 
 	// watch rauc offline
 	{

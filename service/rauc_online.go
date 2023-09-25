@@ -70,7 +70,7 @@ func (r *RAUCService) IsUpgradable(release codegen.Release, sysrootPath string) 
 	return err == nil
 }
 
-func (r *RAUCService) MigrationInLaunch(sysRoot string) error {
+func (r *RAUCService) Launch(sysRoot string) error {
 	if _, err := os.Stat(filepath.Join(sysRoot, FlagUpgradeFile)); os.IsNotExist(err) {
 		return nil
 	}

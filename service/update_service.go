@@ -16,7 +16,7 @@ type UpdaterServiceInterface interface {
 	Install(release codegen.Release, sysRoot string) error
 	PostInstall(release codegen.Release, sysRoot string) error
 
-	MigrationInLaunch(sysRoot string) error
+	Launch(sysRoot string) error
 	PostMigration(sysRoot string) error
 
 	ShouldUpgrade(release codegen.Release, sysRoot string) bool

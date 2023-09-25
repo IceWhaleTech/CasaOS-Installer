@@ -36,7 +36,7 @@ func Test_Status_Case1_CRONJOB(t *testing.T) {
 	assert.Equal(t, "", msg)
 
 	// main的过程
-	statusService.MigrationInLaunch(sysRoot)
+	statusService.Launch(sysRoot)
 	value, msg = service.GetStatus()
 	assert.Equal(t, codegen.Installing, value.Status)
 	assert.Equal(t, "other", msg)

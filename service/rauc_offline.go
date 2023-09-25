@@ -41,7 +41,7 @@ func (r *RAUCOfflineService) GetRelease(ctx context.Context, tag string) (*codeg
 	return release, nil
 }
 
-func (r *RAUCOfflineService) MigrationInLaunch(sysRoot string) error {
+func (r *RAUCOfflineService) Launch(sysRoot string) error {
 	if _, err := os.Stat(filepath.Join(sysRoot, FlagUpgradeFile)); os.IsNotExist(err) {
 		return nil
 	}
