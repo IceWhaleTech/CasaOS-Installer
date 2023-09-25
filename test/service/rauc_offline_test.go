@@ -28,7 +28,7 @@ func TestRAUCOfflineServer(t *testing.T) {
 
 	installerServer := &service.RAUCOfflineService{
 		SysRoot:            tmpDir,
-		InstallRAUCHandler: service.InstallRAUCTest,
+		InstallRAUCHandler: service.MockInstallRAUC,
 		CheckSumHandler:    checksum.OfflineTarExist,
 	}
 

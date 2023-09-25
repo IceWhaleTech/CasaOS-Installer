@@ -30,7 +30,7 @@ func ExtractRAUCRelease(packageFilepath string, release codegen.Release) error {
 func InstallRAUC(release codegen.Release, sysRoot string, InstallRAUCHandler func(raucPath string) error) error {
 	// to check rauc tar
 
-	raucFilePath, err := VerifyRAUC(release)
+	raucFilePath, err := RAUCFilePath(release)
 	if err != nil {
 		return err
 	}
@@ -43,22 +43,22 @@ func InstallRAUC(release codegen.Release, sysRoot string, InstallRAUCHandler fun
 	return nil
 }
 
-func InstallRAUCHandlerV1(RAUCFilePath string) error {
+func InstallRAUCImp(raucFilePath string) error {
 	// install rauc
-	fmt.Println("rauc路径为:", RAUCFilePath)
+	fmt.Println("rauc路径为:", raucFilePath)
 
 	raucInstaller, err := rauc.InstallerNew()
 	if err != nil {
 		fmt.Sprintln("rauc.InstallerNew() failed: ", err.Error())
 	}
 
-	compatible, version, err := raucInstaller.Info(RAUCFilePath)
+	compatible, version, err := raucInstaller.Info(raucFilePath)
 	if err != nil {
 		log.Fatal("Info() failed", err.Error())
 	}
 	log.Printf("Info(): compatible=%s, version=%s", compatible, version)
 
-	err = raucInstaller.InstallBundle(RAUCFilePath, rauc.InstallBundleOptions{})
+	err = raucInstaller.InstallBundle(raucFilePath, rauc.InstallBundleOptions{})
 	if err != nil {
 		log.Fatal("InstallBundle() failed: ", err.Error())
 	}
@@ -66,10 +66,10 @@ func InstallRAUCHandlerV1(RAUCFilePath string) error {
 	return nil
 }
 
-func InstallRAUCTest(raucfilepath string) error {
+func MockInstallRAUC(raucFilePath string) error {
 	// to check file exist
-	fmt.Println("文件名为", raucfilepath)
-	if _, err := os.Stat(raucfilepath); os.IsNotExist(err) {
+	fmt.Println("文件名为", raucFilePath)
+	if _, err := os.Stat(raucFilePath); os.IsNotExist(err) {
 		return fmt.Errorf("not found rauc install package")
 	}
 
@@ -85,7 +85,7 @@ func PostInstallRAUC(release codegen.Release, sysRoot string) error {
 	return err
 }
 
-func VerifyRAUC(release codegen.Release) (string, error) {
+func RAUCFilePath(release codegen.Release) (string, error) {
 	// 这个是验证解压之后的包。
 	releaseDir, err := config.ReleaseDir(release)
 	if err != nil {

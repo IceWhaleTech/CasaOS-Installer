@@ -51,7 +51,7 @@ func TestDownloadRauc(t *testing.T) {
 	assert.FileExists(t, releaseFilePath)
 	// fmt.Println(releaseFilePath)
 
-	releaseFilePath, err = service.VerifyRAUC(*release)
+	releaseFilePath, err = service.RAUCFilePath(*release)
 	assert.NoError(t, err)
 	assert.FileExists(t, releaseFilePath)
 }

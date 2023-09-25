@@ -159,7 +159,7 @@ func Test_Status_Case2_Upgradable(t *testing.T) {
 
 	statusService := &service.StatusService{
 		ImplementService: &service.RAUCService{
-			InstallRAUCHandler: service.InstallRAUCTest,
+			InstallRAUCHandler: service.MockInstallRAUC,
 			CheckSumHandler:    checksum.OnlineTarExist,
 		},
 		SysRoot: sysRoot,
@@ -203,7 +203,7 @@ func Test_Status_Case3_Download_Failed(t *testing.T) {
 
 	statusService := &service.StatusService{
 		ImplementService: &service.RAUCService{
-			InstallRAUCHandler: service.InstallRAUCTest,
+			InstallRAUCHandler: service.MockInstallRAUC,
 			CheckSumHandler:    checksum.AlwaysFail,
 		},
 		SysRoot: sysRoot,

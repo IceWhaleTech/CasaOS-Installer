@@ -27,7 +27,7 @@ func TestRAUCServer(t *testing.T) {
 	config.ServerInfo.CachePath = filepath.Join(tmpDir, "cache")
 
 	installerServer := &service.RAUCService{
-		InstallRAUCHandler: service.InstallRAUCTest,
+		InstallRAUCHandler: service.MockInstallRAUC,
 		CheckSumHandler:    checksum.OnlineTarExist,
 	}
 
