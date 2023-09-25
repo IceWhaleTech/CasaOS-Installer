@@ -25,6 +25,11 @@ var (
 	ErrReleaseNotFound = fmt.Errorf("release not found")
 )
 
+var (
+	CurrentReleaseLocalPath = "/etc/casaos/release.yaml"
+	TargetReleaseLocalPath  = "/etc/casaos/target-release.yaml"
+)
+
 type InstallerType string
 
 const (
