@@ -151,15 +151,6 @@ func (r *StatusService) IsUpgradable(release codegen.Release, sysRootPath string
 	return r.ImplementService.IsUpgradable(release, sysRootPath)
 }
 
-func (r *StatusService) GetMigrationInfo(ctx context.Context, release codegen.Release) error {
-
-	return r.ImplementService.GetMigrationInfo(ctx, release)
-}
-
-func (r *StatusService) DownloadAllMigrationTools(ctx context.Context, release codegen.Release) error {
-	return r.ImplementService.DownloadAllMigrationTools(ctx, release)
-}
-
 func (r *StatusService) PostMigration(sysRoot string) error {
 	UpdateStatusWithMessage(InstallBegin, "other")
 	err := r.ImplementService.PostMigration(sysRoot)

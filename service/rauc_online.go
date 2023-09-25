@@ -45,18 +45,6 @@ func (r *RAUCService) ExtractRelease(packageFilepath string, release codegen.Rel
 	return ExtractRAUCRelease(packageFilepath, release)
 }
 
-func (r *RAUCService) GetMigrationInfo(ctx context.Context, release codegen.Release) error {
-
-	// 回头删一下，不做migration了
-	return nil
-}
-
-func (r *RAUCService) DownloadAllMigrationTools(ctx context.Context, release codegen.Release) error {
-	// 到 /var/cache/casaos/ 下面里拿migration信息
-
-	return nil
-}
-
 func (r *RAUCService) ShouldUpgrade(release codegen.Release, sysRoot string) bool {
 	return ShouldUpgrade(release, sysRoot)
 }

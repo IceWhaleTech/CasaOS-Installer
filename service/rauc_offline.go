@@ -99,14 +99,6 @@ func (r *RAUCOfflineService) IsUpgradable(release codegen.Release, sysrootPath s
 	return err == nil
 }
 
-func (r *RAUCOfflineService) GetMigrationInfo(ctx context.Context, release codegen.Release) error {
-	return nil
-}
-
-func (r *RAUCOfflineService) DownloadAllMigrationTools(ctx context.Context, release codegen.Release) error {
-	return nil
-}
-
 func copy(src, dst string) (int64, error) {
 	sourceFileStat, err := os.Stat(src)
 	if err != nil {
