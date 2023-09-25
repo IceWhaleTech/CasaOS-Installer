@@ -10,6 +10,7 @@ import (
 	"github.com/IceWhaleTech/CasaOS-Common/utils/logger"
 	"github.com/IceWhaleTech/CasaOS-Installer/codegen"
 	"github.com/IceWhaleTech/CasaOS-Installer/common/fixtures"
+	"github.com/IceWhaleTech/CasaOS-Installer/internal/checksum"
 	"github.com/IceWhaleTech/CasaOS-Installer/internal/config"
 	"github.com/IceWhaleTech/CasaOS-Installer/service"
 	"github.com/IceWhaleTech/CasaOS-Installer/types"
@@ -159,6 +160,7 @@ func Test_Status_Case2_Upgradable(t *testing.T) {
 	statusService := &service.StatusService{
 		ImplementService: &service.RAUCService{
 			InstallRAUCHandler: service.InstallRAUCTest,
+			CheckSumHandler:    checksum.OnlineTarExist,
 		},
 		SysRoot: sysRoot,
 	}

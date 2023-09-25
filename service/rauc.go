@@ -9,6 +9,7 @@ import (
 
 	"github.com/IceWhaleTech/CasaOS-Installer/codegen"
 	"github.com/IceWhaleTech/CasaOS-Installer/internal"
+	"github.com/IceWhaleTech/CasaOS-Installer/internal/config"
 	"github.com/holoplot/go-rauc/rauc"
 )
 
@@ -17,7 +18,7 @@ const (
 )
 
 func ExtractRAUCRelease(packageFilepath string, release codegen.Release) error {
-	releaseDir, err := ReleaseDir(release)
+	releaseDir, err := config.ReleaseDir(release)
 	if err != nil {
 		return err
 	}
@@ -84,33 +85,9 @@ func PostInstallRAUC(release codegen.Release, sysRoot string) error {
 	return err
 }
 
-func VerifyRAUCRelease(release codegen.Release) (string, error) {
-	releaseDir, err := ReleaseDir(release)
-	if err != nil {
-		return "", err
-	}
-
-	packageURL, err := internal.GetPackageURLByCurrentArch(release, "")
-	if err != nil {
-		return "", err
-	}
-
-	packageFilename := filepath.Base(packageURL)
-
-	packageFilePath := filepath.Join(releaseDir, packageFilename)
-
-	// to check file exist
-	fmt.Println("rauc verify release:", packageFilePath)
-	if _, err := os.Stat(packageFilePath); os.IsNotExist(err) {
-		return "", fmt.Errorf("not found rauc release  package")
-	}
-	return packageFilePath, nil
-
-}
-
 func VerifyRAUC(release codegen.Release) (string, error) {
 	// 这个是验证解压之后的包。
-	releaseDir, err := ReleaseDir(release)
+	releaseDir, err := config.ReleaseDir(release)
 	if err != nil {
 		return "", err
 	}

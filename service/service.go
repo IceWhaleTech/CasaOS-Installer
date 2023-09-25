@@ -11,6 +11,7 @@ import (
 	"github.com/IceWhaleTech/CasaOS-Installer/codegen"
 	"github.com/IceWhaleTech/CasaOS-Installer/codegen/message_bus"
 	"github.com/IceWhaleTech/CasaOS-Installer/common"
+	"github.com/IceWhaleTech/CasaOS-Installer/internal/checksum"
 	"github.com/IceWhaleTech/CasaOS-Installer/internal/config"
 	"go.uber.org/zap"
 )
@@ -178,6 +179,8 @@ func NewInstallerService(sysRoot string) UpdaterServiceInterface {
 		fmt.Println("RAUC Online 模式")
 		return &RAUCService{
 			InstallRAUCHandler: InstallRAUCHandlerV1,
+			DownloadHandler:    nil,
+			CheckSumHandler:    checksum.OnlineTarExist,
 		}
 	}
 
@@ -187,6 +190,7 @@ func NewInstallerService(sysRoot string) UpdaterServiceInterface {
 		return &RAUCOfflineService{
 			SysRoot:            sysRoot,
 			InstallRAUCHandler: InstallRAUCHandlerV1,
+			CheckSumHandler:    checksum.OfflineTarExist,
 		}
 	}
 
@@ -195,6 +199,7 @@ func NewInstallerService(sysRoot string) UpdaterServiceInterface {
 		// 暂时先用 rauc mock 一下
 		return &RAUCService{
 			InstallRAUCHandler: InstallRAUCHandlerV1,
+			CheckSumHandler:    checksum.OnlineTarExist,
 		}
 	}
 

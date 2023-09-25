@@ -1,10 +1,13 @@
 package config
 
 import (
+	"fmt"
 	"log"
+	"path/filepath"
 
 	"gopkg.in/ini.v1"
 
+	"github.com/IceWhaleTech/CasaOS-Installer/codegen"
 	"github.com/IceWhaleTech/CasaOS-Installer/common"
 )
 
@@ -48,6 +51,13 @@ var (
 	ConfigFilePath string
 )
 
+const (
+	RAUC_OFFLINE_PATH             = "/DATA/rauc/"
+	RAUC_OFFLINE_RELEASE_FILENAME = "release.yaml"
+	RAUC_OFFLINE_RAUC_FILENAME    = "rauc.tar"
+	OFFLINE_RAUC_TEMP_PATH        = "/tmp/offline_rauc"
+)
+
 func InitSetup(config string) {
 	ConfigFilePath = InstallerConfigFilePath
 	if len(config) > 0 {
@@ -71,4 +81,12 @@ func mapTo(section string, v interface{}) {
 	if err != nil {
 		log.Fatalf("Cfg.MapTo %s err: %v", section, err)
 	}
+}
+
+func ReleaseDir(release codegen.Release) (string, error) {
+	if release.Version == "" {
+		return "", fmt.Errorf("release version is empty")
+	}
+
+	return filepath.Join(ServerInfo.CachePath, "releases", release.Version), nil
 }

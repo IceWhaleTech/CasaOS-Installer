@@ -72,7 +72,7 @@ func DownloadRelease(ctx context.Context, release codegen.Release, force bool) (
 		return "", fmt.Errorf("no mirror found")
 	}
 
-	releaseDir, err := ReleaseDir(release)
+	releaseDir, err := config.ReleaseDir(release)
 	if err != nil {
 		return "", err
 	}
@@ -167,7 +167,7 @@ func GetInstallMethod(sysRoot string) (InstallerType, error) {
 
 	if IsZimaOS(sysRoot) {
 		// to check file exsit
-		if _, err := os.Stat(filepath.Join(sysRoot, RAUC_OFFLINE_PATH, RAUC_OFFLINE_RAUC_FILENAME)); os.IsNotExist(err) {
+		if _, err := os.Stat(filepath.Join(sysRoot, config.RAUC_OFFLINE_PATH, config.RAUC_OFFLINE_RAUC_FILENAME)); os.IsNotExist(err) {
 			return RAUC, nil
 		} else {
 			return RAUCOFFLINE, nil
@@ -214,7 +214,7 @@ func IsUpgradable(release codegen.Release, sysrootPath string) bool {
 }
 
 func InstallRelease(release codegen.Release, sysrootPath string) error {
-	releaseDir, err := ReleaseDir(release)
+	releaseDir, err := config.ReleaseDir(release)
 	if err != nil {
 		return err
 	}
@@ -231,7 +231,7 @@ func InstallDependencies(release codegen.Release, sysrootPath string) error {
 	return nil
 }
 func VerifyRelease(release codegen.Release) (string, error) {
-	releaseDir, err := ReleaseDir(release)
+	releaseDir, err := config.ReleaseDir(release)
 	if err != nil {
 		return "", err
 	}

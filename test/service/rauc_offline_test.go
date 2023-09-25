@@ -9,6 +9,7 @@ import (
 
 	"github.com/IceWhaleTech/CasaOS-Common/utils/logger"
 	"github.com/IceWhaleTech/CasaOS-Installer/common/fixtures"
+	"github.com/IceWhaleTech/CasaOS-Installer/internal/checksum"
 	"github.com/IceWhaleTech/CasaOS-Installer/internal/config"
 	"github.com/IceWhaleTech/CasaOS-Installer/service"
 	"github.com/stretchr/testify/assert"
@@ -28,14 +29,15 @@ func TestRAUCOfflineServer(t *testing.T) {
 	installerServer := &service.RAUCOfflineService{
 		SysRoot:            tmpDir,
 		InstallRAUCHandler: service.InstallRAUCTest,
+		CheckSumHandler:    checksum.OfflineTarExist,
 	}
 
 	config.ServerInfo.CachePath = filepath.Join(tmpDir, "cache")
 
 	// 构建假文件放到目录
 
-	os.MkdirAll(filepath.Join(tmpDir, service.RAUC_OFFLINE_PATH), 0755)
-	fixtures.SetOfflineRAUC(tmpDir, service.RAUC_OFFLINE_PATH, service.RAUC_OFFLINE_RAUC_FILENAME)
+	os.MkdirAll(filepath.Join(tmpDir, config.RAUC_OFFLINE_PATH), 0755)
+	fixtures.SetOfflineRAUC(tmpDir, config.RAUC_OFFLINE_PATH, config.RAUC_OFFLINE_RAUC_FILENAME)
 
 	release, err := installerServer.GetRelease(ctx, "any thing")
 	assert.NoError(t, err)
@@ -43,8 +45,8 @@ func TestRAUCOfflineServer(t *testing.T) {
 	assert.Equal(t, "v0.4.8", release.Version)
 	assert.Equal(t, "## offline update test\n", release.ReleaseNotes)
 
-	assert.FileExists(t, filepath.Join(tmpDir, service.RAUC_OFFLINE_PATH, service.RAUC_OFFLINE_RAUC_FILENAME))
-	assert.FileExists(t, filepath.Join(tmpDir, service.OFFLINE_RAUC_TEMP_PATH, service.RAUC_OFFLINE_RELEASE_FILENAME))
+	assert.FileExists(t, filepath.Join(tmpDir, config.RAUC_OFFLINE_PATH, config.RAUC_OFFLINE_RAUC_FILENAME))
+	assert.FileExists(t, filepath.Join(tmpDir, config.OFFLINE_RAUC_TEMP_PATH, config.RAUC_OFFLINE_RELEASE_FILENAME))
 
 	// 这个是一个假文件，只有2.6mb
 	releasePath, err := installerServer.DownloadRelease(ctx, *release, false)
