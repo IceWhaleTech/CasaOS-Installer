@@ -166,7 +166,7 @@ func main() {
 		},
 	}
 
-	go service.StopFallbackWebsite()
+	service.StopFallbackWebsite()
 
 	// notify systemd that we are ready
 	{
@@ -197,6 +197,7 @@ func main() {
 				break
 			}
 		}
+		// 不要一直重试
 		time.Sleep(10 * time.Second)
 	}()
 
@@ -232,7 +233,8 @@ func main() {
 		}
 	}()
 
-	time.Sleep(15 * time.Second)
+	// 等待一下，让gateway注册成功
+	time.Sleep(5 * time.Second)
 	// 这里应该还要把文件删一下
 	service.InstallerService.PostMigration(sysRoot)
 
