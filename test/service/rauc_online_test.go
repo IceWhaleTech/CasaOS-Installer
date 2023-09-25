@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/IceWhaleTech/CasaOS-Common/utils/logger"
+	"github.com/IceWhaleTech/CasaOS-Installer/internal/checksum"
 	"github.com/IceWhaleTech/CasaOS-Installer/internal/config"
 	"github.com/IceWhaleTech/CasaOS-Installer/service"
 	"github.com/stretchr/testify/assert"
@@ -26,7 +27,8 @@ func TestRAUCServer(t *testing.T) {
 	config.ServerInfo.CachePath = filepath.Join(tmpDir, "cache")
 
 	installerServer := &service.RAUCService{
-		InstallRAUCHandler: service.InstallRAUCTest,
+		InstallRAUCHandler: service.MockInstallRAUC,
+		CheckSumHandler:    checksum.OnlineTarExist,
 	}
 
 	release, err := installerServer.GetRelease(ctx, "unit-test-rauc-0.4.4-1")

@@ -12,10 +12,11 @@ import (
 	"github.com/IceWhaleTech/CasaOS-Installer/codegen"
 	"github.com/IceWhaleTech/CasaOS-Installer/common"
 	"github.com/IceWhaleTech/CasaOS-Installer/internal"
+	"github.com/IceWhaleTech/CasaOS-Installer/internal/config"
 )
 
 func DownloadChecksum(ctx context.Context, release codegen.Release, mirror string) (string, error) {
-	releaseDir, err := ReleaseDir(release)
+	releaseDir, err := config.ReleaseDir(release)
 	if err != nil {
 		return "", err
 	}
@@ -46,7 +47,7 @@ func VerifyChecksumByFilePath(filepath, checksum string) error {
 }
 
 func GetChecksums(release codegen.Release) (map[string]string, error) {
-	releaseDir, err := ReleaseDir(release)
+	releaseDir, err := config.ReleaseDir(release)
 	if err != nil {
 		return nil, err
 	}

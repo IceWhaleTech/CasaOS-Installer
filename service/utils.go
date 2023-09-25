@@ -9,7 +9,6 @@ import (
 	"strings"
 
 	"github.com/IceWhaleTech/CasaOS-Common/utils/logger"
-	"github.com/IceWhaleTech/CasaOS-Installer/codegen"
 	"github.com/IceWhaleTech/CasaOS-Installer/common"
 	"github.com/IceWhaleTech/CasaOS-Installer/internal"
 	"github.com/IceWhaleTech/CasaOS-Installer/internal/config"
@@ -19,14 +18,6 @@ import (
 
 func MigrationToolsDir() string {
 	return filepath.Join(config.ServerInfo.CachePath, "migration-tools")
-}
-
-func ReleaseDir(release codegen.Release) (string, error) {
-	if release.Version == "" {
-		return "", fmt.Errorf("release version is empty")
-	}
-
-	return filepath.Join(config.ServerInfo.CachePath, "releases", release.Version), nil
 }
 
 func NormalizeVersion(version string) string {

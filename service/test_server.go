@@ -38,14 +38,6 @@ func (r *TestService) ExtractRelease(packageFilepath string, release codegen.Rel
 	return nil
 }
 
-func (r *TestService) GetMigrationInfo(ctx context.Context, release codegen.Release) error {
-	return nil
-}
-
-func (r *TestService) DownloadAllMigrationTools(ctx context.Context, release codegen.Release) error {
-	return nil
-}
-
 func (r *TestService) ShouldUpgrade(release codegen.Release, sysRoot string) bool {
 	return true
 }
@@ -54,7 +46,7 @@ func (r *TestService) IsUpgradable(release codegen.Release, sysRootPath string) 
 	return r.ShouldUpgrade(release, sysRootPath) && r.downloaded
 }
 
-func (r *TestService) MigrationInLaunch(sysRoot string) error {
+func (r *TestService) Launch(sysRoot string) error {
 	return nil
 }
 

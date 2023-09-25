@@ -9,6 +9,7 @@ import (
 
 	"github.com/IceWhaleTech/CasaOS-Installer/codegen"
 	"github.com/IceWhaleTech/CasaOS-Installer/internal"
+	"github.com/IceWhaleTech/CasaOS-Installer/internal/config"
 	"github.com/holoplot/go-rauc/rauc"
 )
 
@@ -17,7 +18,7 @@ const (
 )
 
 func ExtractRAUCRelease(packageFilepath string, release codegen.Release) error {
-	releaseDir, err := ReleaseDir(release)
+	releaseDir, err := config.ReleaseDir(release)
 	if err != nil {
 		return err
 	}
@@ -29,7 +30,7 @@ func ExtractRAUCRelease(packageFilepath string, release codegen.Release) error {
 func InstallRAUC(release codegen.Release, sysRoot string, InstallRAUCHandler func(raucPath string) error) error {
 	// to check rauc tar
 
-	raucFilePath, err := VerifyRAUC(release)
+	raucFilePath, err := RAUCFilePath(release)
 	if err != nil {
 		return err
 	}
@@ -42,22 +43,22 @@ func InstallRAUC(release codegen.Release, sysRoot string, InstallRAUCHandler fun
 	return nil
 }
 
-func InstallRAUCHandlerV1(RAUCFilePath string) error {
+func InstallRAUCImp(raucFilePath string) error {
 	// install rauc
-	fmt.Println("rauc路径为:", RAUCFilePath)
+	fmt.Println("rauc路径为:", raucFilePath)
 
 	raucInstaller, err := rauc.InstallerNew()
 	if err != nil {
 		fmt.Sprintln("rauc.InstallerNew() failed: ", err.Error())
 	}
 
-	compatible, version, err := raucInstaller.Info(RAUCFilePath)
+	compatible, version, err := raucInstaller.Info(raucFilePath)
 	if err != nil {
 		log.Fatal("Info() failed", err.Error())
 	}
 	log.Printf("Info(): compatible=%s, version=%s", compatible, version)
 
-	err = raucInstaller.InstallBundle(RAUCFilePath, rauc.InstallBundleOptions{})
+	err = raucInstaller.InstallBundle(raucFilePath, rauc.InstallBundleOptions{})
 	if err != nil {
 		log.Fatal("InstallBundle() failed: ", err.Error())
 	}
@@ -65,10 +66,10 @@ func InstallRAUCHandlerV1(RAUCFilePath string) error {
 	return nil
 }
 
-func InstallRAUCTest(raucfilepath string) error {
+func MockInstallRAUC(raucFilePath string) error {
 	// to check file exist
-	fmt.Println("文件名为", raucfilepath)
-	if _, err := os.Stat(raucfilepath); os.IsNotExist(err) {
+	fmt.Println("文件名为", raucFilePath)
+	if _, err := os.Stat(raucFilePath); os.IsNotExist(err) {
 		return fmt.Errorf("not found rauc install package")
 	}
 
@@ -84,33 +85,9 @@ func PostInstallRAUC(release codegen.Release, sysRoot string) error {
 	return err
 }
 
-func VerifyRAUCRelease(release codegen.Release) (string, error) {
-	releaseDir, err := ReleaseDir(release)
-	if err != nil {
-		return "", err
-	}
-
-	packageURL, err := internal.GetPackageURLByCurrentArch(release, "")
-	if err != nil {
-		return "", err
-	}
-
-	packageFilename := filepath.Base(packageURL)
-
-	packageFilePath := filepath.Join(releaseDir, packageFilename)
-
-	// to check file exist
-	fmt.Println("rauc verify release:", packageFilePath)
-	if _, err := os.Stat(packageFilePath); os.IsNotExist(err) {
-		return "", fmt.Errorf("not found rauc release  package")
-	}
-	return packageFilePath, nil
-
-}
-
-func VerifyRAUC(release codegen.Release) (string, error) {
+func RAUCFilePath(release codegen.Release) (string, error) {
 	// 这个是验证解压之后的包。
-	releaseDir, err := ReleaseDir(release)
+	releaseDir, err := config.ReleaseDir(release)
 	if err != nil {
 		return "", err
 	}

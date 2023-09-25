@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"path/filepath"
 
@@ -26,35 +25,24 @@ func (r *RAUCService) GetRelease(ctx context.Context, tag string) (*codegen.Rele
 
 func (r *RAUCService) VerifyRelease(release codegen.Release) (string, error) {
 	// 这个是验证下载包的，验证的是下载之前的包。
-	return VerifyRAUCRelease(release)
+	return r.CheckSumHandler(release)
 }
 
 func (r *RAUCService) DownloadRelease(ctx context.Context, release codegen.Release, force bool) (string, error) {
 	filePath, err := r.VerifyRelease(release)
-	if err != nil {
-		fmt.Println("重新下载")
-		return DownloadRelease(ctx, release, force)
-	} else {
-		fmt.Println("不用下载")
+	if err == nil {
+		return filePath, nil
+		// 不用下载
 	}
 
-	return filePath, nil
+	// 重新下载
+	DownloadRelease(ctx, release, force)
+	filePath, err = r.VerifyRelease(release)
+	return filePath, err
 }
 
 func (r *RAUCService) ExtractRelease(packageFilepath string, release codegen.Release) error {
 	return ExtractRAUCRelease(packageFilepath, release)
-}
-
-func (r *RAUCService) GetMigrationInfo(ctx context.Context, release codegen.Release) error {
-
-	// 回头删一下，不做migration了
-	return nil
-}
-
-func (r *RAUCService) DownloadAllMigrationTools(ctx context.Context, release codegen.Release) error {
-	// 到 /var/cache/casaos/ 下面里拿migration信息
-
-	return nil
 }
 
 func (r *RAUCService) ShouldUpgrade(release codegen.Release, sysRoot string) bool {
@@ -70,7 +58,7 @@ func (r *RAUCService) IsUpgradable(release codegen.Release, sysrootPath string) 
 	return err == nil
 }
 
-func (r *RAUCService) MigrationInLaunch(sysRoot string) error {
+func (r *RAUCService) Launch(sysRoot string) error {
 	if _, err := os.Stat(filepath.Join(sysRoot, FlagUpgradeFile)); os.IsNotExist(err) {
 		return nil
 	}

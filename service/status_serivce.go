@@ -71,12 +71,12 @@ func (r *StatusService) GetRelease(ctx context.Context, tag string) (*codegen.Re
 	return release, err
 }
 
-func (r *StatusService) MigrationInLaunch(sysRoot string) error {
+func (r *StatusService) Launch(sysRoot string) error {
 	// 在这里会把状态更新为installing或者继续idle
-	UpdateStatusWithMessage(InstallBegin, "migration")
+	UpdateStatusWithMessage(InstallBegin, "migration") // 事实上已经没有migration了，但是为了兼容性， 先留着
 	defer UpdateStatusWithMessage(InstallBegin, "other")
 	// defer UpdateStatusWithMessage(InstallEnd, "migration")
-	return r.ImplementService.MigrationInLaunch(sysRoot)
+	return r.ImplementService.Launch(sysRoot)
 }
 
 func (r *StatusService) VerifyRelease(release codegen.Release) (string, error) {
@@ -84,7 +84,7 @@ func (r *StatusService) VerifyRelease(release codegen.Release) (string, error) {
 }
 
 func (r *StatusService) DownloadRelease(ctx context.Context, release codegen.Release, force bool) (string, error) {
-	result, err := "", error(nil)
+	err := error(nil)
 	if ctx.Value(types.Trigger) == types.CRON_JOB {
 		UpdateStatusWithMessage(DownloadBegin, "下载中")
 		defer func() {
@@ -117,7 +117,7 @@ func (r *StatusService) DownloadRelease(ctx context.Context, release codegen.Rel
 		}()
 	}
 
-	result, err = r.ImplementService.DownloadRelease(ctx, release, force)
+	result, err := r.ImplementService.DownloadRelease(ctx, release, force)
 	return result, err
 }
 
@@ -149,15 +149,6 @@ func (r *StatusService) ShouldUpgrade(release codegen.Release, sysRoot string) b
 
 func (r *StatusService) IsUpgradable(release codegen.Release, sysRootPath string) bool {
 	return r.ImplementService.IsUpgradable(release, sysRootPath)
-}
-
-func (r *StatusService) GetMigrationInfo(ctx context.Context, release codegen.Release) error {
-
-	return r.ImplementService.GetMigrationInfo(ctx, release)
-}
-
-func (r *StatusService) DownloadAllMigrationTools(ctx context.Context, release codegen.Release) error {
-	return r.ImplementService.DownloadAllMigrationTools(ctx, release)
 }
 
 func (r *StatusService) PostMigration(sysRoot string) error {
