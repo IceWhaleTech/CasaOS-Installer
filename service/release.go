@@ -25,6 +25,10 @@ var (
 	ErrReleaseNotFound = fmt.Errorf("release not found")
 )
 
+var (
+	CurrentReleaseLocalPath = "/etc/release.yaml"
+)
+
 type InstallerType string
 
 const (
@@ -64,17 +68,6 @@ func GetRelease(ctx context.Context, tag string) (*codegen.Release, error) {
 
 // returns releaseFilePath if successful
 func DownloadRelease(ctx context.Context, release codegen.Release, force bool) (string, error) {
-
-	// check and verify existing packages
-	// if !force {
-	// 	if packageFilePath, err := VerifyRelease(release); err != nil {
-	// 		logger.Info("error while verifying release - continue to download", zap.Error(err))
-	// 	} else {
-	// 		logger.Info("package already exists - skipping")
-	// 		return packageFilePath, nil
-	// 	}
-	// }
-
 	if release.Mirrors == nil {
 		return "", fmt.Errorf("no mirror found")
 	}
@@ -237,39 +230,6 @@ func InstallDependencies(release codegen.Release, sysrootPath string) error {
 	internal.InstallDependencies()
 	return nil
 }
-
-func PostReleaseInstall(release codegen.Release, sysrootPath string) error {
-	// post release install script
-	// work list
-	// 1. overwrite target release
-	// if casaos folder is exist, create casaos folder
-	os.MkdirAll(filepath.Join(sysrootPath, "etc", "casaos"), 0o755)
-
-	targetReleaseLocalPath := filepath.Join(sysrootPath, TargetReleaseLocalPath)
-	targetReleaseContent, err := yaml.Marshal(release)
-	if err != nil {
-		return err
-	}
-	if err := os.WriteFile(targetReleaseLocalPath, targetReleaseContent, 0o666); err != nil {
-		return err
-	}
-
-	// 2. if current release is not exist, create it( using current release version )
-	// if current release is exist, It mean the casaos is old casaos that install by shell
-	// So It should update to casaos v0.4.4 and we didn't need to migrate it.
-	currentReleaseLocalPath := filepath.Join(sysrootPath, CurrentReleaseLocalPath)
-	if _, err := os.Stat(currentReleaseLocalPath); os.IsNotExist(err) {
-		currentReleaseContent, err := yaml.Marshal(release)
-		if err != nil {
-			return err
-		}
-		if err := os.WriteFile(currentReleaseLocalPath, currentReleaseContent, 0o666); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
 func VerifyRelease(release codegen.Release) (string, error) {
 	releaseDir, err := ReleaseDir(release)
 	if err != nil {

@@ -7,10 +7,13 @@ import (
 	"path/filepath"
 
 	"github.com/IceWhaleTech/CasaOS-Installer/codegen"
+	"github.com/IceWhaleTech/CasaOS-Installer/service/out"
 )
 
 type RAUCService struct {
 	InstallRAUCHandler func(raucPath string) error
+	DownloadHandler    out.DownloadReleaseUseCase
+	CheckSumHandler    out.CheckSumReleaseUseCase
 }
 
 func (r *RAUCService) Install(release codegen.Release, sysRoot string) error {
@@ -44,6 +47,7 @@ func (r *RAUCService) ExtractRelease(packageFilepath string, release codegen.Rel
 
 func (r *RAUCService) GetMigrationInfo(ctx context.Context, release codegen.Release) error {
 
+	// 回头删一下，不做migration了
 	return nil
 }
 
