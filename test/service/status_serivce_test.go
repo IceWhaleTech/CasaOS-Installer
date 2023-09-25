@@ -190,3 +190,46 @@ func Test_Status_Case2_Upgradable(t *testing.T) {
 	assert.Equal(t, "ready-to-update", msg)
 
 }
+
+func Test_Status_Case3_Download_Failed(t *testing.T) {
+	logger.LogInitConsoleOnly()
+
+	tmpDir, err := os.MkdirTemp("", "casaos-status-test-case-2")
+	assert.NoError(t, err)
+	sysRoot := tmpDir
+	config.ServerInfo.CachePath = filepath.Join(tmpDir, "cache")
+
+	fixtures.SetLocalRelease(sysRoot, "v0.4.4")
+
+	statusService := &service.StatusService{
+		ImplementService: &service.RAUCService{
+			InstallRAUCHandler: service.InstallRAUCTest,
+			CheckSumHandler:    checksum.AlwaysFail,
+		},
+		SysRoot: sysRoot,
+	}
+
+	fixtures.SetLocalRelease(sysRoot, "v0.4.3")
+
+	ctx := context.WithValue(context.Background(), types.Trigger, types.CRON_JOB)
+
+	service.UpdateStatusWithMessage(service.FetchUpdateEnd, "")
+
+	value, msg := service.GetStatus()
+	assert.Equal(t, codegen.Idle, value.Status)
+	assert.Equal(t, "", msg)
+
+	release, err := statusService.GetRelease(ctx, "unit-test-rauc-0.4.4-1")
+	assert.NoError(t, err)
+
+	value, msg = service.GetStatus()
+	assert.Equal(t, codegen.Idle, value.Status)
+	assert.Equal(t, string(types.OUT_OF_DATE), msg)
+
+	_, err = statusService.DownloadRelease(ctx, *release, false)
+	assert.ErrorContains(t, err, "download fail")
+
+	value, msg = service.GetStatus()
+	assert.Equal(t, codegen.DownloadError, value.Status)
+	assert.Equal(t, "download fail", msg)
+}
