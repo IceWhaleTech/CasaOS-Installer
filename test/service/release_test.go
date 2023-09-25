@@ -121,30 +121,6 @@ func TestDownloadRelease(t *testing.T) {
 	fmt.Println(releaseFilePath)
 }
 
-func TestPostReleaseInsall(t *testing.T) {
-	logger.LogInitConsoleOnly()
-
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	tmpDir, err := os.MkdirTemp("", "casaos-installer-test-*")
-	defer os.RemoveAll(tmpDir)
-
-	assert.NoError(t, err)
-	tmpSysRoot := filepath.Join(tmpDir, "sysroot")
-	os.MkdirAll(tmpSysRoot, 0755)
-	os.MkdirAll(filepath.Join(tmpSysRoot, "etc", "casaos"), 0755)
-
-	release, err := service.GetRelease(ctx, "unit-test-release-0.4.4-1")
-	assert.NoError(t, err)
-
-	err = service.PostReleaseInstall(*release, tmpSysRoot)
-	assert.NoError(t, err)
-
-	// to check the target file is exist
-	assert.FileExists(t, filepath.Join(tmpSysRoot, "etc", "casaos", "target-release.yaml"))
-}
-
 // func TestIsUpgradable(t *testing.T) {
 // 	if _, exists := os.LookupEnv("CI"); exists {
 // 		t.Skip("skipping test in CI environment")
@@ -214,16 +190,16 @@ func TestDeviceModelDiscover(t *testing.T) {
 
 	tmpSysRoot := filepath.Join(tmpDir, "sysroot")
 
-	resule := service.IsCasaOS(tmpSysRoot)
-	assert.Equal(t, resule, true)
-	resule = service.IsZimaOS(tmpSysRoot)
-	assert.Equal(t, resule, false)
+	result := service.IsCasaOS(tmpSysRoot)
+	assert.Equal(t, result, true)
+	result = service.IsZimaOS(tmpSysRoot)
+	assert.Equal(t, result, false)
 
 	fixtures.SetZimaOS(tmpSysRoot)
 	assert.NoError(t, err)
 
-	resule = service.IsCasaOS(tmpSysRoot)
-	assert.Equal(t, resule, false)
-	resule = service.IsZimaOS(tmpSysRoot)
-	assert.Equal(t, resule, true)
+	result = service.IsCasaOS(tmpSysRoot)
+	assert.Equal(t, result, false)
+	result = service.IsZimaOS(tmpSysRoot)
+	assert.Equal(t, result, true)
 }

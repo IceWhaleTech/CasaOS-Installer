@@ -1,13 +1,15 @@
-package service_test
+package migration_test
 
-var (
-	// TODO NOTE! there is a bug, the url after v0.3.5-1 didn't download the migration tool
-	appManagementMigrationList = `v0.3.5 ${DOWNLOAD_DOMAIN}IceWhaleTech/CasaOS-AppManagement/releases/download/v0.4.0/linux-${ARCH}-casaos-app-management-migration-tool-v0.4.0.tar.gz
-v0.3.6 ${DOWNLOAD_DOMAIN}IceWhaleTech/CasaOS-AppManagement/releases/download/v0.4.1-alpha1/linux-${ARCH}-casaos-app-management-migration-tool-v0.4.1-alpha1.tar.gz
-v0.3.7 ${DOWNLOAD_DOMAIN}IceWhaleTech/CasaOS-AppManagement/releases/download/v0.4.2-1/linux-${ARCH}-casaos-app-management-migration-tool-v0.4.2-1.tar.gz
-v0.3.8 ${DOWNLOAD_DOMAIN}IceWhaleTech/CasaOS-AppManagement/releases/download/v0.4.3/linux-${ARCH}-casaos-app-management-migration-tool-v0.4.3.tar.gz
-v0.3.9 ${DOWNLOAD_DOMAIN}IceWhaleTech/CasaOS-AppManagement/releases/download/v0.4.3/linux-${ARCH}-casaos-app-management-migration-tool-v0.4.3.tar.gz`
-)
+// package service_test
+
+// var (
+// 	// TODO NOTE! there is a bug, the url after v0.3.5-1 didn't download the migration tool
+// 	appManagementMigrationList = `v0.3.5 ${DOWNLOAD_DOMAIN}IceWhaleTech/CasaOS-AppManagement/releases/download/v0.4.0/linux-${ARCH}-casaos-app-management-migration-tool-v0.4.0.tar.gz
+// v0.3.6 ${DOWNLOAD_DOMAIN}IceWhaleTech/CasaOS-AppManagement/releases/download/v0.4.1-alpha1/linux-${ARCH}-casaos-app-management-migration-tool-v0.4.1-alpha1.tar.gz
+// v0.3.7 ${DOWNLOAD_DOMAIN}IceWhaleTech/CasaOS-AppManagement/releases/download/v0.4.2-1/linux-${ARCH}-casaos-app-management-migration-tool-v0.4.2-1.tar.gz
+// v0.3.8 ${DOWNLOAD_DOMAIN}IceWhaleTech/CasaOS-AppManagement/releases/download/v0.4.3/linux-${ARCH}-casaos-app-management-migration-tool-v0.4.3.tar.gz
+// v0.3.9 ${DOWNLOAD_DOMAIN}IceWhaleTech/CasaOS-AppManagement/releases/download/v0.4.3/linux-${ARCH}-casaos-app-management-migration-tool-v0.4.3.tar.gz`
+// )
 
 // NOTE! the test will cost very long time(1 min)(decided by network speed). So we should timeout it longer than another.
 //

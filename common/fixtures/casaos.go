@@ -19,7 +19,7 @@ func createFolderIfNotExist(path string) {
 func getReleaseYamlContent(versionTag string) string {
 	return `version: ` + versionTag + `
 release_notes: |
-  TOOD: add release notes
+  TODO: add release notes
 mirrors:
   - http://casaos.io/does/not/exist/test
   - https://github.com/IceWhaleTech
@@ -74,48 +74,6 @@ func SetLocalRelease(sysRoot string, versionTag string) {
 	createFolderIfNotExist(filepath.Join(sysRoot, "etc", "casaos"))
 	os.WriteFile(filepath.Join(sysRoot, service.CurrentReleaseLocalPath), []byte(releaseContent), 0755)
 }
-
-func SetLocalTargetRelease(sysRoot string, versionTag string) {
-	releaseContent := getReleaseYamlContent(versionTag)
-
-	createFolderIfNotExist(filepath.Join(sysRoot, "etc", "casaos"))
-	os.WriteFile(filepath.Join(sysRoot, service.TargetReleaseLocalPath), []byte(releaseContent), 0755)
-}
-
-// func CacheRelease0441(cacheDir string) error {
-// 	originCachePath := config.ServerInfo.CachePath
-// 	config.ServerInfo.CachePath = filepath.Join("/tmp", "casaos-cache", "var", "cache", "casaos")
-// 	ctx := context.Background()
-// 	release, err := service.GetRelease(ctx, "unit-test-release-0.4.4-1")
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	releaseFilePath, err := service.DownloadRelease(ctx, *release, false)
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	err = service.ExtractReleasePackages(releaseFilePath, *release)
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	// extract module packages
-// 	err = service.ExtractReleasePackages(releaseFilePath+"/linux*", *release)
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	// copy release file to cache path
-// 	err = cp.Copy(config.ServerInfo.CachePath, cacheDir)
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	config.ServerInfo.CachePath = originCachePath
-// 	return nil
-// }
 
 func SetZimaOS(sysRoot string) error {
 	// write  sysRoot/etc/os-release file
