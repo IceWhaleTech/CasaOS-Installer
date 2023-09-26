@@ -14,15 +14,13 @@ import (
 	"github.com/IceWhaleTech/CasaOS-Installer/common"
 )
 
-// embeded static files
-//
 //go:embed static
 var FallbackStaticFiles embed.FS
 var srv *http.Server
 
 func StartFallbackWebsite() {
-	// run a http server for embedded fellbackStaticFiles
-	fs, err := fs.Sub(FallbackStaticFiles, "static")
+	// run a http server for embedded fallback StaticFiles
+	http_fs, err := fs.Sub(FallbackStaticFiles, "static")
 	if err != nil {
 		panic(err)
 	}
@@ -33,11 +31,11 @@ func StartFallbackWebsite() {
 		Addr:    net.JoinHostPort(common.Localhost, port),
 		Handler: m,
 	}
-	m.Handle("/", http.FileServer(http.FS(fs)))
+	m.Handle("/", http.FileServer(http.FS(http_fs)))
 
 	// get file content string
 	// if file not exist, use default config
-	// to check exsit /etc/casaos/gateway.ini
+	// to check exist /etc/casaos/gateway.ini
 	if content, err := os.ReadFile("/etc/casaos/gateway.ini"); err != nil {
 		fmt.Println("read gateway config file error, use default config")
 	} else {
