@@ -49,6 +49,7 @@ func (a *api) GetRelease(ctx echo.Context, params codegen.GetReleaseParams) erro
 
 	http_trigger_context := context.WithValue(ctx.Request().Context(), types.Trigger, types.HTTP_REQUEST)
 	release, err := service.InstallerService.GetRelease(http_trigger_context, tag)
+
 	if err != nil {
 		message := err.Error()
 		if err == service.ErrReleaseNotFound {
@@ -63,16 +64,19 @@ func (a *api) GetRelease(ctx echo.Context, params codegen.GetReleaseParams) erro
 
 	upgradable := service.InstallerService.IsUpgradable(*release, "")
 
-	if service.ShouldUpgrade(*release, sysRoot) {
-		if upgradable {
-			service.UpdateStatusWithMessage(service.FetchUpdateEnd, "ready-to-update")
+	go func() {
+
+		if service.ShouldUpgrade(*release, sysRoot) {
+			if upgradable {
+				service.UpdateStatusWithMessage(service.FetchUpdateEnd, "ready-to-update")
+			} else {
+				service.UpdateStatusWithMessage(service.FetchUpdateEnd, "out-of-date")
+				service.InstallerService.DownloadRelease(http_trigger_context, *release, false)
+			}
 		} else {
-			service.UpdateStatusWithMessage(service.FetchUpdateEnd, "out-of-date")
-			service.InstallerService.DownloadRelease(http_trigger_context, *release, false)
+			service.UpdateStatusWithMessage(service.FetchUpdateEnd, "up-to-date")
 		}
-	} else {
-		service.UpdateStatusWithMessage(service.FetchUpdateEnd, "up-to-date")
-	}
+	}()
 
 	return ctx.JSON(http.StatusOK, &codegen.ReleaseOK{
 		Data:       release,

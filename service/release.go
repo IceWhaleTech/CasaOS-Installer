@@ -95,9 +95,13 @@ func FetchRelease(ctx context.Context, tag string, constructReleaseFileUrlFunc C
 	var best BestURLFunc = BestByDelay // dependency inject
 
 	url := best(releaseURL)
+	var release *codegen.Release
 	release, err := internal.GetReleaseFrom(ctx, url)
-
-	return release, err
+	if err != nil {
+		logger.Info("trying to get release information from url", zap.String("url", url))
+		return release, err
+	}
+	return release, nil
 }
 
 func GetRelease(ctx context.Context, tag string) (*codegen.Release, error) {
@@ -215,7 +219,7 @@ func GetReleaseBranch(sysRoot string) string {
 		return "rauc"
 	}
 	if IsCasaOS(sysRoot) {
-		return "dev-test"
+		return "rauc"
 	}
 	return "main"
 }
@@ -331,7 +335,6 @@ func ExecuteModuleInstallScript(releaseFilePath string, release codegen.Release)
 			return nil
 		}
 
-		fmt.Println("执行: ", path)
 		cmd := exec.Command(path)
 		err = cmd.Run()
 		return err
@@ -364,7 +367,6 @@ func stopSystemdService(serviceName string) error {
 func StopModule(release codegen.Release) error {
 	err := error(nil)
 	for _, module := range release.Modules {
-		fmt.Println("停止: ", module.Name)
 		if err := stopSystemdService(module.Name); err != nil {
 			fmt.Printf("failed to stop module: %s\n", err.Error())
 		}
