@@ -121,6 +121,16 @@ func TestDownloadRelease(t *testing.T) {
 	fmt.Println(releaseFilePath)
 }
 
+func TestBestByDelay(t *testing.T) {
+	url := service.BestByDelay([]string{
+		"https://casaos.oss-cn-shanghai.aliyuncs.com/IceWhaleTech/zimaos-rauc/rauc",
+		"https://raw.githubusercontent.com/IceWhaleTech/zimaos-rauc/main/rau242342c",
+		"https://baidu.com/weqteqrwerwerwr",
+		"https://baid2342341234123411231412u.com/weqteqrwerwerwr",
+	})
+	assert.Equal(t, "https://casaos.oss-cn-shanghai.aliyuncs.com/IceWhaleTech/zimaos-rauc/rauc", url)
+}
+
 // func TestIsUpgradable(t *testing.T) {
 // 	if _, exists := os.LookupEnv("CI"); exists {
 // 		t.Skip("skipping test in CI environment")

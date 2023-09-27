@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -37,23 +38,86 @@ const (
 	TAR         InstallerType = "tar"
 )
 
+type ConstructReleaseFileUrlFunc func(tag string, mirror string) string
+
+func GitHubBranchTagReleaseUrl(tag string, mirror string) string {
+	// 这个不走新的mirror，自己用的旧的，回头迁移完，这个函数就删了。
+	mirror = "https://raw.githubusercontent.com/IceWhaleTech"
+	return fmt.Sprintf("%s/get/%s/casaos-release", strings.TrimSuffix(mirror, "/"), tag)
+}
+
+func HyperFileTagReleaseUrl(tag string, mirror string) string {
+	// https://raw.githubusercontent.com/IceWhaleTech/zimaos-rauc/main/rauc
+	// https://casaos.oss-cn-shanghai.aliyuncs.com/IceWhaleTech/zimaos-rauc/rauc
+	return mirror + tag
+}
+
+type BestURLFunc func(urls []string) string
+
+func BestByDelay(urls []string) string {
+	type result struct {
+		url     string
+		latency time.Duration
+	}
+
+	ch := make(chan result)
+
+	for _, url := range urls {
+		go func(url string) {
+			start := time.Now()
+			resp, err := http.Get(url)
+			if err != nil || resp.StatusCode != http.StatusOK {
+				ch <- result{url: url, latency: 0}
+				return
+			}
+			latency := time.Since(start)
+			ch <- result{url: url, latency: latency}
+		}(url)
+	}
+
+	var first result
+	for range urls {
+		res := <-ch
+		if res.latency != 0 && (first.latency == 0 || res.latency < first.latency) {
+			first = res
+		}
+	}
+
+	return first.url
+}
+func FetchRelease(ctx context.Context, tag string, constructReleaseFileUrlFunc ConstructReleaseFileUrlFunc) (*codegen.Release, error) {
+	var releaseURL []string
+
+	for _, mirror := range config.ServerInfo.Mirrors {
+		releaseURL = append(releaseURL, constructReleaseFileUrlFunc(tag, mirror))
+	}
+
+	var best BestURLFunc = BestByDelay // dependency inject
+
+	url := best(releaseURL)
+	var release *codegen.Release
+	release, err := internal.GetReleaseFrom(ctx, url)
+	if err != nil {
+		logger.Info("trying to get release information from url", zap.String("url", url))
+		return release, err
+	}
+	return release, nil
+}
+
 func GetRelease(ctx context.Context, tag string) (*codegen.Release, error) {
 	var release *codegen.Release
 	var mirror string
-	for _, mirror = range config.ServerInfo.Mirrors {
-		releaseURL := fmt.Sprintf("%s/get/%s/casaos-release", strings.TrimSuffix(mirror, "/"), tag)
 
-		logger.Info("trying to get release information from url", zap.String("url", releaseURL))
+	releaseURL := GitHubBranchTagReleaseUrl(tag, mirror)
 
-		_release, err := internal.GetReleaseFrom(ctx, releaseURL)
-		if err != nil {
-			logger.Info("error while getting release information - skipping", zap.Error(err), zap.String("url", releaseURL))
-			continue
-		}
+	logger.Info("trying to get release information from url", zap.String("url", releaseURL))
 
-		release = _release
-		break
+	_release, err := internal.GetReleaseFrom(ctx, releaseURL)
+	if err != nil {
+		logger.Info("error while getting release information - skipping", zap.Error(err), zap.String("url", releaseURL))
 	}
+
+	release = _release
 
 	if release == nil {
 		release = lastRelease
@@ -155,7 +219,7 @@ func GetReleaseBranch(sysRoot string) string {
 		return "rauc"
 	}
 	if IsCasaOS(sysRoot) {
-		return "dev-test"
+		return "rauc"
 	}
 	return "main"
 }
@@ -271,7 +335,6 @@ func ExecuteModuleInstallScript(releaseFilePath string, release codegen.Release)
 			return nil
 		}
 
-		fmt.Println("执行: ", path)
 		cmd := exec.Command(path)
 		err = cmd.Run()
 		return err
@@ -304,7 +367,6 @@ func stopSystemdService(serviceName string) error {
 func StopModule(release codegen.Release) error {
 	err := error(nil)
 	for _, module := range release.Modules {
-		fmt.Println("停止: ", module.Name)
 		if err := stopSystemdService(module.Name); err != nil {
 			fmt.Printf("failed to stop module: %s\n", err.Error())
 		}

@@ -19,7 +19,7 @@ func (r *TarService) Install(release codegen.Release, sysRoot string) error {
 }
 
 func (r *TarService) GetRelease(ctx context.Context, tag string) (*codegen.Release, error) {
-	return GetRelease(ctx, tag)
+	return FetchRelease(ctx, tag, GitHubBranchTagReleaseUrl)
 }
 
 // dependent config.ServerInfo.CachePath

@@ -42,8 +42,8 @@ var (
 	ServerInfo = &ServerModel{
 		CachePath: "/var/cache/casaos",
 		Mirrors: []string{
-			"https://raw.githubusercontent.com/IceWhaleTech",
-			"https://casaos.oss-cn-shanghai.aliyuncs.com/IceWhaleTech",
+			"https://raw.githubusercontent.com/IceWhaleTech/zimaos-rauc/main/",
+			"https://casaos.oss-cn-shanghai.aliyuncs.com/IceWhaleTech/zimaos-rauc/",
 		},
 	}
 

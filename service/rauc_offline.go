@@ -25,9 +25,6 @@ func (r *RAUCOfflineService) Install(release codegen.Release, sysRoot string) er
 
 func (r *RAUCOfflineService) GetRelease(ctx context.Context, tag string) (*codegen.Release, error) {
 
-	// to check file exist
-	fmt.Println(filepath.Join(r.SysRoot, config.RAUC_OFFLINE_PATH, config.RAUC_OFFLINE_RAUC_FILENAME))
-
 	if _, err := os.Stat(filepath.Join(r.SysRoot, config.RAUC_OFFLINE_PATH, config.RAUC_OFFLINE_RAUC_FILENAME)); os.IsNotExist(err) {
 		return nil, fmt.Errorf("not found offline install package")
 	} else {
@@ -57,7 +54,7 @@ func (r *RAUCOfflineService) VerifyRelease(release codegen.Release) (string, err
 }
 
 func (r *RAUCOfflineService) DownloadRelease(ctx context.Context, release codegen.Release, force bool) (string, error) {
-	releasepath, err := r.VerifyRelease(release)
+	releasePath, err := r.VerifyRelease(release)
 	if err != nil {
 		// 这里多做一步，从本地读release
 		// 把前面的zip复制到/var/cache/casaos下面。
@@ -74,7 +71,7 @@ func (r *RAUCOfflineService) DownloadRelease(ctx context.Context, release codege
 
 		return filepath.Join(releaseDir, config.RAUC_OFFLINE_RAUC_FILENAME), nil
 	}
-	return releasepath, nil
+	return releasePath, nil
 }
 
 func (r *RAUCOfflineService) ExtractRelease(packageFilepath string, release codegen.Release) error {
