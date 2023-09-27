@@ -181,6 +181,7 @@ func NewInstallerService(sysRoot string) UpdaterServiceInterface {
 			InstallRAUCHandler: InstallRAUCImp,
 			DownloadHandler:    nil,
 			CheckSumHandler:    checksum.OnlineTarExist,
+			UrlHandler:         HyperFileTagReleaseUrl,
 		}
 	}
 
@@ -200,6 +201,7 @@ func NewInstallerService(sysRoot string) UpdaterServiceInterface {
 		return &RAUCService{
 			InstallRAUCHandler: InstallRAUCImp,
 			CheckSumHandler:    checksum.OnlineTarExist,
+			UrlHandler:         HyperFileTagReleaseUrl,
 		}
 	}
 

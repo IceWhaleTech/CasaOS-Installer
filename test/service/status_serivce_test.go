@@ -161,6 +161,7 @@ func Test_Status_Case2_Upgradable(t *testing.T) {
 		ImplementService: &service.RAUCService{
 			InstallRAUCHandler: service.MockInstallRAUC,
 			CheckSumHandler:    checksum.OnlineTarExist,
+			UrlHandler:         service.GitHubBranchTagReleaseUrl,
 		},
 		SysRoot: sysRoot,
 	}
@@ -205,6 +206,7 @@ func Test_Status_Case3_Download_Failed(t *testing.T) {
 		ImplementService: &service.RAUCService{
 			InstallRAUCHandler: service.MockInstallRAUC,
 			CheckSumHandler:    checksum.AlwaysFail,
+			UrlHandler:         service.GitHubBranchTagReleaseUrl,
 		},
 		SysRoot: sysRoot,
 	}

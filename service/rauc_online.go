@@ -13,6 +13,7 @@ type RAUCService struct {
 	InstallRAUCHandler func(raucPath string) error
 	DownloadHandler    out.DownloadReleaseUseCase
 	CheckSumHandler    out.CheckSumReleaseUseCase
+	UrlHandler         ConstructReleaseFileUrlFunc
 }
 
 func (r *RAUCService) Install(release codegen.Release, sysRoot string) error {
@@ -20,7 +21,7 @@ func (r *RAUCService) Install(release codegen.Release, sysRoot string) error {
 }
 
 func (r *RAUCService) GetRelease(ctx context.Context, tag string) (*codegen.Release, error) {
-	return GetRelease(ctx, tag)
+	return FetchRelease(ctx, tag, r.UrlHandler)
 }
 
 func (r *RAUCService) VerifyRelease(release codegen.Release) (string, error) {
