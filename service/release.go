@@ -65,8 +65,8 @@ func BestByDelay(urls []string) string {
 	for _, url := range urls {
 		go func(url string) {
 			start := time.Now()
-			_, err := http.Get(url)
-			if err != nil {
+			resp, err := http.Get(url)
+			if err != nil || resp.StatusCode != http.StatusOK {
 				ch <- result{url: url, latency: 0}
 				return
 			}
