@@ -146,7 +146,7 @@ func Test_Status_Case3_Install_Success(t *testing.T) {
 	time.Sleep(3 * time.Second)
 	go statusService.DownloadRelease(ctx, codegen.Release{}, false)
 
-	time.Sleep(1 * time.Second)
+	time.Sleep(2 * time.Second)
 	// 安装 请求的dowing会把状态变成installing
 	value, msg = service.GetStatus()
 	assert.Equal(t, codegen.Installing, value.Status)
@@ -154,14 +154,14 @@ func Test_Status_Case3_Install_Success(t *testing.T) {
 
 	go statusService.ExtractRelease("", codegen.Release{})
 
-	time.Sleep(1 * time.Second)
+	time.Sleep(2 * time.Second)
 	value, msg = service.GetStatus()
 	assert.Equal(t, codegen.Installing, value.Status)
 	assert.Equal(t, string(types.DECOMPRESS), msg)
 
 	go statusService.Install(codegen.Release{}, "")
 
-	time.Sleep(1 * time.Second)
+	time.Sleep(2 * time.Second)
 	value, msg = service.GetStatus()
 	assert.Equal(t, codegen.Installing, value.Status)
 	assert.Equal(t, string(types.INSTALLING), msg)

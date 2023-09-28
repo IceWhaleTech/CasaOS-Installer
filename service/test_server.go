@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/IceWhaleTech/CasaOS-Installer/codegen"
@@ -11,6 +12,7 @@ import (
 type TestService struct {
 	InstallRAUCHandler func(raucPath string) error
 	downloaded         bool
+	lock               sync.Mutex
 }
 
 func AlwaysSuccessInstallHandler(raucPath string) error {
@@ -27,7 +29,9 @@ func (r *TestService) Install(release codegen.Release, sysRoot string) error {
 
 func (r *TestService) GetRelease(ctx context.Context, tag string) (*codegen.Release, error) {
 	time.Sleep(2 * time.Second)
+	r.lock.Lock()
 	r.downloaded = false
+	r.lock.Unlock()
 	return &codegen.Release{
 		Version: "v0.4.8",
 	}, nil
@@ -38,8 +42,11 @@ func (r *TestService) VerifyRelease(release codegen.Release) (string, error) {
 }
 
 func (r *TestService) DownloadRelease(ctx context.Context, release codegen.Release, force bool) (string, error) {
-	time.Sleep(2 * time.Second)
+	time.Sleep(3 * time.Second)
+	r.lock.Lock()
 	r.downloaded = true
+	r.lock.Unlock()
+
 	return "", nil
 }
 
