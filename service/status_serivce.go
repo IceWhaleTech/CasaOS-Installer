@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/IceWhaleTech/CasaOS-Installer/codegen"
 	"github.com/IceWhaleTech/CasaOS-Installer/types"
@@ -13,8 +12,10 @@ type StatusService struct {
 	SysRoot          string
 }
 
+type InstallProgressStatus string
+
 func (r *StatusService) Install(release codegen.Release, sysRoot string) error {
-	UpdateStatusWithMessage(InstallBegin, "installing")
+	UpdateStatusWithMessage(InstallBegin, types.INSTALLING)
 	err := r.ImplementService.Install(release, sysRoot)
 	defer func() {
 		if err != nil {
@@ -47,15 +48,12 @@ func (r *StatusService) GetRelease(ctx context.Context, tag string) (*codegen.Re
 		// 如果是HTTP请求的话，则不更新状态
 		defer func() {
 			if !r.ShouldUpgrade(*release, r.SysRoot) {
-				fmt.Println("不需要更新")
 				UpdateStatusWithMessage(FetchUpdateEnd, "up-to-date")
 				return
 			} else {
 				if r.IsUpgradable(*release, r.SysRoot) {
-					fmt.Println("准备好")
 					UpdateStatusWithMessage(FetchUpdateEnd, "ready-to-update")
 				} else {
-					fmt.Println("需要更新")
 					UpdateStatusWithMessage(FetchUpdateEnd, "out-of-date")
 				}
 			}
@@ -122,7 +120,7 @@ func (r *StatusService) DownloadRelease(ctx context.Context, release codegen.Rel
 }
 
 func (r *StatusService) ExtractRelease(packageFilepath string, release codegen.Release) error {
-	UpdateStatusWithMessage(InstallBegin, "decompress")
+	UpdateStatusWithMessage(InstallBegin, types.DECOMPRESS)
 	err := r.ImplementService.ExtractRelease(packageFilepath, release)
 	defer func() {
 		if err != nil {
@@ -133,7 +131,7 @@ func (r *StatusService) ExtractRelease(packageFilepath string, release codegen.R
 }
 
 func (r *StatusService) PostInstall(release codegen.Release, sysRoot string) error {
-	UpdateStatusWithMessage(InstallBegin, "restarting")
+	UpdateStatusWithMessage(InstallBegin, types.RESTARTING)
 	err := r.ImplementService.PostInstall(release, sysRoot)
 	defer func() {
 		if err != nil {
