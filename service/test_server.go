@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/IceWhaleTech/CasaOS-Installer/codegen"
@@ -12,8 +13,16 @@ type TestService struct {
 	downloaded         bool
 }
 
-func (r *TestService) Install(release codegen.Release, sysRoot string) error {
+func AlwaysSuccessInstallHandler(raucPath string) error {
 	return nil
+}
+
+func AlwaysFailedInstallHandler(raucPath string) error {
+	return fmt.Errorf("rauc is not compatible")
+}
+
+func (r *TestService) Install(release codegen.Release, sysRoot string) error {
+	return r.InstallRAUCHandler("")
 }
 
 func (r *TestService) GetRelease(ctx context.Context, tag string) (*codegen.Release, error) {
