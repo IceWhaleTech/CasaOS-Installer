@@ -8,7 +8,6 @@ import (
 	_ "embed"
 	"flag"
 	"fmt"
-	"log"
 	"net"
 	"net/http"
 	"os"
@@ -125,14 +124,12 @@ func main() {
 						return
 					}
 					if event.Has(fsnotify.Create) {
-						log.Println("modified file:", event.Name)
 						service.InstallerService = &service.StatusService{
 							ImplementService: service.NewInstallerService(sysRoot),
 							SysRoot:          sysRoot,
 						}
 					}
 					if event.Has(fsnotify.Remove) {
-						log.Println("modified file:", event.Name)
 						service.InstallerService = &service.StatusService{
 							ImplementService: service.NewInstallerService(sysRoot),
 							SysRoot:          sysRoot,
