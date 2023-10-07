@@ -36,6 +36,7 @@ func TestRAUCOfflineServer(t *testing.T) {
 
 	// 构建假文件放到目录
 
+	config.RAUC_OFFLINE_RAUC_FILENAME = "rauc.tar"
 	os.MkdirAll(filepath.Join(tmpDir, config.RAUC_OFFLINE_PATH), 0755)
 	fixtures.SetOfflineRAUC(tmpDir, config.RAUC_OFFLINE_PATH, config.RAUC_OFFLINE_RAUC_FILENAME)
 

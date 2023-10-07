@@ -224,14 +224,30 @@ func GetReleaseBranch(sysRoot string) string {
 	return "main"
 }
 
+func CheckOfflineTarExist(sysRoot string) bool {
+	// get all file from /DATA/rauc
+	// if the file have "*.tar" return true
+	files := internal.GetAllFile(filepath.Join(sysRoot, config.RAUC_OFFLINE_PATH))
+	if len(files) == 1 {
+		file_name := files[0]
+		if strings.HasSuffix(file_name, ".tar") {
+			config.RAUC_OFFLINE_RAUC_FILENAME = file_name
+			return true
+		}
+	} else {
+		return false
+	}
+	return false
+}
+
 func GetInstallMethod(sysRoot string) (InstallerType, error) {
 	// to check the system is casaos or zimaos
 	// if zimaos, return "rauc"
 	// if casaos, return "tar"
 
 	if IsZimaOS(sysRoot) {
-		// to check file exsit
-		if _, err := os.Stat(filepath.Join(sysRoot, config.RAUC_OFFLINE_PATH, config.RAUC_OFFLINE_RAUC_FILENAME)); os.IsNotExist(err) {
+		// to check file exist
+		if !CheckOfflineTarExist(sysRoot) {
 			return RAUC, nil
 		} else {
 			return RAUCOFFLINE, nil
