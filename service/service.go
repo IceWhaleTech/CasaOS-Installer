@@ -197,6 +197,8 @@ func NewInstallerService(sysRoot string) UpdaterServiceInterface {
 
 	// 回头做这个社区版。
 	if installMethod == TAR {
+		fmt.Println("TAR 模式")
+
 		// 暂时先用 rauc mock 一下
 		return &RAUCService{
 			InstallRAUCHandler: InstallRAUCImp,
