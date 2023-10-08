@@ -228,9 +228,11 @@ func CheckOfflineTarExist(sysRoot string) bool {
 	// get all file from /DATA/rauc
 	// if the file have "*.tar" return true
 	files := internal.GetAllFile(filepath.Join(sysRoot, config.RAUC_OFFLINE_PATH))
+	println("files : ", files)
 	if len(files) == 1 {
 		file_name := files[0]
 		if strings.HasSuffix(file_name, ".tar") {
+			println("find offline rauc file: ", file_name)
 			config.RAUC_OFFLINE_RAUC_FILENAME = file_name
 			return true
 		}
@@ -245,7 +247,8 @@ func GetInstallMethod(sysRoot string) (InstallerType, error) {
 	// if zimaos, return "rauc"
 	// if casaos, return "tar"
 
-	if IsZimaOS(sysRoot) {
+	// for test. always open rauc
+	if IsZimaOS(sysRoot) || true {
 		// to check file exist
 		if !CheckOfflineTarExist(sysRoot) {
 			return RAUC, nil
