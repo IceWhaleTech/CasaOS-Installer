@@ -311,3 +311,5 @@ func Test_Status_Case4_Install_Fail(t *testing.T) {
 	assert.Equal(t, codegen.InstallError, value.Status)
 	assert.Equal(t, "rauc is not compatible", msg)
 }
+
+// TODO 补一个测试，就是解压失败
