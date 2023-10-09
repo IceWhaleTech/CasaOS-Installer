@@ -37,7 +37,8 @@ func InstallRAUC(release codegen.Release, sysRoot string, InstallRAUCHandler fun
 
 	err = InstallRAUCHandler(raucFilePath)
 	if err != nil {
-		log.Fatal("VerifyRAUC() failed: ", err.Error())
+		log.Println("VerifyRAUC() failed: ", err.Error())
+		return err
 	}
 
 	return nil
@@ -54,13 +55,15 @@ func InstallRAUCImp(raucFilePath string) error {
 
 	compatible, version, err := raucInstaller.Info(raucFilePath)
 	if err != nil {
-		log.Fatal("Info() failed", err.Error())
+		log.Println("Info() failed", err.Error())
+		return err
 	}
 	log.Printf("Info(): compatible=%s, version=%s", compatible, version)
 
 	err = raucInstaller.InstallBundle(raucFilePath, rauc.InstallBundleOptions{})
 	if err != nil {
-		log.Fatal("InstallBundle() failed: ", err.Error())
+		log.Println("InstallBundle() failed: ", err.Error())
+		return err
 	}
 
 	return nil
