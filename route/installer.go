@@ -24,8 +24,23 @@ func (a *api) GetStatus(ctx echo.Context) error {
 }
 
 func (a *api) GetRelease(ctx echo.Context, params codegen.GetReleaseParams) error {
+	// TODO 考虑一下这个packageStatus的问题
+	// go service.UpdateStatusWithMessage(service.FetchUpdateBegin, "主动触发的获取信息")
+	tag := service.GetReleaseBranch(sysRoot)
+
 	http_trigger_context := context.WithValue(ctx.Request().Context(), types.Trigger, types.HTTP_REQUEST)
 	release, err := service.InstallerService.GetRelease(http_trigger_context, tag)
+	if err != nil {
+		message := err.Error()
+		if err == service.ErrReleaseNotFound {
+			return ctx.JSON(http.StatusNotFound, &codegen.ResponseNotFound{
+				Message: &message,
+			})
+		}
+		return ctx.JSON(http.StatusInternalServerError, &codegen.ResponseInternalServerError{
+			Message: &message,
+		})
+	}
 
 	status, _ := service.GetStatus()
 	if status.Status == codegen.Downloading {
@@ -40,10 +55,6 @@ func (a *api) GetRelease(ctx echo.Context, params codegen.GetReleaseParams) erro
 			Upgradable: utils.Ptr(false),
 		})
 	}
-
-	// TODO 考虑一下这个packageStatus的问题
-	// go service.UpdateStatusWithMessage(service.FetchUpdateBegin, "主动触发的获取信息")
-	tag := service.GetReleaseBranch(sysRoot)
 
 	if params.Version != nil && *params.Version != "latest" {
 		tag = *params.Version
