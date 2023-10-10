@@ -9,6 +9,8 @@ const (
 type TriggerType string
 
 const (
+	HTTP_CHECK TriggerType = "http-request-check"
+
 	HTTP_REQUEST TriggerType = "http-request-trigger"
 	CRON_JOB     TriggerType = "cron-job-trigger"
 	INSTALL      TriggerType = "install-trigger"

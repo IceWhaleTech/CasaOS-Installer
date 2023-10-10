@@ -28,6 +28,11 @@ func (r *StatusService) Install(release codegen.Release, sysRoot string) error {
 func (r *StatusService) GetRelease(ctx context.Context, tag string) (*codegen.Release, error) {
 	release := &codegen.Release{}
 
+	// 因为更新完进入主页又要拿一次release
+	if ctx.Value(types.Trigger) == types.HTTP_CHECK {
+		// 不更新状态
+	}
+
 	if ctx.Value(types.Trigger) == types.CRON_JOB {
 		UpdateStatusWithMessage(FetchUpdateBegin, "触发更新")
 		defer func() {

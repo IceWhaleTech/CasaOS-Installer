@@ -24,17 +24,20 @@ func (a *api) GetStatus(ctx echo.Context) error {
 }
 
 func (a *api) GetRelease(ctx echo.Context, params codegen.GetReleaseParams) error {
+	http_trigger_context := context.WithValue(ctx.Request().Context(), types.Trigger, types.HTTP_REQUEST)
+	release, err := service.InstallerService.GetRelease(http_trigger_context, tag)
+
 	status, _ := service.GetStatus()
 	if status.Status == codegen.Downloading {
-		message := "downloading"
-		return ctx.JSON(http.StatusOK, &codegen.ResponseOK{
-			Message: &message,
+		return ctx.JSON(http.StatusOK, &codegen.ReleaseOK{
+			Data:       release,
+			Upgradable: utils.Ptr(false),
 		})
 	}
 	if status.Status == codegen.Installing {
-		message := "downloading"
-		return ctx.JSON(http.StatusOK, &codegen.ResponseOK{
-			Message: &message,
+		return ctx.JSON(http.StatusOK, &codegen.ReleaseOK{
+			Data:       release,
+			Upgradable: utils.Ptr(false),
 		})
 	}
 
@@ -46,8 +49,10 @@ func (a *api) GetRelease(ctx echo.Context, params codegen.GetReleaseParams) erro
 		tag = *params.Version
 	}
 
-	http_trigger_context := context.WithValue(ctx.Request().Context(), types.Trigger, types.HTTP_REQUEST)
-	release, err := service.InstallerService.GetRelease(http_trigger_context, tag)
+	// 这里就拿导致拿两次release了
+	// 这里不能用request的context，不然会cancel
+	http_trigger_context = context.WithValue(context.Background(), types.Trigger, types.HTTP_REQUEST)
+	release, err = service.InstallerService.GetRelease(http_trigger_context, tag)
 
 	if err != nil {
 		message := err.Error()
