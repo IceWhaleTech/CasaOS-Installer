@@ -27,10 +27,9 @@ func (a *api) GetRelease(ctx echo.Context, params codegen.GetReleaseParams) erro
 	// TODO 考虑一下这个packageStatus的问题
 	// go service.UpdateStatusWithMessage(service.FetchUpdateBegin, "主动触发的获取信息")
 	tag := service.GetReleaseBranch(sysRoot)
-  if params.Version != nil && *params.Version != "latest" {
+	if params.Version != nil && *params.Version != "latest" {
 		tag = *params.Version
 	}
-
 
 	http_trigger_context := context.WithValue(ctx.Request().Context(), types.Trigger, types.HTTP_REQUEST)
 	release, err := service.InstallerService.GetRelease(http_trigger_context, tag)
@@ -46,9 +45,6 @@ func (a *api) GetRelease(ctx echo.Context, params codegen.GetReleaseParams) erro
 		})
 	}
 
-  http_trigger_context := context.WithValue(ctx.Request().Context(), types.Trigger, types.HTTP_REQUEST)
-	release, err := service.InstallerService.GetRelease(http_trigger_context, tag)
-
 	status, _ := service.GetStatus()
 	if status.Status == codegen.Downloading {
 		return ctx.JSON(http.StatusOK, &codegen.ReleaseOK{
@@ -62,7 +58,7 @@ func (a *api) GetRelease(ctx echo.Context, params codegen.GetReleaseParams) erro
 			Upgradable: utils.Ptr(false),
 		})
 	}
-  // 无其它东西在干扰的情况
+	// 无其它东西在干扰的情况
 
 	// 这里就拿导致拿两次release了
 	// 这里不能用request的context，不然会cancel
