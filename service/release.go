@@ -19,6 +19,8 @@ import (
 	"github.com/Masterminds/semver/v3"
 	"go.uber.org/zap"
 	"gopkg.in/yaml.v3"
+
+	"github.com/samber/lo"
 )
 
 var (
@@ -229,7 +231,16 @@ func CheckOfflineTarExist(sysRoot string) bool {
 	// if the file have "*.tar" return true
 	files := internal.GetAllFile(filepath.Join(sysRoot, config.RAUC_OFFLINE_PATH))
 	println("files : ", files)
-	if len(files) == 1 {
+
+	// only allow one tar file
+	tar_files := lo.FilterMap(files, func(filename string, _ int) (string, bool) {
+		if strings.HasSuffix(filename, ".tar") {
+			return filename, true
+		}
+		return "", false
+	})
+
+	if len(tar_files) == 1 {
 		file_name := files[0]
 		if strings.HasSuffix(file_name, ".tar") {
 			println("find offline rauc file: ", file_name)

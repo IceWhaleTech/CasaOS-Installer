@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	FlagUpgradeFile = "/var/lib/casaos/upgradInfo.txt"
+	FlagUpgradeFile = "/var/lib/casaos/upgradeInfo.txt"
 )
 
 func ExtractRAUCRelease(packageFilepath string, release codegen.Release) error {
@@ -46,7 +46,7 @@ func InstallRAUC(release codegen.Release, sysRoot string, InstallRAUCHandler fun
 
 func InstallRAUCImp(raucFilePath string) error {
 	// install rauc
-	fmt.Println("rauc路径为:", raucFilePath)
+	fmt.Println("rauc path: ", raucFilePath)
 
 	raucInstaller, err := rauc.InstallerNew()
 	if err != nil {
@@ -71,7 +71,7 @@ func InstallRAUCImp(raucFilePath string) error {
 
 func MockInstallRAUC(raucFilePath string) error {
 	// to check file exist
-	fmt.Println("文件名为", raucFilePath)
+	fmt.Println("filename: ", raucFilePath)
 	if _, err := os.Stat(raucFilePath); os.IsNotExist(err) {
 		return fmt.Errorf("not found rauc install package")
 	}
