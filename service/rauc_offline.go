@@ -53,6 +53,10 @@ func (r *RAUCOfflineService) VerifyRelease(release codegen.Release) (string, err
 	return r.CheckSumHandler(release)
 }
 
+func CleanupOfflineRAUCTemp(sysRoot string) error {
+	return os.RemoveAll(filepath.Join(sysRoot, config.OFFLINE_RAUC_TEMP_PATH))
+}
+
 func (r *RAUCOfflineService) DownloadRelease(ctx context.Context, release codegen.Release, force bool) (string, error) {
 	releasePath, err := r.VerifyRelease(release)
 	if err != nil {

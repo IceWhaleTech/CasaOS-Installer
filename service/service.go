@@ -168,6 +168,8 @@ func NewService(RuntimePath string) Services {
 }
 
 func NewInstallerService(sysRoot string) UpdaterServiceInterface {
+
+	CleanupOfflineRAUCTemp(sysRoot)
 	installMethod, err := GetInstallMethod(sysRoot)
 	if err != nil {
 		panic(err)
