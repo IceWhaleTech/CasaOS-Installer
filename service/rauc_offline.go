@@ -78,23 +78,6 @@ func CleanupOfflineRAUCTemp(sysRoot string) error {
 }
 
 func (r *RAUCOfflineService) DownloadRelease(ctx context.Context, release codegen.Release, force bool) (string, error) {
-	// releasePath, err := r.VerifyRelease(release)
-	// if err != nil {
-	// 	// 这里多做一步，从本地读release
-	// 	// 把前面的zip复制到/var/cache/casaos下面。
-	// 	releaseDir, err := config.ReleaseDir(release)
-	// 	if err != nil {
-	// 		return "", err
-	// 	}
-	// 	//copy file to /var/cache/casaos
-	// 	os.MkdirAll(releaseDir, 0755)
-	// 	_, err = copy(filepath.Join(r.SysRoot, config.RAUC_OFFLINE_PATH, config.RAUC_OFFLINE_RAUC_FILENAME), filepath.Join(releaseDir, config.RAUC_OFFLINE_RAUC_FILENAME))
-	// 	if err != nil {
-	// 		return "", err
-	// 	}
-
-	// 	return filepath.Join(releaseDir, config.RAUC_OFFLINE_RAUC_FILENAME), nil
-	// }
 	releasePath := filepath.Join(r.SysRoot, config.RAUC_OFFLINE_PATH, config.RAUC_OFFLINE_RAUC_FILENAME)
 
 	return releasePath, nil
