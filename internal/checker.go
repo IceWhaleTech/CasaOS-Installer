@@ -24,6 +24,21 @@ func init() {
 		SetRetryMaxWaitTime(20 * time.Second)
 }
 
+func WriteReleaseToLocal(release *codegen.Release, releasePath string) error {
+	// create the yaml file
+	f, err := os.Create(releasePath)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	// encode the yaml file
+	encoder := yaml.NewEncoder(f)
+	if err := encoder.Encode(release); err != nil {
+		return err
+	}
+	return nil
+}
 func GetReleaseFromLocal(releasePath string) (*codegen.Release, error) {
 	// open the yaml file
 	f, err := os.Open(releasePath)

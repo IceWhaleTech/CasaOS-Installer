@@ -11,6 +11,8 @@ import (
 	"github.com/IceWhaleTech/CasaOS-Installer/internal"
 	"github.com/IceWhaleTech/CasaOS-Installer/internal/config"
 	"github.com/IceWhaleTech/CasaOS-Installer/service/out"
+
+	"github.com/IceWhaleTech/CasaOS-Installer/common"
 )
 
 type RAUCOfflineService struct {
@@ -26,21 +28,34 @@ func (r *RAUCOfflineService) Install(release codegen.Release, sysRoot string) er
 }
 
 func (r *RAUCOfflineService) LoadReleaseFromRAUC(sysRoot string) (*codegen.Release, error) {
-	rauc_info, err := r.GetRAUCInfo(filepath.Join(sysRoot, config.RAUC_OFFLINE_PATH, config.RAUC_OFFLINE_RAUC_FILENAME))
-	if err != nil {
-		return nil, err
+	if _, err := os.Stat(filepath.Join(sysRoot, config.OFFLINE_RAUC_TEMP_PATH, common.ReleaseYAMLFileName)); os.IsNotExist(err) {
+
+		rauc_info, err := r.GetRAUCInfo(filepath.Join(sysRoot, config.RAUC_OFFLINE_PATH, config.RAUC_OFFLINE_RAUC_FILENAME))
+		if err != nil {
+			return nil, err
+		}
+
+		base64_release, err := GetDescription(rauc_info)
+		if err != nil {
+			return nil, err
+		}
+		releaseContent, err := base64.StdEncoding.DecodeString(base64_release)
+		if err != nil {
+			return nil, err
+		}
+
+		release, err := internal.GetReleaseFromContent(releaseContent)
+		if err != nil {
+			fmt.Println("write release to temp error:", err)
+			return release, nil
+		}
+
+		// write release to temp
+		err = internal.WriteReleaseToLocal(release, filepath.Join(sysRoot, config.OFFLINE_RAUC_TEMP_PATH, common.ReleaseYAMLFileName))
+		return release, err
 	}
 
-	base64_release, err := GetDescription(rauc_info)
-	if err != nil {
-		return nil, err
-	}
-	releaseContent, err := base64.StdEncoding.DecodeString(base64_release)
-	if err != nil {
-		return nil, err
-	}
-
-	return internal.GetReleaseFromContent(releaseContent)
+	return internal.GetReleaseFromLocal(filepath.Join(sysRoot, config.OFFLINE_RAUC_TEMP_PATH, config.RAUC_OFFLINE_RELEASE_FILENAME))
 }
 
 func (r *RAUCOfflineService) GetRelease(ctx context.Context, tag string) (*codegen.Release, error) {
@@ -106,31 +121,6 @@ func (r *RAUCOfflineService) IsUpgradable(release codegen.Release, sysRootPath s
 	return err == nil
 }
 
-// func copy(src, dst string) (int64, error) {
-// 	sourceFileStat, err := os.Stat(src)
-// 	if err != nil {
-// 		return 0, err
-// 	}
-
-// 	if !sourceFileStat.Mode().IsRegular() {
-// 		return 0, fmt.Errorf("%s is not a regular file", src)
-// 	}
-
-// 	source, err := os.Open(src)
-// 	if err != nil {
-// 		return 0, err
-// 	}
-// 	defer source.Close()
-
-// 	destination, err := os.Create(dst)
-// 	if err != nil {
-// 		return 0, err
-// 	}
-// 	defer destination.Close()
-// 	nBytes, err := io.Copy(destination, source)
-// 	return nBytes, err
-// }
-
 func ExtractOfflineRAUCToTemp(sysRoot string) error {
 	// to check temp file exist.
 	// TODO should also check rauc file
@@ -160,11 +150,7 @@ func (r *RAUCOfflineService) LoadReleaseFromOfflineRAUC(sysRoot string) (*codege
 		return nil, fmt.Errorf("rauc release file not found")
 	}
 
-	release, err := internal.GetReleaseFromLocal(filepath.Join(sysRoot, config.OFFLINE_RAUC_TEMP_PATH, config.RAUC_OFFLINE_RELEASE_FILENAME))
-	if err != nil {
-		return nil, err
-	}
-	return release, nil
+	return internal.GetReleaseFromLocal(filepath.Join(sysRoot, config.OFFLINE_RAUC_TEMP_PATH, config.RAUC_OFFLINE_RELEASE_FILENAME))
 }
 
 func (r *RAUCOfflineService) PostMigration(sysRoot string) error {

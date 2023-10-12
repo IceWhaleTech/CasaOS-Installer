@@ -108,8 +108,5 @@ func SetOfflineRAUC(sysRoot string, RAUCOfflinePath string, RAUCOfflineRAUCFile 
 	fmt.Println(filepath.Join(sysRoot, RAUCOfflinePath, RAUCOfflineRAUCFile))
 	if _, err := os.Stat(filepath.Join(sysRoot, RAUCOfflinePath, RAUCOfflineRAUCFile)); os.IsNotExist(err) {
 		panic("not found offline install package")
-	} else {
-		fmt.Println("found offline install package")
 	}
-
 }
