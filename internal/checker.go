@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -26,17 +27,21 @@ func init() {
 
 func WriteReleaseToLocal(release *codegen.Release, releasePath string) error {
 	// create the yaml file
+
+	os.MkdirAll(filepath.Dir(releasePath), 0755)
 	f, err := os.Create(releasePath)
+	defer f.Close()
+
 	if err != nil {
 		return err
 	}
-	defer f.Close()
 
-	// encode the yaml file
-	encoder := yaml.NewEncoder(f)
-	if err := encoder.Encode(release); err != nil {
+	releaseContent, err := yaml.Marshal(release)
+	if err != nil {
 		return err
 	}
+
+	f.Write([]byte(releaseContent))
 	return nil
 }
 func GetReleaseFromLocal(releasePath string) (*codegen.Release, error) {

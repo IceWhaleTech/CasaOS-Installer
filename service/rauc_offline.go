@@ -28,49 +28,49 @@ func (r *RAUCOfflineService) Install(release codegen.Release, sysRoot string) er
 }
 
 func (r *RAUCOfflineService) LoadReleaseFromRAUC(sysRoot string) (*codegen.Release, error) {
-	if _, err := os.Stat(filepath.Join(sysRoot, config.OFFLINE_RAUC_TEMP_PATH, common.ReleaseYAMLFileName)); os.IsNotExist(err) {
-
-		rauc_info, err := r.GetRAUCInfo(filepath.Join(sysRoot, config.RAUC_OFFLINE_PATH, config.RAUC_OFFLINE_RAUC_FILENAME))
-		if err != nil {
-			return nil, err
-		}
-
-		base64_release, err := GetDescription(rauc_info)
-		if err != nil {
-			return nil, err
-		}
-		releaseContent, err := base64.StdEncoding.DecodeString(base64_release)
-		if err != nil {
-			return nil, err
-		}
-
-		release, err := internal.GetReleaseFromContent(releaseContent)
-		if err != nil {
-			fmt.Println("write release to temp error:", err)
-			return release, nil
-		}
-
-		// write release to temp
-		err = internal.WriteReleaseToLocal(release, filepath.Join(sysRoot, config.OFFLINE_RAUC_TEMP_PATH, common.ReleaseYAMLFileName))
-		return release, err
+	if _, err := os.Stat(filepath.Join(sysRoot, config.OFFLINE_RAUC_TEMP_PATH, common.ReleaseYAMLFileName)); os.IsExist(err) {
+		return internal.GetReleaseFromLocal(filepath.Join(sysRoot, config.OFFLINE_RAUC_TEMP_PATH, config.RAUC_OFFLINE_RELEASE_FILENAME))
 	}
+	fmt.Println("rauc file not found")
 
-	return internal.GetReleaseFromLocal(filepath.Join(sysRoot, config.OFFLINE_RAUC_TEMP_PATH, config.RAUC_OFFLINE_RELEASE_FILENAME))
-}
-
-func (r *RAUCOfflineService) GetRelease(ctx context.Context, tag string) (*codegen.Release, error) {
-
-	if _, err := os.Stat(filepath.Join(r.SysRoot, config.RAUC_OFFLINE_PATH, config.RAUC_OFFLINE_RAUC_FILENAME)); os.IsNotExist(err) {
-		return nil, fmt.Errorf("not found offline install package")
-	} else {
-		fmt.Println("found offline install package")
-	}
-
-	release, err := r.LoadReleaseFromRAUC(r.SysRoot)
+	rauc_info, err := r.GetRAUCInfo(filepath.Join(sysRoot, config.RAUC_OFFLINE_PATH, config.RAUC_OFFLINE_RAUC_FILENAME))
 	if err != nil {
 		return nil, err
 	}
-	return release, nil
+
+	base64_release, err := GetDescription(rauc_info)
+	if err != nil {
+		return nil, err
+	}
+	releaseContent, err := base64.StdEncoding.DecodeString(base64_release)
+	if err != nil {
+		return nil, err
+	}
+
+	release, err := internal.GetReleaseFromContent(releaseContent)
+	if err != nil {
+		fmt.Println("write release to temp error:", err)
+		return release, nil
+	}
+
+	// write release to temp
+	err = internal.WriteReleaseToLocal(release, filepath.Join(sysRoot, config.OFFLINE_RAUC_TEMP_PATH, common.ReleaseYAMLFileName))
+	return release, err
+}
+
+func (r *RAUCOfflineService) GetRelease(ctx context.Context, tag string) (*codegen.Release, error) {
+	if _, err := os.Stat(filepath.Join(r.SysRoot, config.RAUC_OFFLINE_PATH, config.RAUC_OFFLINE_RAUC_FILENAME)); os.IsExist(err) {
+		fmt.Println("rauc file  found")
+		return internal.GetReleaseFromLocal(filepath.Join(r.SysRoot, config.OFFLINE_RAUC_TEMP_PATH, config.RAUC_OFFLINE_RELEASE_FILENAME))
+	} else {
+		fmt.Println("rauc file not found")
+
+		release, err := r.LoadReleaseFromRAUC(r.SysRoot)
+		if err != nil {
+			return nil, err
+		}
+		return release, nil
+	}
 }
 
 func (r *RAUCOfflineService) Launch(sysRoot string) error {
