@@ -84,6 +84,7 @@ func main() {
 		println("build date:", date)
 
 		config.InitSetup(*configFlag)
+		config.SysRoot = sysRoot
 
 		logger.LogInit(config.AppInfo.LogPath, config.AppInfo.LogSaveName, config.AppInfo.LogFileExt)
 

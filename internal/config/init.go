@@ -60,6 +60,7 @@ const (
 )
 
 var (
+	SysRoot = "/"
 	// The file name of the rauc package
 	// the name can be changed by file change
 	RAUC_OFFLINE_RAUC_FILENAME = "rauc.tar"

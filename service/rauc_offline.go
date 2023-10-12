@@ -18,14 +18,21 @@ type RAUCOfflineService struct {
 	SysRoot            string
 	InstallRAUCHandler func(raucPath string) error
 	CheckSumHandler    out.CheckSumReleaseUseCase
+
+	GetRAUCInfo func(string) (string, error)
 }
 
 func (r *RAUCOfflineService) Install(release codegen.Release, sysRoot string) error {
-	return InstallRAUC(release, sysRoot, r.InstallRAUCHandler)
+	return r.InstallRAUCHandler(OfflineRAUCFilePath())
 }
 
 func (r *RAUCOfflineService) LoadReleaseFromRAUC(sysRoot string) (*codegen.Release, error) {
-	base64_release, err := GetDescription(filepath.Join(sysRoot, config.RAUC_OFFLINE_PATH))
+	rauc_info, err := r.GetRAUCInfo(filepath.Join(sysRoot, config.RAUC_OFFLINE_PATH, config.RAUC_OFFLINE_RAUC_FILENAME))
+	if err != nil {
+		return nil, err
+	}
+
+	base64_release, err := GetDescription(rauc_info)
 	if err != nil {
 		return nil, err
 	}
@@ -72,23 +79,25 @@ func CleanupOfflineRAUCTemp(sysRoot string) error {
 }
 
 func (r *RAUCOfflineService) DownloadRelease(ctx context.Context, release codegen.Release, force bool) (string, error) {
-	releasePath, err := r.VerifyRelease(release)
-	if err != nil {
-		// 这里多做一步，从本地读release
-		// 把前面的zip复制到/var/cache/casaos下面。
-		releaseDir, err := config.ReleaseDir(release)
-		if err != nil {
-			return "", err
-		}
-		//copy file to /var/cache/casaos
-		os.MkdirAll(releaseDir, 0755)
-		_, err = copy(filepath.Join(r.SysRoot, config.RAUC_OFFLINE_PATH, config.RAUC_OFFLINE_RAUC_FILENAME), filepath.Join(releaseDir, config.RAUC_OFFLINE_RAUC_FILENAME))
-		if err != nil {
-			return "", err
-		}
+	// releasePath, err := r.VerifyRelease(release)
+	// if err != nil {
+	// 	// 这里多做一步，从本地读release
+	// 	// 把前面的zip复制到/var/cache/casaos下面。
+	// 	releaseDir, err := config.ReleaseDir(release)
+	// 	if err != nil {
+	// 		return "", err
+	// 	}
+	// 	//copy file to /var/cache/casaos
+	// 	os.MkdirAll(releaseDir, 0755)
+	// 	_, err = copy(filepath.Join(r.SysRoot, config.RAUC_OFFLINE_PATH, config.RAUC_OFFLINE_RAUC_FILENAME), filepath.Join(releaseDir, config.RAUC_OFFLINE_RAUC_FILENAME))
+	// 	if err != nil {
+	// 		return "", err
+	// 	}
 
-		return filepath.Join(releaseDir, config.RAUC_OFFLINE_RAUC_FILENAME), nil
-	}
+	// 	return filepath.Join(releaseDir, config.RAUC_OFFLINE_RAUC_FILENAME), nil
+	// }
+	releasePath := filepath.Join(r.SysRoot, config.RAUC_OFFLINE_PATH, config.RAUC_OFFLINE_RAUC_FILENAME)
+
 	return releasePath, nil
 }
 

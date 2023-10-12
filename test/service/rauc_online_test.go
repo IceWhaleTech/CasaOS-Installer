@@ -25,6 +25,10 @@ func TestRAUCServer(t *testing.T) {
 	ctx := context.Background()
 	assert.NoError(t, err)
 	config.ServerInfo.CachePath = filepath.Join(tmpDir, "cache")
+	config.SysRoot = tmpDir
+	config.ServerInfo.Mirrors = []string{
+		"https://raw.githubusercontent.com/IceWhaleTech/get/main/",
+	}
 
 	installerServer := &service.RAUCService{
 		InstallRAUCHandler: service.MockInstallRAUC,
@@ -32,16 +36,16 @@ func TestRAUCServer(t *testing.T) {
 		UrlHandler:         service.GitHubBranchTagReleaseUrl,
 	}
 
-	release, err := installerServer.GetRelease(ctx, "unit-test-rauc-0.4.4-1")
+	release, err := installerServer.GetRelease(ctx, "unit-test-rauc-online-v2-0.5.0")
 	assert.NoError(t, err)
-	assert.Equal(t, "v0.4.4-1", release.Version)
+	assert.Equal(t, "v0.5.0", release.Version)
 	fmt.Println(release)
-	// 这个是一个假文件，只有2.6mb
+
 	releasePath, err := installerServer.DownloadRelease(ctx, *release, false)
 	parentDir := filepath.Dir(releasePath)
 
 	assert.NoError(t, err)
-	assert.FileExists(t, filepath.Join(parentDir, "casaos_ova-0.4.4-1.tar"))
+	assert.FileExists(t, filepath.Join(parentDir, "zimaos_zimacube-0.5.0.raucb"))
 	// run shell in golang
 
 	releasePath, err = installerServer.VerifyRelease(*release)
@@ -49,7 +53,7 @@ func TestRAUCServer(t *testing.T) {
 
 	err = installerServer.ExtractRelease(releasePath, *release)
 	assert.NoError(t, err)
-	assert.FileExists(t, filepath.Join(parentDir, "casaos_ova-0.4.4-1.raucb"))
+	assert.FileExists(t, filepath.Join(parentDir, "zimaos_zimacube-0.5.0.raucb"))
 
 	// ensure release file exists
 	fmt.Println("release path:", releasePath)
@@ -57,7 +61,7 @@ func TestRAUCServer(t *testing.T) {
 
 	// ensure rauc file exists
 	// get parent dir of releaseDir
-	assert.FileExists(t, filepath.Join(parentDir, "casaos_ova-0.4.4-1.raucb"))
+	assert.FileExists(t, filepath.Join(parentDir, "zimaos_zimacube-0.5.0.raucb"))
 
 	err = installerServer.Install(*release, tmpDir)
 	assert.NoError(t, err)

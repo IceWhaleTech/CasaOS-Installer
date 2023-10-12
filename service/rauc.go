@@ -91,6 +91,9 @@ func PostInstallRAUC(release codegen.Release, sysRoot string) error {
 	RebootSystem()
 	return err
 }
+func OfflineRAUCFilePath() string {
+	return filepath.Join(config.SysRoot, config.RAUC_OFFLINE_PATH, config.RAUC_OFFLINE_RAUC_FILENAME)
+}
 
 func RAUCFilePath(release codegen.Release) (string, error) {
 	// 这个是验证解压之后的包。
@@ -165,16 +168,23 @@ func CheckMemory() error {
 	return nil
 }
 
-func GetDescription(raucPath string) (string, error) {
-	cmd := exec.Command("rauc", "info", raucPath)
+var MockContent string = ``
+
+func MockRAUCInfo(content string) (string, error) {
+	return MockContent, nil
+}
+
+func GetRAUCInfo(path string) (string, error) {
+	cmd := exec.Command("rauc", "info", path)
 	var out bytes.Buffer
 	cmd.Stdout = &out
 	err := cmd.Run()
-	if err != nil {
-		return "", err
-	}
 
-	lines := strings.Split(out.String(), "\n")
+	return out.String(), err
+}
+
+func GetDescription(raucInfo string) (string, error) {
+	lines := strings.Split(raucInfo, "\n")
 	if len(lines) < 8 {
 		return "", fmt.Errorf("unexpected output: less than 8 lines")
 	}
