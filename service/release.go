@@ -226,50 +226,50 @@ func GetReleaseBranch(sysRoot string) string {
 	return "main"
 }
 
-func CheckOfflineTarExist(sysRoot string) bool {
-	// get all file from /DATA/rauc
-	// if the file have "*.tar" return true
-	files := internal.GetAllFile(filepath.Join(sysRoot, config.RAUC_OFFLINE_PATH))
-	println("files : ", files)
+// func CheckOfflineTarExist(sysRoot string) bool {
+// 	// get all file from /DATA/rauc
+// 	// if the file have "*.tar" return true
+// 	files := internal.GetAllFile(filepath.Join(sysRoot, config.RAUC_OFFLINE_PATH))
+// 	fmt.Println("files : ", files)
 
-	// only allow one tar file
-	tar_files := lo.FilterMap(files, func(filename string, _ int) (string, bool) {
-		if strings.HasSuffix(filename, ".tar") {
-			return filename, true
-		}
-		return "", false
-	})
+// 	// only allow one tar file
+// 	tar_files := lo.FilterMap(files, func(filename string, _ int) (string, bool) {
+// 		if strings.HasSuffix(filename, ".tar") {
+// 			return filename, true
+// 		}
+// 		return "", false
+// 	})
 
-	if len(tar_files) == 1 {
-		file_name := files[0]
-		if strings.HasSuffix(file_name, ".tar") {
-			println("find offline rauc file: ", file_name)
-			config.RAUC_OFFLINE_RAUC_FILENAME = file_name
-			return true
-		}
-	} else {
-		return false
-	}
-	return false
-}
+// 	if len(tar_files) == 1 {
+// 		file_name := files[0]
+// 		if strings.HasSuffix(file_name, ".tar") {
+// 			println("find offline rauc file: ", file_name)
+// 			config.RAUC_OFFLINE_RAUC_FILENAME = file_name
+// 			return true
+// 		}
+// 	} else {
+// 		return false
+// 	}
+// 	return false
+// }
 
 func CheckOfflineRAUCExist(sysRoot string) bool {
 	// get all file from /DATA/rauc
 	// if the file have "*.tar" return true
 	files := internal.GetAllFile(filepath.Join(sysRoot, config.RAUC_OFFLINE_PATH))
-	println("files : ", files)
+	fmt.Println("files : ", files)
 
 	// only allow one tar file
-	tar_files := lo.FilterMap(files, func(filename string, _ int) (string, bool) {
-		if strings.HasSuffix(filename, ".tar") {
+	raucb_files := lo.FilterMap(files, func(filename string, _ int) (string, bool) {
+		if strings.HasSuffix(filename, ".raucb") {
 			return filename, true
 		}
 		return "", false
 	})
 
-	if len(tar_files) == 1 {
+	if len(raucb_files) == 1 {
 		file_name := files[0]
-		if strings.HasSuffix(file_name, ".tar") {
+		if strings.HasSuffix(file_name, ".raucb") {
 			println("find offline rauc file: ", file_name)
 			config.RAUC_OFFLINE_RAUC_FILENAME = file_name
 			return true
