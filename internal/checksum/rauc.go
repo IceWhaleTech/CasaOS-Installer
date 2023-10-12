@@ -49,3 +49,11 @@ func OfflineTarExist(release codegen.Release) (string, error) {
 	return packageFilePath, nil
 
 }
+
+func OfflineTarExistV2(release codegen.Release) (string, error) {
+	packageFilePath := filepath.Join(config.SysRoot, config.RAUC_OFFLINE_PATH, config.RAUC_OFFLINE_RAUC_FILENAME)
+	if _, err := os.Stat(packageFilePath); os.IsNotExist(err) {
+		return "", fmt.Errorf("not found offline rauc release package")
+	}
+	return packageFilePath, nil
+}
