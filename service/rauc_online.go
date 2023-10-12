@@ -17,6 +17,10 @@ type RAUCService struct {
 }
 
 func (r *RAUCService) Install(release codegen.Release, sysRoot string) error {
+	err := CheckMemory()
+	if err != nil {
+		return err
+	}
 	return InstallRAUC(release, sysRoot, r.InstallRAUCHandler)
 }
 
@@ -43,7 +47,8 @@ func (r *RAUCService) DownloadRelease(ctx context.Context, release codegen.Relea
 }
 
 func (r *RAUCService) ExtractRelease(packageFilepath string, release codegen.Release) error {
-	return ExtractRAUCRelease(packageFilepath, release)
+	// return ExtractRAUCRelease(packageFilepath, release)
+	return nil
 }
 
 func (r *RAUCService) ShouldUpgrade(release codegen.Release, sysRoot string) bool {

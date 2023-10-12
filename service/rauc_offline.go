@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 	"io"
 	"os"
@@ -23,6 +24,19 @@ func (r *RAUCOfflineService) Install(release codegen.Release, sysRoot string) er
 	return InstallRAUC(release, sysRoot, r.InstallRAUCHandler)
 }
 
+func (r *RAUCOfflineService) LoadReleaseFromRAUC(sysRoot string) (*codegen.Release, error) {
+	base64_release, err := GetDescription(filepath.Join(sysRoot, config.RAUC_OFFLINE_PATH))
+	if err != nil {
+		return nil, err
+	}
+	releaseContent, err := base64.StdEncoding.DecodeString(base64_release)
+	if err != nil {
+		return nil, err
+	}
+
+	return internal.GetReleaseFromContent(releaseContent)
+}
+
 func (r *RAUCOfflineService) GetRelease(ctx context.Context, tag string) (*codegen.Release, error) {
 
 	if _, err := os.Stat(filepath.Join(r.SysRoot, config.RAUC_OFFLINE_PATH, config.RAUC_OFFLINE_RAUC_FILENAME)); os.IsNotExist(err) {
@@ -31,7 +45,7 @@ func (r *RAUCOfflineService) GetRelease(ctx context.Context, tag string) (*codeg
 		fmt.Println("found offline install package")
 	}
 
-	release, err := r.LoadReleaseFromOfflineRAUC(r.SysRoot)
+	release, err := r.LoadReleaseFromRAUC(r.SysRoot)
 	if err != nil {
 		return nil, err
 	}
@@ -80,7 +94,8 @@ func (r *RAUCOfflineService) DownloadRelease(ctx context.Context, release codege
 
 func (r *RAUCOfflineService) ExtractRelease(packageFilepath string, release codegen.Release) error {
 	// 这个offline没有变化
-	return ExtractRAUCRelease(packageFilepath, release)
+	// return ExtractRAUCRelease(packageFilepath, release)
+	return nil
 }
 
 func (r *RAUCOfflineService) PostInstall(release codegen.Release, sysRoot string) error {

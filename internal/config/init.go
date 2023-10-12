@@ -52,7 +52,9 @@ var (
 )
 
 const (
-	RAUC_OFFLINE_PATH             = "/DATA/rauc/"
+	// RAUC_OFFLINE_PATH             = "/DATA/rauc/"
+	RAUC_OFFLINE_PATH = "/var/lib/casa_data/rauc/"
+
 	RAUC_OFFLINE_RELEASE_FILENAME = "release.yaml"
 	OFFLINE_RAUC_TEMP_PATH        = "/tmp/offline_rauc"
 )
