@@ -2,6 +2,7 @@ package internal
 
 import (
 	"bufio"
+	"bytes"
 	"context"
 	"fmt"
 	"net/http"
@@ -34,6 +35,16 @@ func GetReleaseFromLocal(releasePath string) (*codegen.Release, error) {
 	// decode the yaml file
 	var release codegen.Release
 	decoder := yaml.NewDecoder(f)
+	if err := decoder.Decode(&release); err != nil {
+		return nil, err
+	}
+	return &release, nil
+}
+
+func GetReleaseFromContent(content []byte) (*codegen.Release, error) {
+	// decode the yaml file
+	var release codegen.Release
+	decoder := yaml.NewDecoder(bytes.NewReader(content))
 	if err := decoder.Decode(&release); err != nil {
 		return nil, err
 	}
