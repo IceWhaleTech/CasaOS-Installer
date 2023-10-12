@@ -24,7 +24,6 @@ __debug_bin
 
 codegen/
 dist/
-.vscode/
 .idea/
 /node_modules
 /generate 

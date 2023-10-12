@@ -55,19 +55,6 @@ type services struct {
 	runtimePath string
 }
 
-// func UpdateStatus(newStatus codegen.Status) {
-// 	// if status move to server. the function can be reuse.
-// 	lock.Lock()
-// 	defer lock.Unlock()
-
-// 	status = newStatus
-// 	message = ""
-
-// 	// 把消息总线和状态放在一起。
-// 	ctx := context.Background()
-// 	go PublishEventWrapper(ctx, common.EventTypeDownloadUpdateEnd, nil)
-// }
-
 func GetStatus() (codegen.Status, string) {
 	lock.RLock()
 	defer lock.RUnlock()
@@ -178,7 +165,7 @@ func NewInstallerService(sysRoot string) UpdaterServiceInterface {
 	// 这里搞个工厂模式。
 
 	if installMethod == RAUC {
-		fmt.Println("RAUC Online 模式")
+		fmt.Println("RAUC Online mode")
 		return &RAUCService{
 			InstallRAUCHandler: InstallRAUCImp,
 			DownloadHandler:    nil,
@@ -188,12 +175,13 @@ func NewInstallerService(sysRoot string) UpdaterServiceInterface {
 	}
 
 	if installMethod == RAUCOFFLINE {
-		fmt.Println("RAUC Offline 模式")
+		fmt.Println("RAUC Offline mode")
 
 		return &RAUCOfflineService{
 			SysRoot:            sysRoot,
 			InstallRAUCHandler: InstallRAUCImp,
 			CheckSumHandler:    checksum.OfflineTarExist,
+			GetRAUCInfo:        GetRAUCInfo,
 		}
 	}
 
@@ -236,7 +224,7 @@ func (s *services) MessageBus() (*message_bus.ClientWithResponses, error) {
 
 func PublishEventWrapper(ctx context.Context, eventType message_bus.EventType, properties map[string]string) {
 	if MyService == nil {
-		fmt.Println("Warning: failed to publish event - messsage bus service didn't running")
+		fmt.Println("Warning: failed to publish event - message bus service didn't running")
 		return
 	}
 

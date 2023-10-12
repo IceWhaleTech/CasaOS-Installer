@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
 
@@ -114,9 +113,9 @@ func (r *RAUCOfflineService) PostInstall(release codegen.Release, sysRoot string
 func (r *RAUCOfflineService) ShouldUpgrade(release codegen.Release, sysRoot string) bool {
 	return ShouldUpgrade(release, sysRoot)
 }
-func (r *RAUCOfflineService) IsUpgradable(release codegen.Release, sysrootPath string) bool {
+func (r *RAUCOfflineService) IsUpgradable(release codegen.Release, sysRootPath string) bool {
 
-	if !r.ShouldUpgrade(release, sysrootPath) {
+	if !r.ShouldUpgrade(release, sysRootPath) {
 		return false
 	}
 
@@ -124,30 +123,30 @@ func (r *RAUCOfflineService) IsUpgradable(release codegen.Release, sysrootPath s
 	return err == nil
 }
 
-func copy(src, dst string) (int64, error) {
-	sourceFileStat, err := os.Stat(src)
-	if err != nil {
-		return 0, err
-	}
+// func copy(src, dst string) (int64, error) {
+// 	sourceFileStat, err := os.Stat(src)
+// 	if err != nil {
+// 		return 0, err
+// 	}
 
-	if !sourceFileStat.Mode().IsRegular() {
-		return 0, fmt.Errorf("%s is not a regular file", src)
-	}
+// 	if !sourceFileStat.Mode().IsRegular() {
+// 		return 0, fmt.Errorf("%s is not a regular file", src)
+// 	}
 
-	source, err := os.Open(src)
-	if err != nil {
-		return 0, err
-	}
-	defer source.Close()
+// 	source, err := os.Open(src)
+// 	if err != nil {
+// 		return 0, err
+// 	}
+// 	defer source.Close()
 
-	destination, err := os.Create(dst)
-	if err != nil {
-		return 0, err
-	}
-	defer destination.Close()
-	nBytes, err := io.Copy(destination, source)
-	return nBytes, err
-}
+// 	destination, err := os.Create(dst)
+// 	if err != nil {
+// 		return 0, err
+// 	}
+// 	defer destination.Close()
+// 	nBytes, err := io.Copy(destination, source)
+// 	return nBytes, err
+// }
 
 func ExtractOfflineRAUCToTemp(sysRoot string) error {
 	// to check temp file exist.

@@ -42,9 +42,9 @@ const (
 
 type ConstructReleaseFileUrlFunc func(tag string, mirror string) string
 
-func GitHubBranchTagReleaseUrl(tag string, mirror string) string {
+func GitHubBranchTagReleaseUrl(tag string, _ string) string {
 	// 这个不走新的mirror，自己用的旧的，回头迁移完，这个函数就删了。
-	mirror = "https://raw.githubusercontent.com/IceWhaleTech"
+	mirror := "https://raw.githubusercontent.com/IceWhaleTech"
 	return fmt.Sprintf("%s/get/%s/casaos-release", strings.TrimSuffix(mirror, "/"), tag)
 }
 
@@ -273,7 +273,7 @@ func GetInstallMethod(sysRoot string) (InstallerType, error) {
 	return "", fmt.Errorf("unknown system")
 }
 
-func ShouldUpgrade(release codegen.Release, sysrootPath string) bool {
+func ShouldUpgrade(release codegen.Release, sysRootPath string) bool {
 	if release.Version == "" {
 		return false
 	}
@@ -284,7 +284,7 @@ func ShouldUpgrade(release codegen.Release, sysrootPath string) bool {
 		return false
 	}
 
-	currentVersion, err := CurrentReleaseVersion(sysrootPath)
+	currentVersion, err := CurrentReleaseVersion(sysRootPath)
 	if err != nil {
 		logger.Info("error while getting current release version - considered as not upgradable", zap.Error(err))
 		return false
@@ -298,8 +298,8 @@ func ShouldUpgrade(release codegen.Release, sysrootPath string) bool {
 }
 
 // to check the new version is upgradable and packages are already cached(download)
-func IsUpgradable(release codegen.Release, sysrootPath string) bool {
-	if !ShouldUpgrade(release, sysrootPath) {
+func IsUpgradable(release codegen.Release, sysRootPath string) bool {
+	if !ShouldUpgrade(release, sysRootPath) {
 		return false
 	}
 
@@ -307,20 +307,20 @@ func IsUpgradable(release codegen.Release, sysrootPath string) bool {
 	return err == nil
 }
 
-func InstallRelease(release codegen.Release, sysrootPath string) error {
+func InstallRelease(release codegen.Release, sysRootPath string) error {
 	releaseDir, err := config.ReleaseDir(release)
 	if err != nil {
 		return err
 	}
 
-	if err := internal.InstallRelease(releaseDir, sysrootPath); err != nil {
+	if err := internal.InstallRelease(releaseDir, sysRootPath); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func InstallDependencies(release codegen.Release, sysrootPath string) error {
+func InstallDependencies(release codegen.Release, sysRootPath string) error {
 	internal.InstallDependencies()
 	return nil
 }
