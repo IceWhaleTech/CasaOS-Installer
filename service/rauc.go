@@ -147,8 +147,8 @@ func getFreeMemory() (uint64, error) {
 			if err != nil {
 				return 0, err
 			}
-			// /proc/meminfo中内存的单位是KB，所以需要转换成GB
-			return mem / 1024 / 1024, nil
+			// /proc/meminfo中内存的单位是KB，所以需要转换成MB
+			return mem / 1024, nil
 		}
 	}
 	if scanner.Err() != nil {
@@ -159,8 +159,8 @@ func getFreeMemory() (uint64, error) {
 
 func CheckMemory() error {
 	mem, err := getFreeMemory()
-	if mem < 2 {
-		return fmt.Errorf("memory is less than 2GB")
+	if mem < 600 {
+		return fmt.Errorf("memory is less than 600MB")
 	}
 	if err != nil {
 		return err
