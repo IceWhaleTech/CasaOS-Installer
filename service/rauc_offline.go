@@ -29,9 +29,9 @@ func (r *RAUCOfflineService) Install(release codegen.Release, sysRoot string) er
 
 func (r *RAUCOfflineService) LoadReleaseFromRAUC(sysRoot string) (*codegen.Release, error) {
 	if _, err := os.Stat(filepath.Join(sysRoot, config.OFFLINE_RAUC_TEMP_PATH, common.ReleaseYAMLFileName)); os.IsExist(err) {
+		// read release from cache
 		return internal.GetReleaseFromLocal(filepath.Join(sysRoot, config.OFFLINE_RAUC_TEMP_PATH, config.RAUC_OFFLINE_RELEASE_FILENAME))
 	}
-	fmt.Println("rauc file not found")
 
 	rauc_info, err := r.GetRAUCInfo(filepath.Join(sysRoot, config.RAUC_OFFLINE_PATH, config.RAUC_OFFLINE_RAUC_FILENAME))
 	if err != nil {

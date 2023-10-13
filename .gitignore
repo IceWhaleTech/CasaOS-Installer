@@ -31,4 +31,4 @@ yarn*
 .pnp*
 .yarn
 pnpm-lock.yaml
-
+.DS_Store
