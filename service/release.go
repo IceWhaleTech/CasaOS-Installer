@@ -51,7 +51,7 @@ func GitHubBranchTagReleaseUrl(tag string, _ string) string {
 func HyperFileTagReleaseUrl(tag string, mirror string) string {
 	// https://raw.githubusercontent.com/IceWhaleTech/zimaos-rauc/main/rauc
 	// https://casaos.oss-cn-shanghai.aliyuncs.com/IceWhaleTech/zimaos-rauc/rauc
-	return mirror + tag
+	return mirror + tag + ".txt"
 }
 
 type BestURLFunc func(urls []string) string
