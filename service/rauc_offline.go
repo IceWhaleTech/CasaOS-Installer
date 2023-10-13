@@ -54,13 +54,13 @@ func (r *RAUCOfflineService) LoadReleaseFromRAUC(sysRoot string) (*codegen.Relea
 	}
 
 	// write release to temp
-	err = internal.WriteReleaseToLocal(release, filepath.Join(sysRoot, config.OFFLINE_RAUC_TEMP_PATH, common.ReleaseYAMLFileName))
+	err = internal.WriteReleaseToLocal(release, filepath.Join(sysRoot, config.OFFLINE_RAUC_TEMP_PATH, config.RAUC_OFFLINE_RELEASE_FILENAME))
 	return release, err
 }
 
 func (r *RAUCOfflineService) GetRelease(ctx context.Context, tag string) (*codegen.Release, error) {
-	if _, err := os.Stat(filepath.Join(r.SysRoot, config.RAUC_OFFLINE_PATH, config.RAUC_OFFLINE_RAUC_FILENAME)); os.IsExist(err) {
-		fmt.Println("rauc file  found")
+	if _, err := os.Stat(filepath.Join(r.SysRoot, config.OFFLINE_RAUC_TEMP_PATH, config.RAUC_OFFLINE_RELEASE_FILENAME)); os.IsExist(err) {
+		fmt.Println("rauc file found")
 		return internal.GetReleaseFromLocal(filepath.Join(r.SysRoot, config.OFFLINE_RAUC_TEMP_PATH, config.RAUC_OFFLINE_RELEASE_FILENAME))
 	} else {
 		fmt.Println("rauc file not found")

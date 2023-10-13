@@ -1,10 +1,10 @@
 package fixtures
 
 import (
+	"fmt"
 	"path/filepath"
 
 	"github.com/IceWhaleTech/CasaOS-Installer/codegen"
-	"github.com/IceWhaleTech/CasaOS-Installer/common"
 	"github.com/IceWhaleTech/CasaOS-Installer/internal"
 	"github.com/IceWhaleTech/CasaOS-Installer/internal/config"
 	"github.com/IceWhaleTech/CasaOS-Installer/service"
@@ -56,6 +56,7 @@ func SetOfflineRAUCRelease_050(sysRoot string) error {
 	release := &codegen.Release{
 		Version: "v0.5.0",
 	}
-	err := internal.WriteReleaseToLocal(release, filepath.Join(sysRoot, config.OFFLINE_RAUC_TEMP_PATH, common.ReleaseYAMLFileName))
+	fmt.Println("write:", filepath.Join(sysRoot, config.OFFLINE_RAUC_TEMP_PATH, config.RAUC_OFFLINE_RELEASE_FILENAME))
+	err := internal.WriteReleaseToLocal(release, filepath.Join(sysRoot, config.OFFLINE_RAUC_TEMP_PATH, config.RAUC_OFFLINE_RELEASE_FILENAME))
 	return err
 }
