@@ -104,6 +104,7 @@ func TestRAUCOfflineServerLoadReleaseFromCache(t *testing.T) {
 	fixtures.SetOfflineRAUC(tmpDir, config.RAUC_OFFLINE_PATH, config.RAUC_OFFLINE_RAUC_FILENAME)
 	fixtures.SetOfflineRAUCMock_0504(tmpDir)
 	fixtures.SetOfflineRAUCRelease_050(tmpDir)
+	assert.FileExists(t, filepath.Join(tmpDir, config.RAUC_OFFLINE_PATH, config.RAUC_OFFLINE_RAUC_FILENAME))
 
 	release, err := installerServer.GetRelease(ctx, "any thing")
 	assert.NoError(t, err)

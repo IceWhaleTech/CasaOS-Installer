@@ -54,7 +54,8 @@ func SetOfflineRAUCMock_0504(sysRoot string) error {
 func SetOfflineRAUCRelease_050(sysRoot string) error {
 	service.MockContent = rauc_info_048
 	release := &codegen.Release{
-		Version: "v0.5.0",
+		Version:      "v0.5.0",
+		ReleaseNotes: "# private test\n",
 	}
 	fmt.Println("write:", filepath.Join(sysRoot, config.OFFLINE_RAUC_TEMP_PATH, config.RAUC_OFFLINE_RELEASE_FILENAME))
 	err := internal.WriteReleaseToLocal(release, filepath.Join(sysRoot, config.OFFLINE_RAUC_TEMP_PATH, config.RAUC_OFFLINE_RELEASE_FILENAME))

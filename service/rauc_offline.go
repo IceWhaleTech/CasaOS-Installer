@@ -59,10 +59,10 @@ func (r *RAUCOfflineService) LoadReleaseFromRAUC(sysRoot string) (*codegen.Relea
 }
 
 func (r *RAUCOfflineService) GetRelease(ctx context.Context, tag string) (*codegen.Release, error) {
-	if _, err := os.Stat(filepath.Join(r.SysRoot, config.OFFLINE_RAUC_TEMP_PATH, config.RAUC_OFFLINE_RELEASE_FILENAME)); os.IsExist(err) {
-		fmt.Println("rauc file found")
-		return internal.GetReleaseFromLocal(filepath.Join(r.SysRoot, config.OFFLINE_RAUC_TEMP_PATH, config.RAUC_OFFLINE_RELEASE_FILENAME))
-	} else {
+	cachePath := filepath.Join(r.SysRoot, config.OFFLINE_RAUC_TEMP_PATH, config.RAUC_OFFLINE_RELEASE_FILENAME)
+	_, err := os.Stat(cachePath)
+
+	if os.IsNotExist(err) {
 		fmt.Println("rauc file not found")
 
 		release, err := r.LoadReleaseFromRAUC(r.SysRoot)
@@ -70,6 +70,10 @@ func (r *RAUCOfflineService) GetRelease(ctx context.Context, tag string) (*codeg
 			return nil, err
 		}
 		return release, nil
+
+	} else {
+		fmt.Println("rauc file found")
+		return internal.GetReleaseFromLocal(cachePath)
 	}
 }
 
