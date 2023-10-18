@@ -170,7 +170,7 @@ func NewInstallerService(sysRoot string) UpdaterServiceInterface {
 		return &RAUCService{
 			InstallRAUCHandler: InstallRAUCImp,
 			DownloadHandler:    nil,
-			CheckSumHandler:    checksum.OnlineTarExist,
+			CheckSumHandler:    checksum.OnlineRaucChecksumExist,
 			UrlHandler:         HyperFileTagReleaseUrl,
 		}
 	}
@@ -193,7 +193,7 @@ func NewInstallerService(sysRoot string) UpdaterServiceInterface {
 		// 暂时先用 rauc mock 一下
 		return &RAUCService{
 			InstallRAUCHandler: InstallRAUCImp,
-			CheckSumHandler:    checksum.OnlineTarExist,
+			CheckSumHandler:    checksum.OnlineRAUCExist,
 			UrlHandler:         HyperFileTagReleaseUrl,
 		}
 	}

@@ -180,7 +180,7 @@ func Test_Status_Case2_Upgradable(t *testing.T) {
 	statusService := &service.StatusService{
 		ImplementService: &service.RAUCService{
 			InstallRAUCHandler: service.MockInstallRAUC,
-			CheckSumHandler:    checksum.OnlineTarExist,
+			CheckSumHandler:    checksum.OnlineRAUCExist,
 			UrlHandler:         service.GitHubBranchTagReleaseUrl,
 		},
 		SysRoot: sysRoot,
