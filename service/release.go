@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
 	"time"
@@ -226,33 +225,6 @@ func GetReleaseBranch(sysRoot string) string {
 	return "main"
 }
 
-// func CheckOfflineTarExist(sysRoot string) bool {
-// 	// get all file from /DATA/rauc
-// 	// if the file have "*.tar" return true
-// 	files := internal.GetAllFile(filepath.Join(sysRoot, config.RAUC_OFFLINE_PATH))
-// 	fmt.Println("files : ", files)
-
-// 	// only allow one tar file
-// 	tar_files := lo.FilterMap(files, func(filename string, _ int) (string, bool) {
-// 		if strings.HasSuffix(filename, ".tar") {
-// 			return filename, true
-// 		}
-// 		return "", false
-// 	})
-
-// 	if len(tar_files) == 1 {
-// 		file_name := files[0]
-// 		if strings.HasSuffix(file_name, ".tar") {
-// 			println("find offline rauc file: ", file_name)
-// 			config.RAUC_OFFLINE_RAUC_FILENAME = file_name
-// 			return true
-// 		}
-// 	} else {
-// 		return false
-// 	}
-// 	return false
-// }
-
 func CheckOfflineRAUCExist(sysRoot string) bool {
 	// get all file from /DATA/rauc
 	// if the file have "*.tar" return true
@@ -324,16 +296,6 @@ func ShouldUpgrade(release codegen.Release, sysRootPath string) bool {
 	return true
 }
 
-// to check the new version is upgradable and packages are already cached(download)
-func IsUpgradable(release codegen.Release, sysRootPath string) bool {
-	if !ShouldUpgrade(release, sysRootPath) {
-		return false
-	}
-
-	_, err := VerifyRelease(release)
-	return err == nil
-}
-
 func InstallRelease(release codegen.Release, sysRootPath string) error {
 	releaseDir, err := config.ReleaseDir(release)
 	if err != nil {
@@ -343,59 +305,6 @@ func InstallRelease(release codegen.Release, sysRootPath string) error {
 	if err := internal.InstallRelease(releaseDir, sysRootPath); err != nil {
 		return err
 	}
-
-	return nil
-}
-
-func InstallDependencies(release codegen.Release, sysRootPath string) error {
-	internal.InstallDependencies()
-	return nil
-}
-func VerifyRelease(release codegen.Release) (string, error) {
-	releaseDir, err := config.ReleaseDir(release)
-	if err != nil {
-		return "", err
-	}
-
-	packageURL, err := internal.GetPackageURLByCurrentArch(release, "")
-	if err != nil {
-		return "", err
-	}
-
-	packageFilename := filepath.Base(packageURL)
-
-	// 回头再把这个开一下
-	// packageChecksum := checksums[packageFilename]
-
-	packageFilePath := filepath.Join(releaseDir, packageFilename)
-
-	// TODO 以后做一个优化，以后tar用tar的verify，分开实现
-	// 当前我都不做校验
-	// return packageFilePath, VerifyChecksumByFilePath(packageFilePath, packageChecksum)
-	if _, err := os.Stat(packageFilePath); os.IsNotExist(err) {
-		return packageFilePath, err
-	}
-	return packageFilePath, nil
-}
-
-func ExecuteModuleInstallScript(releaseFilePath string, release codegen.Release) error {
-	// run setup script
-	scriptFolderPath := filepath.Join(releaseFilePath, "..", "build/scripts/setup/script.d")
-	// to get the script file name from scriptFolderPath
-	// to execute the script in name order
-	filepath.WalkDir(scriptFolderPath, func(path string, d os.DirEntry, err error) error {
-		if err != nil {
-			return err
-		}
-
-		if d.IsDir() {
-			return nil
-		}
-
-		cmd := exec.Command(path)
-		err = cmd.Run()
-		return err
-	})
 
 	return nil
 }
@@ -419,28 +328,4 @@ func stopSystemdService(serviceName string) error {
 	}
 	return nil
 
-}
-
-func StopModule(release codegen.Release) error {
-	err := error(nil)
-	for _, module := range release.Modules {
-		if err := stopSystemdService(module.Name); err != nil {
-			fmt.Printf("failed to stop module: %s\n", err.Error())
-		}
-		// to sleep 1s
-		time.Sleep(1 * time.Second)
-	}
-	return err
-}
-
-func LaunchModule(release codegen.Release) error {
-	for _, module := range release.Modules {
-		fmt.Println("启动: ", module.Name)
-		if err := reStartSystemdService(module.Name); err != nil {
-			return err
-		}
-		// to sleep 1s
-		time.Sleep(1 * time.Second)
-	}
-	return nil
 }
