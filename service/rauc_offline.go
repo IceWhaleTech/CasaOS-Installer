@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/IceWhaleTech/CasaOS-Installer/codegen"
 	"github.com/IceWhaleTech/CasaOS-Installer/internal"
@@ -42,8 +43,9 @@ func (r *RAUCOfflineService) LoadReleaseFromRAUC(sysRoot string) (*codegen.Relea
 	if err != nil {
 		return nil, err
 	}
-	releaseContent, err := base64.StdEncoding.DecodeString(base64_release)
+	releaseContent, err := base64.StdEncoding.DecodeString(strings.TrimSpace(base64_release))
 	if err != nil {
+		fmt.Println("decode base64 error:", err, "`", strings.TrimSpace(base64_release), "`")
 		return nil, err
 	}
 

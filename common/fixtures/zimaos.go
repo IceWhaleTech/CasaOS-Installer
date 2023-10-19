@@ -10,6 +10,42 @@ import (
 	"github.com/IceWhaleTech/CasaOS-Installer/service"
 )
 
+const rauc_info_049 = `Compatible: 	'zimaos-zimacube'
+Version:    	'0.4.8'
+Description:	'dmVyc2lvbjogdjAuNC45CnJlbGVhc2Vfbm90ZXM6IHwKICAjIyMgZmlyc3QgcmVsZWFzZSBcblxuZmlyc3QgcmVsZWFzZSEhISEgVGVzdCBvbmx5ISEhCm1pcnJvcnM6CiAgLSBodHRwczovL2dpdGh1Yi5jb20vSWNlV2hhbGVUZWNoCnBhY2thZ2VzOgogIC0gcGF0aDogL3ppbWFvcy1yYXVjL3JlbGVhc2VzL2Rvd25sb2FkLzAuNC44LjEvemltYW9zX3ppbWFjdWJlLTAuNC44LnJhdWNiCiAgICBhcmNoaXRlY3R1cmU6IGFtZDY0CmNoZWNrc3VtczogL3ppbWFvcy1yYXVjL3JlbGVhc2VzL2Rvd25sb2FkLzAuNC44LjEvY2hlY2tzdW1zLnR4dA==='
+Build:      	'(null)'
+Hooks:      	'install-check'
+Bundle Format: 	plain
+
+3 Images:
+  [boot]
+	Filename:  boot.vfat
+	Checksum:  a4691daff60756352486c1e8a1b44d1047fb2eb82e847404b26447f1d60f95d5
+	Size:      33554432
+	Hooks:     install
+  [kernel]
+	Filename:  kernel.img
+	Checksum:  48f50e07fb99475090f4816a352e3978f8b6b3d9a4659f6ea16c16da6fe87c21
+	Size:      14430208
+	Hooks:     post-install
+  [rootfs]
+	Filename:  rootfs.img
+	Checksum:  c4a3b384f5ba2d359c4719391e9ff185cf7a7ffd3776dde76acaa2d1283ed959
+	Size:      496070656
+	Hooks:
+
+Certificate Chain:
+ 0 Subject: O = IceWhale Technology, CN = IceWhale Technology Development-1
+   Issuer: O = IceWhale Technology, CN = IceWhale Technology OTA Development
+   SPKI sha256: 96:A9:8A:2D:12:E3:6F:DE:ED:B1:0B:C8:26:2D:7C:EA:30:34:B5:15:1E:E6:AB:7C:DA:AD:F9:DC:DC:84:01:AD
+   Not Before: Jan  1 00:00:00 1970 GMT
+   Not After:  Dec 31 23:59:59 9999 GMT
+ 1 Subject: O = IceWhale Technology, CN = IceWhale Technology OTA Development
+   Issuer: O = IceWhale Technology, CN = IceWhale Technology OTA Development
+   SPKI sha256: FE:BE:C2:D0:42:16:92:F4:85:5D:3D:71:C9:79:FC:D9:16:AE:9E:73:EB:74:48:4D:3E:D2:23:54:AF:D5:05:B4
+   Not Before: Jan  1 00:00:00 1970 GMT
+   Not After:  Dec 31 23:59:59 9999 GMT
+`
 const rauc_info_048 = `Compatible: 	'zimaos-zimacube'
 Version:    	'0.5.0.4'
 Description:	'dmVyc2lvbjogdjAuNS4wLjQKcmVsZWFzZV9ub3RlczogfAogICMgcHJpdmF0ZSB0ZXN0Cm1pcnJvcnM6CiAgLSBodHRwczovL2Nhc2Fvcy5vc3MtY24tc2hhbmdoYWkuYWxpeXVuY3MuY29tL0ljZVdoYWxlVGVjaApwYWNrYWdlczoKICAtIHBhdGg6IC96aW1hb3MtcmF1Yy9yZWxlYXNlcy9kb3dubG9hZC90ZXN0L3ppbWFvc196aW1hY3ViZS0wLjQuOC5yYXVjYgogICAgYXJjaGl0ZWN0dXJlOiBhbWQ2NApjaGVja3N1bXM6IC9nZXQvcmVsZWFzZXMvZG93bmxvYWQvdjAuNC40LTEvY2hlY2tzdW1zLnR4dAptb2R1bGVzOgogIC0gbmFtZTogY2FzYW9zLWdhdGV3YXkKICAgIHNob3J0OiBnYXRld2F5CiAgLSBuYW1lOiBjYXNhb3MtdXNlci1zZXJ2aWNlCiAgICBzaG9ydDogdXNlci1zZXJ2aWNlCiAgLSBuYW1lOiBjYXNhb3MtbWVzc2FnZS1idXMKICAgIHNob3J0OiBtZXNzYWdlLWJ1cwogIC0gbmFtZTogY2FzYW9zCiAgICBzaG9ydDogY2FzYW9zCiAgLSBuYW1lOiBjYXNhb3MtbG9jYWwtc3RvcmFnZQogICAgc2hvcnQ6IGxvY2FsLXN0b3JhZ2UKICAtIG5hbWU6IGNhc2Fvcy1hcHAtbWFuYWdlbWVudAogICAgc2hvcnQ6IGFwcC1tYW5hZ2VtZW50'
@@ -48,6 +84,11 @@ Certificate Chain:
 
 func SetOfflineRAUCMock_0504(sysRoot string) error {
 	service.MockContent = rauc_info_048
+	return nil
+}
+
+func SetOfflineRAUCMock_049(sysRoot string) error {
+	service.MockContent = rauc_info_049
 	return nil
 }
 

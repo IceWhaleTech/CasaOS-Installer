@@ -52,7 +52,6 @@ func (r *StatusService) GetRelease(ctx context.Context, tag string) (*codegen.Re
 				}
 			}
 		}()
-
 	}
 
 	if ctx.Value(types.Trigger) == types.HTTP_REQUEST {
