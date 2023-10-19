@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/IceWhaleTech/CasaOS-Installer/codegen"
 	"github.com/IceWhaleTech/CasaOS-Installer/types"
@@ -28,38 +29,46 @@ func (r *StatusService) Install(release codegen.Release, sysRoot string) error {
 func (r *StatusService) GetRelease(ctx context.Context, tag string) (*codegen.Release, error) {
 	release := &codegen.Release{}
 
+	err := error(nil)
 	// 因为更新完进入主页又要拿一次release
 	if ctx.Value(types.Trigger) == types.HTTP_CHECK {
 		// 不更新状态
 	}
 
 	if ctx.Value(types.Trigger) == types.CRON_JOB {
+		fmt.Println("err", err, release)
 		UpdateStatusWithMessage(FetchUpdateBegin, "触发更新")
 		defer func() {
-			if !r.ShouldUpgrade(*release, r.SysRoot) {
-				UpdateStatusWithMessage(FetchUpdateEnd, "up-to-date")
-				return
-			} else {
-				if r.IsUpgradable(*release, r.SysRoot) {
-					UpdateStatusWithMessage(FetchUpdateEnd, "ready-to-update")
+			if err == nil && release != nil {
+
+				if !r.ShouldUpgrade(*release, r.SysRoot) {
+					UpdateStatusWithMessage(FetchUpdateEnd, "up-to-date")
+					return
 				} else {
-					UpdateStatusWithMessage(FetchUpdateEnd, "out-of-date")
+					if r.IsUpgradable(*release, r.SysRoot) {
+						UpdateStatusWithMessage(FetchUpdateEnd, "ready-to-update")
+					} else {
+						UpdateStatusWithMessage(FetchUpdateEnd, "out-of-date")
+					}
 				}
 			}
 		}()
+
 	}
 
 	if ctx.Value(types.Trigger) == types.HTTP_REQUEST {
 		// 如果是HTTP请求的话，则不更新状态
 		defer func() {
-			if !r.ShouldUpgrade(*release, r.SysRoot) {
-				UpdateStatusWithMessage(FetchUpdateEnd, "up-to-date")
-				return
-			} else {
-				if r.IsUpgradable(*release, r.SysRoot) {
-					UpdateStatusWithMessage(FetchUpdateEnd, "ready-to-update")
+			if err == nil && release != nil {
+				if !r.ShouldUpgrade(*release, r.SysRoot) {
+					UpdateStatusWithMessage(FetchUpdateEnd, "up-to-date")
+					return
 				} else {
-					UpdateStatusWithMessage(FetchUpdateEnd, "out-of-date")
+					if r.IsUpgradable(*release, r.SysRoot) {
+						UpdateStatusWithMessage(FetchUpdateEnd, "ready-to-update")
+					} else {
+						UpdateStatusWithMessage(FetchUpdateEnd, "out-of-date")
+					}
 				}
 			}
 		}()
@@ -70,7 +79,10 @@ func (r *StatusService) GetRelease(ctx context.Context, tag string) (*codegen.Re
 		UpdateStatusWithMessage(InstallBegin, "fetching")
 	}
 
-	release, err := r.ImplementService.GetRelease(ctx, tag)
+	release, err = r.ImplementService.GetRelease(ctx, tag)
+	if err != nil {
+		fmt.Println(err)
+	}
 	return release, err
 }
 
@@ -141,6 +153,8 @@ func (r *StatusService) PostInstall(release codegen.Release, sysRoot string) err
 	defer func() {
 		if err != nil {
 			UpdateStatusWithMessage(InstallError, err.Error())
+		} else {
+			fmt.Println(err)
 		}
 	}()
 	return err
