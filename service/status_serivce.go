@@ -36,7 +36,6 @@ func (r *StatusService) GetRelease(ctx context.Context, tag string) (*codegen.Re
 	}
 
 	if ctx.Value(types.Trigger) == types.CRON_JOB {
-		fmt.Println("err", err, release)
 		UpdateStatusWithMessage(FetchUpdateBegin, "触发更新")
 		defer func() {
 			if err == nil && release != nil {

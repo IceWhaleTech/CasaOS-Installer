@@ -2,10 +2,12 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"path/filepath"
 
 	"github.com/IceWhaleTech/CasaOS-Installer/codegen"
+	"github.com/IceWhaleTech/CasaOS-Installer/internal/config"
 	"github.com/IceWhaleTech/CasaOS-Installer/service/out"
 )
 
@@ -33,8 +35,21 @@ func (r *RAUCService) VerifyRelease(release codegen.Release) (string, error) {
 	return r.CheckSumHandler(release)
 }
 
+func (r *RAUCService) CleanRelease(ctx context.Context, release codegen.Release) error {
+	releaseDir, err := config.ReleaseDir(release)
+	if err != nil {
+		return err
+	}
+	return os.RemoveAll(releaseDir)
+}
 func (r *RAUCService) DownloadRelease(ctx context.Context, release codegen.Release, force bool) (string, error) {
 	filePath, err := r.VerifyRelease(release)
+	if err != nil {
+		fmt.Println("verify release error:", err, "to clean release file")
+
+		// delete the old release
+		r.CleanRelease(ctx, release)
+	}
 	if err == nil {
 		return filePath, nil
 		// 不用下载
@@ -43,6 +58,7 @@ func (r *RAUCService) DownloadRelease(ctx context.Context, release codegen.Relea
 	// 重新下载
 	DownloadRelease(ctx, release, force)
 	filePath, err = r.VerifyRelease(release)
+	fmt.Println("download release success", err)
 	return filePath, err
 }
 
