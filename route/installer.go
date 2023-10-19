@@ -2,6 +2,7 @@ package route
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	"github.com/IceWhaleTech/CasaOS-Common/utils"
@@ -47,6 +48,8 @@ func (a *api) GetRelease(ctx echo.Context, params codegen.GetReleaseParams) erro
 
 	status, _ := service.GetStatus()
 	if status.Status == codegen.Downloading {
+		fmt.Println("不触发下载，提着返回")
+
 		return ctx.JSON(http.StatusOK, &codegen.ReleaseOK{
 			Data:       release,
 			Upgradable: utils.Ptr(false),
@@ -59,6 +62,8 @@ func (a *api) GetRelease(ctx echo.Context, params codegen.GetReleaseParams) erro
 		})
 	}
 	// 无其它东西在干扰的情况
+
+	fmt.Println("download")
 
 	// 这里就拿导致拿两次release了
 	// 这里不能用request的context，不然会cancel
@@ -82,14 +87,11 @@ func (a *api) GetRelease(ctx echo.Context, params codegen.GetReleaseParams) erro
 	go func() {
 
 		if service.ShouldUpgrade(*release, sysRoot) {
-			if upgradable {
-				service.UpdateStatusWithMessage(service.FetchUpdateEnd, "ready-to-update")
-			} else {
-				service.UpdateStatusWithMessage(service.FetchUpdateEnd, "out-of-date")
-				service.InstallerService.DownloadRelease(http_trigger_context, *release, false)
+			service.UpdateStatusWithMessage(service.FetchUpdateEnd, "out-of-date")
+			_, err := service.InstallerService.DownloadRelease(http_trigger_context, *release, false)
+			if err != nil {
+				fmt.Println(err)
 			}
-		} else {
-			service.UpdateStatusWithMessage(service.FetchUpdateEnd, "up-to-date")
 		}
 	}()
 

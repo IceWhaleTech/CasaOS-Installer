@@ -70,14 +70,15 @@ func OnlineRaucChecksumExist(release codegen.Release) (string, error) {
 	packageFilename := filepath.Base(packageURL)
 
 	packageFilePath := filepath.Join(releaseDir, packageFilename)
-	checksums, err := internal.GetChecksums(packageFilePath)
+
+	checksums, err := internal.GetChecksums(filepath.Dir(packageFilePath) + "/checksums.txt")
 	packageChecksum := checksums[packageFilename]
 
 	if err != nil {
 		return "", err
 	}
 	// to check file exist
-	fmt.Println("rauc verify release:", packageFilePath)
+	fmt.Println("rauc verify checksum:", packageFilePath)
 	if _, err := os.Stat(packageFilePath); os.IsNotExist(err) {
 		return "", fmt.Errorf("not found rauc release  package")
 	}

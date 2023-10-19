@@ -93,6 +93,7 @@ func GetReleaseFrom(ctx context.Context, releaseURL string) (*codegen.Release, e
 }
 
 func GetChecksums(filepath string) (map[string]string, error) {
+	println("sum filepath", filepath)
 	file, err := os.Open(filepath)
 	if err != nil {
 		return nil, err
