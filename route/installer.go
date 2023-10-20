@@ -81,7 +81,6 @@ func (a *api) GetRelease(ctx echo.Context, params codegen.GetReleaseParams) erro
 	}
 
 	go func() {
-
 		if service.ShouldUpgrade(*release, sysRoot) {
 			service.UpdateStatusWithMessage(service.FetchUpdateEnd, "out-of-date")
 			_, err := service.InstallerService.DownloadRelease(http_trigger_context, *release, false)
@@ -98,6 +97,7 @@ func (a *api) GetRelease(ctx echo.Context, params codegen.GetReleaseParams) erro
 }
 
 func (a *api) InstallRelease(ctx echo.Context, params codegen.InstallReleaseParams) error {
+	fmt.Println("安装!!!!1")
 	status, _ := service.GetStatus()
 	if status.Status == codegen.Downloading {
 		message := "downloading"
@@ -121,12 +121,11 @@ func (a *api) InstallRelease(ctx echo.Context, params codegen.InstallReleasePara
 		tag = *params.Version
 	}
 
-	// go service.UpdateStatusWithMessage(service.InstallBegin, "getRelease中")
-
 	release, err := service.InstallerService.GetRelease(context.WithValue(ctx.Request().Context(), types.INSTALL, types.INSTALL), tag)
 	if err != nil {
 		message := err.Error()
 
+		fmt.Println("安装失败", err)
 		if err == service.ErrReleaseNotFound {
 			return ctx.JSON(http.StatusNotFound, &codegen.ResponseNotFound{
 				Message: &message,
@@ -148,6 +147,8 @@ func (a *api) InstallRelease(ctx echo.Context, params codegen.InstallReleasePara
 	}
 
 	go func() {
+		fmt.Println("开始安装!!!!1")
+
 		// backgroundCtx, cancel := context.WithCancel(context.Background())
 		// defer cancel()
 		sysRoot := "/"

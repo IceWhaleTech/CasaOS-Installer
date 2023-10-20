@@ -64,6 +64,9 @@ func GetStatus() (codegen.Status, string) {
 func UpdateStatusWithMessage(eventType EventType, newPackageStatus string) {
 	lock.Lock()
 	defer lock.Unlock()
+	if (eventType != InstallEnd && eventType != InstallError) && (status.Status == codegen.Installing) {
+		return
+	}
 
 	// TODO only run once
 	InitEventTypeMapStatus()

@@ -39,17 +39,18 @@ func (r *StatusService) GetRelease(ctx context.Context, tag string) (*codegen.Re
 		UpdateStatusWithMessage(FetchUpdateBegin, "触发更新")
 		defer func() {
 			if err == nil && release != nil {
-
-				if !r.ShouldUpgrade(*release, r.SysRoot) {
-					UpdateStatusWithMessage(FetchUpdateEnd, "up-to-date")
-					return
-				} else {
-					if r.IsUpgradable(*release, r.SysRoot) {
-						UpdateStatusWithMessage(FetchUpdateEnd, "ready-to-update")
+				go func() {
+					if !r.ShouldUpgrade(*release, r.SysRoot) {
+						UpdateStatusWithMessage(FetchUpdateEnd, "up-to-date")
+						return
 					} else {
-						UpdateStatusWithMessage(FetchUpdateEnd, "out-of-date")
+						if r.IsUpgradable(*release, r.SysRoot) {
+							UpdateStatusWithMessage(FetchUpdateEnd, "ready-to-update")
+						} else {
+							UpdateStatusWithMessage(FetchUpdateEnd, "out-of-date")
+						}
 					}
-				}
+				}()
 			}
 		}()
 	}
@@ -62,11 +63,13 @@ func (r *StatusService) GetRelease(ctx context.Context, tag string) (*codegen.Re
 					UpdateStatusWithMessage(FetchUpdateEnd, "up-to-date")
 					return
 				} else {
-					if r.IsUpgradable(*release, r.SysRoot) {
-						UpdateStatusWithMessage(FetchUpdateEnd, "ready-to-update")
-					} else {
-						UpdateStatusWithMessage(FetchUpdateEnd, "out-of-date")
-					}
+					go func() {
+						if r.IsUpgradable(*release, r.SysRoot) {
+							UpdateStatusWithMessage(FetchUpdateEnd, "ready-to-update")
+						} else {
+							UpdateStatusWithMessage(FetchUpdateEnd, "out-of-date")
+						}
+					}()
 				}
 			}
 		}()
