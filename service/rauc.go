@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/IceWhaleTech/CasaOS-Installer/codegen"
 	"github.com/IceWhaleTech/CasaOS-Installer/internal"
@@ -84,6 +85,8 @@ func MockInstallRAUC(raucFilePath string) error {
 }
 
 func PostInstallRAUC(release codegen.Release, sysRoot string) error {
+	time.Sleep(5 * time.Second)
+
 	// write 1+1=2  to sysRoot + FlagUpgradeFile
 	d1 := []byte("1+1=2")
 	err := os.WriteFile(filepath.Join(sysRoot, FlagUpgradeFile), d1, 0644)
