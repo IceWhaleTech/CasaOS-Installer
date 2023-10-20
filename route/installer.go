@@ -63,8 +63,6 @@ func (a *api) GetRelease(ctx echo.Context, params codegen.GetReleaseParams) erro
 	}
 	// 无其它东西在干扰的情况
 
-	fmt.Println("download")
-
 	// 这里就拿导致拿两次release了
 	// 这里不能用request的context，不然会cancel
 	http_trigger_context = context.WithValue(context.Background(), types.Trigger, types.HTTP_REQUEST)
@@ -82,8 +80,6 @@ func (a *api) GetRelease(ctx echo.Context, params codegen.GetReleaseParams) erro
 		})
 	}
 
-	upgradable := service.InstallerService.IsUpgradable(*release, "")
-
 	go func() {
 
 		if service.ShouldUpgrade(*release, sysRoot) {
@@ -97,7 +93,7 @@ func (a *api) GetRelease(ctx echo.Context, params codegen.GetReleaseParams) erro
 
 	return ctx.JSON(http.StatusOK, &codegen.ReleaseOK{
 		Data:       release,
-		Upgradable: &upgradable,
+		Upgradable: utils.Ptr(false),
 	})
 }
 
