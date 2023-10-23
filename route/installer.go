@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/IceWhaleTech/CasaOS-Common/utils"
 	"github.com/IceWhaleTech/CasaOS-Common/utils/logger"
@@ -147,8 +148,6 @@ func (a *api) InstallRelease(ctx echo.Context, params codegen.InstallReleasePara
 	}
 
 	go func() {
-		fmt.Println("开始安装!!!!1")
-
 		// backgroundCtx, cancel := context.WithCancel(context.Background())
 		// defer cancel()
 		sysRoot := "/"
@@ -159,29 +158,26 @@ func (a *api) InstallRelease(ctx echo.Context, params codegen.InstallReleasePara
 		releasePath, err := service.InstallerService.DownloadRelease(contentCtx, *release, false)
 		if err != nil {
 			logger.Error("error while downloading release: %s", zap.Error(err))
-			// service.UpdateStatusWithMessage(service.InstallError, fmt.Sprintf("安装时下载失败:%s", err.Error()))
 			return
 		}
+		time.Sleep(3 * time.Second)
 
 		err = service.InstallerService.ExtractRelease(releasePath, *release)
 		if err != nil {
 			logger.Error("error while extract release: %s", zap.Error(err))
-			//  这个更新message应该是由status service 来更新的
-			// service.UpdateStatusWithMessage(service.InstallError, fmt.Sprintf("安装时解压失败:%s", err.Error()))
 			return
 		}
+		time.Sleep(3 * time.Second)
 
 		err = service.InstallerService.Install(*release, sysRoot)
 		if err != nil {
 			logger.Error("error while install system: %s", zap.Error(err))
-			// service.UpdateStatusWithMessage(service.InstallError, fmt.Sprintf("安装失败:%s", err.Error()))
 			return
 		}
 
 		err = service.InstallerService.PostInstall(*release, sysRoot)
 		if err != nil {
 			logger.Error("error while post install system: %s", zap.Error(err))
-			// service.UpdateStatusWithMessage(service.InstallError, fmt.Sprintf("后安装失败:%s", err.Error()))
 			return
 		}
 	}()
