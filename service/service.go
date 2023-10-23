@@ -255,6 +255,6 @@ func PublishEventWrapper(ctx context.Context, eventType message_bus.EventType, p
 	defer response.HTTPResponse.Body.Close()
 
 	if response.StatusCode() != http.StatusOK {
-		logger.Error("failed to publish event", zap.String("status code", response.Status()))
+		logger.Error("failed to publish event", zap.String("status code", response.Status()), zap.String("body", string(response.Body)))
 	}
 }

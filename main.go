@@ -178,26 +178,30 @@ func main() {
 	}
 
 	// 上面notify之后，才有必要去注册
-	go func() {
+	go func(context.Context) {
 		for {
-			// register at message bus
-			if messageBus, err := service.MyService.MessageBus(); err != nil {
-				logger.Info("error when trying to connect to message bus... skipping", zap.Error(err))
-			} else {
-				response, err := messageBus.RegisterEventTypesWithResponse(ctx, common.EventTypes)
-				if err != nil {
-					logger.Error("error when trying to register one or more event types - some event type will not be discoverable", zap.Error(err))
+			select {
+			case <-ctx.Done():
+				return
+			case <-time.After(1 * time.Second):
+				if messageBus, err := service.MyService.MessageBus(); err != nil {
+					logger.Info("error when trying to connect to message bus... skipping", zap.Error(err))
+					continue
+				} else {
+					response, err := messageBus.RegisterEventTypesWithResponse(ctx, common.EventTypes)
+					if err != nil {
+						logger.Error("error when trying to register one or more event types - some event type will not be discoverable", zap.Error(err))
+						continue
+					}
+					if response != nil && response.StatusCode() != http.StatusOK {
+						logger.Error("error when trying to register one or more event types - some event type will not be discoverable", zap.String("status", response.Status()), zap.String("body", string(response.Body)))
+						continue
+					}
+					return
 				}
-
-				if response != nil && response.StatusCode() != http.StatusOK {
-					logger.Error("error when trying to register one or more event types - some event type will not be discoverable", zap.String("status", response.Status()), zap.String("body", string(response.Body)))
-				}
-				break
 			}
 		}
-		// 不要一直重试
-		time.Sleep(10 * time.Second)
-	}()
+	}(ctx)
 
 	// initialize routers and register at gateway
 	listener, err := net.Listen("tcp", net.JoinHostPort(common.Localhost, "0"))
