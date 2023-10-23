@@ -197,6 +197,7 @@ func main() {
 						logger.Error("error when trying to register one or more event types - some event type will not be discoverable", zap.String("status", response.Status()), zap.String("body", string(response.Body)))
 						continue
 					}
+					logger.Info("message bus register success")
 					return
 				}
 			}
