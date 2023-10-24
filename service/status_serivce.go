@@ -28,7 +28,8 @@ func (r *StatusService) Install(release codegen.Release, sysRoot string) error {
 }
 
 func (r *StatusService) postGetRelease(ctx context.Context, release *codegen.Release) {
-	fmt.Println("postGetRelease")
+	defer func() { r.have_other_get_release_flag = false }()
+
 	status, _ := GetStatus()
 	if status.Status == codegen.Downloading {
 		return
@@ -54,8 +55,8 @@ func (r *StatusService) postGetRelease(ctx context.Context, release *codegen.Rel
 }
 
 func (r *StatusService) GetRelease(ctx context.Context, tag string) (*codegen.Release, error) {
+	// 只允许一个release进 postGetRelease (这个是为了防止多个请求同时触发checksum)(后面已经对checksum做了缓存)，可以考虑不要
 	flag := false
-	fmt.Println(r.have_other_get_release_flag)
 	if !r.have_other_get_release_flag {
 		if ctx.Value(types.Trigger) == types.HTTP_REQUEST {
 			r.have_other_get_release_flag = true
@@ -69,13 +70,10 @@ func (r *StatusService) GetRelease(ctx context.Context, tag string) (*codegen.Re
 	// 因为更新完进入主页又要拿一次release
 	if ctx.Value(types.Trigger) == types.HTTP_REQUEST {
 		defer func() {
-			fmt.Println("flag ", flag)
-
 			if err == nil && release != nil && flag {
 				go func() {
 					r.postGetRelease(ctx, release)
 				}()
-				defer func() { r.have_other_get_release_flag = false }()
 			}
 		}()
 	}
