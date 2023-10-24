@@ -9,6 +9,8 @@ import (
 	"github.com/IceWhaleTech/CasaOS-Installer/codegen"
 )
 
+var ShouldUpgradeCount int = 0
+
 type TestService struct {
 	InstallRAUCHandler func(raucPath string) error
 	downloaded         bool
@@ -59,6 +61,7 @@ func (r *TestService) ShouldUpgrade(release codegen.Release, sysRoot string) boo
 }
 
 func (r *TestService) IsUpgradable(release codegen.Release, sysRootPath string) bool {
+	ShouldUpgradeCount++
 	return r.ShouldUpgrade(release, sysRootPath) && r.downloaded
 }
 

@@ -9,8 +9,9 @@ import (
 )
 
 type StatusService struct {
-	ImplementService UpdaterServiceInterface
-	SysRoot          string
+	ImplementService            UpdaterServiceInterface
+	SysRoot                     string
+	have_other_get_release_flag bool
 }
 
 type InstallProgressStatus string
@@ -26,51 +27,66 @@ func (r *StatusService) Install(release codegen.Release, sysRoot string) error {
 	return err
 }
 
+func (r *StatusService) postGetRelease(ctx context.Context, release *codegen.Release) {
+	defer func() { r.have_other_get_release_flag = false }()
+
+	status, _ := GetStatus()
+	if status.Status == codegen.Downloading {
+		return
+	}
+	if status.Status == codegen.Installing {
+		return
+	}
+
+	// 这里怎么判断如果有其它fetching就不搞这个了?
+	if !r.ShouldUpgrade(*release, r.SysRoot) {
+		UpdateStatusWithMessage(FetchUpdateEnd, "up-to-date")
+		return
+	} else {
+		if r.IsUpgradable(*release, r.SysRoot) {
+			UpdateStatusWithMessage(FetchUpdateEnd, "ready-to-update")
+		} else {
+			UpdateStatusWithMessage(FetchUpdateEnd, "out-of-date")
+			// 这里应该去触发下载
+			go r.DownloadRelease(ctx, *release, false)
+		}
+		return
+	}
+}
+
 func (r *StatusService) GetRelease(ctx context.Context, tag string) (*codegen.Release, error) {
+	// 只允许一个release进 postGetRelease (这个是为了防止多个请求同时触发checksum)(后面已经对checksum做了缓存)，可以考虑不要
+	flag := false
+	if !r.have_other_get_release_flag {
+		if ctx.Value(types.Trigger) == types.HTTP_REQUEST {
+			r.have_other_get_release_flag = true
+			flag = true
+		}
+	}
+
 	release := &codegen.Release{}
 
 	err := error(nil)
 	// 因为更新完进入主页又要拿一次release
-	if ctx.Value(types.Trigger) == types.HTTP_CHECK {
-		// 不更新状态
-	}
-
-	if ctx.Value(types.Trigger) == types.CRON_JOB {
-		UpdateStatusWithMessage(FetchUpdateBegin, "触发更新")
+	if ctx.Value(types.Trigger) == types.HTTP_REQUEST {
 		defer func() {
-			if err == nil && release != nil {
+			if err == nil && release != nil && flag {
 				go func() {
-					if !r.ShouldUpgrade(*release, r.SysRoot) {
-						UpdateStatusWithMessage(FetchUpdateEnd, "up-to-date")
-						return
-					} else {
-						if r.IsUpgradable(*release, r.SysRoot) {
-							UpdateStatusWithMessage(FetchUpdateEnd, "ready-to-update")
-						} else {
-							UpdateStatusWithMessage(FetchUpdateEnd, "out-of-date")
-						}
-					}
+					r.postGetRelease(ctx, release)
 				}()
 			}
 		}()
 	}
 
-	if ctx.Value(types.Trigger) == types.HTTP_REQUEST {
+	if ctx.Value(types.Trigger) == types.CRON_JOB {
+		UpdateStatusWithMessage(FetchUpdateBegin, "触发更新")
+
 		// 如果是HTTP请求的话，则不更新状态
 		defer func() {
 			if err == nil && release != nil {
-				if !r.ShouldUpgrade(*release, r.SysRoot) {
-					UpdateStatusWithMessage(FetchUpdateEnd, "up-to-date")
-					return
-				} else {
-					go func() {
-						if r.IsUpgradable(*release, r.SysRoot) {
-							UpdateStatusWithMessage(FetchUpdateEnd, "ready-to-update")
-						} else {
-							UpdateStatusWithMessage(FetchUpdateEnd, "out-of-date")
-						}
-					}()
-				}
+				go func() {
+					r.postGetRelease(ctx, release)
+				}()
 			}
 		}()
 	}
@@ -101,16 +117,30 @@ func (r *StatusService) VerifyRelease(release codegen.Release) (string, error) {
 
 func (r *StatusService) DownloadRelease(ctx context.Context, release codegen.Release, force bool) (string, error) {
 	err := error(nil)
+
+	if status.Status == codegen.Downloading {
+		return "", fmt.Errorf("downloading")
+	}
+	if status.Status == codegen.FetchUpdating {
+		return "", fmt.Errorf("fecthing")
+	}
+	if status.Status == codegen.Installing && ctx.Value(types.Trigger) != types.INSTALL {
+		return "", fmt.Errorf("installing")
+	}
+
 	if ctx.Value(types.Trigger) == types.CRON_JOB {
+		fmt.Println("开始下载的状态")
+
 		UpdateStatusWithMessage(DownloadBegin, "下载中")
 		defer func() {
+			fmt.Println("下载完成")
+
 			if err == nil {
 				UpdateStatusWithMessage(DownloadEnd, "ready-to-update")
 			} else {
 				UpdateStatusWithMessage(DownloadError, err.Error())
 			}
 		}()
-
 	}
 
 	if ctx.Value(types.Trigger) == types.HTTP_REQUEST {

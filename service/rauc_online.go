@@ -5,10 +5,12 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/IceWhaleTech/CasaOS-Installer/codegen"
 	"github.com/IceWhaleTech/CasaOS-Installer/internal/config"
 	"github.com/IceWhaleTech/CasaOS-Installer/service/out"
+	"github.com/bluele/gcache"
 )
 
 type RAUCService struct {
@@ -16,6 +18,8 @@ type RAUCService struct {
 	DownloadHandler    out.DownloadReleaseUseCase
 	CheckSumHandler    out.CheckSumReleaseUseCase
 	UrlHandler         ConstructReleaseFileUrlFunc
+	hasChecked         bool
+	gcache             gcache.Cache
 }
 
 func (r *RAUCService) Install(release codegen.Release, sysRoot string) error {
@@ -27,12 +31,33 @@ func (r *RAUCService) Install(release codegen.Release, sysRoot string) error {
 }
 
 func (r *RAUCService) GetRelease(ctx context.Context, tag string) (*codegen.Release, error) {
-	return FetchRelease(ctx, tag, r.UrlHandler)
+	if r.gcache == nil {
+		r.gcache = gcache.New(20).LRU().Build()
+		r.gcache.SetWithExpire("key", "ok", time.Minute*2)
+
+	}
+	// 从缓存中获取
+	if v, err := r.gcache.Get(tag); err == nil {
+		return v.(*codegen.Release), nil
+	}
+
+	release, err := FetchRelease(ctx, tag, r.UrlHandler)
+	if err == nil {
+		r.gcache.SetWithExpire(tag, release, time.Minute*2)
+	}
+	return release, err
 }
 
 func (r *RAUCService) VerifyRelease(release codegen.Release) (string, error) {
+	if r.hasChecked {
+		return "", nil
+	}
 	// 这个是验证下载包的，验证的是下载之前的包。
-	return r.CheckSumHandler(release)
+	path, err := r.CheckSumHandler(release)
+	if err == nil {
+		r.hasChecked = true
+	}
+	return path, err
 }
 
 func (r *RAUCService) CleanRelease(ctx context.Context, release codegen.Release) error {
@@ -56,7 +81,11 @@ func (r *RAUCService) DownloadRelease(ctx context.Context, release codegen.Relea
 	}
 
 	// 重新下载
-	DownloadRelease(ctx, release, force)
+	_, err = DownloadRelease(ctx, release, force)
+	r.hasChecked = false
+	if err != nil {
+		return "", err
+	}
 	filePath, err = r.VerifyRelease(release)
 	fmt.Println("download release success", err)
 	return filePath, err

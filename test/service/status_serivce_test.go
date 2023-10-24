@@ -2,6 +2,7 @@ package service_test
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
@@ -103,12 +104,11 @@ func Test_Status_Case2_HTTP_GET_Release(t *testing.T) {
 	assert.Equal(t, codegen.Idle, value.Status)
 	assert.Equal(t, string(types.READY_TO_UPDATE), msg)
 
-	time.Sleep(3 * time.Second)
+	time.Sleep(2 * time.Second)
 	// 但是应该会说需要更新
 	value, msg = service.GetStatus()
-	assert.Equal(t, codegen.Idle, value.Status)
-	assert.Equal(t, string(types.OUT_OF_DATE), msg)
-
+	assert.Equal(t, codegen.Downloading, value.Status)
+	assert.Equal(t, "http 触发的下载", msg)
 }
 
 func Test_Status_Case3_Install_Success(t *testing.T) {
@@ -167,6 +167,7 @@ func Test_Status_Case3_Install_Success(t *testing.T) {
 	assert.Equal(t, string(types.INSTALLING), msg)
 }
 
+// 这个是测试cron触发的更新的下载的更新的
 func Test_Status_Case2_Upgradable(t *testing.T) {
 	logger.LogInitConsoleOnly()
 
@@ -196,16 +197,16 @@ func Test_Status_Case2_Upgradable(t *testing.T) {
 	assert.Equal(t, codegen.Idle, value.Status)
 	assert.Equal(t, "", msg)
 
-	release, err := statusService.GetRelease(ctx, "unit-test-rauc-0.4.4-1")
+	_, err = statusService.GetRelease(ctx, "unit-test-rauc-0.4.4-1")
 	assert.NoError(t, err)
 
+	time.Sleep(3 * time.Second)
 	value, msg = service.GetStatus()
-	assert.Equal(t, codegen.Idle, value.Status)
-	assert.Equal(t, string(types.OUT_OF_DATE), msg)
+	assert.Equal(t, codegen.Downloading, value.Status)
+	assert.Equal(t, "下载中", msg)
 
-	_, err = statusService.DownloadRelease(ctx, *release, false)
-	assert.NoError(t, err)
-
+	time.Sleep(5 * time.Second)
+	fmt.Println("断言")
 	value, msg = service.GetStatus()
 	assert.Equal(t, codegen.Idle, value.Status)
 	assert.Equal(t, "ready-to-update", msg)
@@ -241,15 +242,18 @@ func Test_Status_Case3_Download_Failed(t *testing.T) {
 	assert.Equal(t, codegen.Idle, value.Status)
 	assert.Equal(t, "", msg)
 
-	release, err := statusService.GetRelease(ctx, "unit-test-rauc-0.4.4-1")
-	assert.NoError(t, err)
+	go func() {
+		_, err = statusService.GetRelease(ctx, "unit-test-rauc-0.4.4-1")
+		assert.NoError(t, err)
+	}()
+
+	time.Sleep(100 * time.Microsecond)
 
 	value, msg = service.GetStatus()
-	assert.Equal(t, codegen.Idle, value.Status)
-	assert.Equal(t, string(types.OUT_OF_DATE), msg)
+	assert.Equal(t, codegen.FetchUpdating, value.Status)
+	assert.Equal(t, "触发更新", msg)
 
-	_, err = statusService.DownloadRelease(ctx, *release, false)
-	assert.ErrorContains(t, err, "download fail")
+	time.Sleep(10 * time.Second)
 
 	value, msg = service.GetStatus()
 	assert.Equal(t, codegen.DownloadError, value.Status)
@@ -312,4 +316,56 @@ func Test_Status_Case4_Install_Fail(t *testing.T) {
 	assert.Equal(t, "rauc is not compatible", msg)
 }
 
-// TODO 补一个测试，就是解压失败
+func Test_Status_Get_Release_Currency(t *testing.T) {
+	logger.LogInitConsoleOnly()
+
+	tmpDir, err := os.MkdirTemp("", "casaos-status-test-case-5")
+	assert.NoError(t, err)
+
+	sysRoot := tmpDir
+	fixtures.SetLocalRelease(sysRoot, "v0.4.5")
+
+	statusService := &service.StatusService{
+		ImplementService: &service.TestService{
+			InstallRAUCHandler: service.AlwaysSuccessInstallHandler,
+		},
+		SysRoot: sysRoot,
+	}
+	service.UpdateStatusWithMessage(service.DownloadEnd, "ready-to-update")
+
+	service.ShouldUpgradeCount = 0
+
+	go func() {
+		ctx := context.WithValue(context.Background(), types.Trigger, types.HTTP_REQUEST)
+		release, err := statusService.GetRelease(ctx, "latest")
+		assert.NoError(t, err)
+		assert.Equal(t, "v0.4.8", release.Version)
+	}()
+
+	time.Sleep(100 * time.Microsecond)
+
+	go func() {
+		ctx := context.WithValue(context.Background(), types.Trigger, types.HTTP_REQUEST)
+		release, err := statusService.GetRelease(ctx, "latest")
+		assert.NoError(t, err)
+		assert.Equal(t, "v0.4.8", release.Version)
+	}()
+
+	time.Sleep(100 * time.Microsecond)
+
+	go func() {
+		ctx := context.WithValue(context.Background(), types.Trigger, types.HTTP_REQUEST)
+		release, err := statusService.GetRelease(ctx, "latest")
+		assert.NoError(t, err)
+		assert.Equal(t, "v0.4.8", release.Version)
+	}()
+
+	time.Sleep(1 * time.Second)
+
+	status, msg := service.GetStatus()
+	assert.Equal(t, codegen.Idle, status.Status)
+	assert.Equal(t, "ready-to-update", msg)
+
+	time.Sleep(5 * time.Second)
+	assert.Equal(t, 1, service.ShouldUpgradeCount)
+}
