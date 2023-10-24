@@ -43,6 +43,7 @@ func (r *RAUCService) CleanRelease(ctx context.Context, release codegen.Release)
 	return os.RemoveAll(releaseDir)
 }
 func (r *RAUCService) DownloadRelease(ctx context.Context, release codegen.Release, force bool) (string, error) {
+	fmt.Println("download release", release)
 	filePath, err := r.VerifyRelease(release)
 	if err != nil {
 		fmt.Println("verify release error:", err, "to clean release file")
@@ -56,7 +57,10 @@ func (r *RAUCService) DownloadRelease(ctx context.Context, release codegen.Relea
 	}
 
 	// 重新下载
-	DownloadRelease(ctx, release, force)
+	_, err = DownloadRelease(ctx, release, force)
+	if err != nil {
+		return "", err
+	}
 	filePath, err = r.VerifyRelease(release)
 	fmt.Println("download release success", err)
 	return filePath, err
