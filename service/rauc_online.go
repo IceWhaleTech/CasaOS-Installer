@@ -19,6 +19,7 @@ type RAUCService struct {
 	CheckSumHandler    out.CheckSumReleaseUseCase
 	UrlHandler         ConstructReleaseFileUrlFunc
 	hasChecked         bool
+	path               string
 	gcache             gcache.Cache
 }
 
@@ -50,11 +51,12 @@ func (r *RAUCService) GetRelease(ctx context.Context, tag string) (*codegen.Rele
 
 func (r *RAUCService) VerifyRelease(release codegen.Release) (string, error) {
 	if r.hasChecked {
-		return "", nil
+		return r.path, nil
 	}
 	// 这个是验证下载包的，验证的是下载之前的包。
 	path, err := r.CheckSumHandler(release)
 	if err == nil {
+		r.path = path
 		r.hasChecked = true
 	}
 	return path, err
