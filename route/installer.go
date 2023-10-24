@@ -2,7 +2,6 @@ package route
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"time"
 
@@ -53,6 +52,9 @@ func (a *api) GetRelease(ctx echo.Context, params codegen.GetReleaseParams) erro
 
 func (a *api) InstallRelease(ctx echo.Context, params codegen.InstallReleaseParams) error {
 	status, _ := service.GetStatus()
+
+	service.UpdateStatusWithMessage(service.InstallBegin, types.FETCHING)
+
 	if status.Status == codegen.Downloading {
 		message := "downloading"
 		return ctx.JSON(http.StatusOK, &codegen.ResponseOK{
@@ -74,18 +76,19 @@ func (a *api) InstallRelease(ctx echo.Context, params codegen.InstallReleasePara
 			tag = *params.Version
 		}
 
-		release, err := service.InstallerService.GetRelease(context.WithValue(ctx.Request().Context(), types.INSTALL, types.INSTALL), tag)
+		ctx := context.WithValue(context.Background(), types.Trigger, types.INSTALL)
+		release, err := service.InstallerService.GetRelease(ctx, tag)
 		if err != nil {
 			message := err.Error()
-			fmt.Println("安装失败", message)
+			service.UpdateStatusWithMessage(service.InstallError, message)
 		}
 
 		// if the err is not nil. It mean should to download
-		contentCtx := context.Background()
 
-		releasePath, err := service.InstallerService.DownloadRelease(contentCtx, *release, false)
+		releasePath, err := service.InstallerService.DownloadRelease(ctx, *release, false)
 		if err != nil {
-			logger.Error("error while downloading release: %s", zap.Error(err))
+			service.UpdateStatusWithMessage(service.InstallError, err.Error())
+			logger.Error("error while downloading release: %s")
 			return
 		}
 		time.Sleep(3 * time.Second)

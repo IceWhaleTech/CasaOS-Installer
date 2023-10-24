@@ -177,33 +177,6 @@ func main() {
 		}
 	}
 
-	// 上面notify之后，才有必要去注册
-	go func(context.Context) {
-		for {
-			select {
-			case <-ctx.Done():
-				return
-			case <-time.After(1 * time.Second):
-				if messageBus, err := service.MyService.MessageBus(); err != nil {
-					logger.Info("error when trying to connect to message bus... skipping", zap.Error(err))
-					continue
-				} else {
-					response, err := messageBus.RegisterEventTypesWithResponse(ctx, common.EventTypes)
-					if err != nil {
-						logger.Error("error when trying to register one or more event types - some event type will not be discoverable", zap.Error(err))
-						continue
-					}
-					if response != nil && response.StatusCode() != http.StatusOK {
-						logger.Error("error when trying to register one or more event types - some event type will not be discoverable", zap.String("status", response.Status()), zap.String("body", string(response.Body)))
-						continue
-					}
-					logger.Info("message bus register success")
-					return
-				}
-			}
-		}
-	}(ctx)
-
 	// initialize routers and register at gateway
 	listener, err := net.Listen("tcp", net.JoinHostPort(common.Localhost, "0"))
 	if err != nil {
@@ -232,12 +205,39 @@ func main() {
 				logger.Info("gateway register success")
 				break
 			}
-			time.Sleep(10 * time.Second)
+			time.Sleep(5 * time.Second)
 		}
 	}()
 
+	// 上面notify之后，才有必要去注册
+	go func(context.Context) {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-time.After(1 * time.Second):
+				if messageBus, err := service.MyService.MessageBus(); err != nil {
+					logger.Info("error when trying to connect to message bus... skipping", zap.Error(err))
+					continue
+				} else {
+					response, err := messageBus.RegisterEventTypesWithResponse(ctx, common.EventTypes)
+					if err != nil {
+						logger.Error("error when trying to register one or more event types - some event type will not be discoverable", zap.Error(err))
+						continue
+					}
+					if response != nil && response.StatusCode() != http.StatusOK {
+						logger.Error("error when trying to register one or more event types - some event type will not be discoverable", zap.String("status", response.Status()), zap.String("body", string(response.Body)))
+						continue
+					}
+					logger.Info("message bus register success")
+					return
+				}
+			}
+		}
+	}(ctx)
+
 	// 等待一下，让gateway注册成功
-	time.Sleep(5 * time.Second)
+	time.Sleep(10 * time.Second)
 	// 这里应该还要把文件删一下
 	service.InstallerService.PostMigration(sysRoot)
 
