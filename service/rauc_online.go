@@ -35,8 +35,7 @@ func (r *RAUCService) Install(release codegen.Release, sysRoot string) error {
 func (r *RAUCService) GetRelease(ctx context.Context, tag string) (*codegen.Release, error) {
 	if r.gcache == nil {
 		r.gcache = gcache.New(20).LRU().Build()
-		r.gcache.SetWithExpire("key", "ok", time.Minute*2)
-
+		r.gcache.SetWithExpire("key", "ok", time.Minute*50)
 	}
 	// 从缓存中获取
 	if v, err := r.gcache.Get(tag); err == nil {
