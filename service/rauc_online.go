@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/IceWhaleTech/CasaOS-Installer/codegen"
+	"github.com/IceWhaleTech/CasaOS-Installer/internal/checksum"
 	"github.com/IceWhaleTech/CasaOS-Installer/internal/config"
 	"github.com/IceWhaleTech/CasaOS-Installer/service/out"
 	"github.com/bluele/gcache"
@@ -50,7 +51,8 @@ func (r *RAUCService) GetRelease(ctx context.Context, tag string) (*codegen.Rele
 }
 
 func (r *RAUCService) VerifyRelease(release codegen.Release) (string, error) {
-	if r.hasChecked {
+	_, err := checksum.OnlineRAUCExist(release)
+	if err == nil && r.hasChecked {
 		return r.path, nil
 	}
 	// 这个是验证下载包的，验证的是下载之前的包。
