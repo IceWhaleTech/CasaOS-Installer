@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/IceWhaleTech/CasaOS-Common/utils/logger"
-	"github.com/IceWhaleTech/CasaOS-Common/utils/systemctl"
 	"github.com/IceWhaleTech/CasaOS-Installer/codegen"
 	"github.com/IceWhaleTech/CasaOS-Installer/common"
 	"github.com/IceWhaleTech/CasaOS-Installer/internal"
@@ -307,25 +306,4 @@ func InstallRelease(release codegen.Release, sysRootPath string) error {
 	}
 
 	return nil
-}
-
-func reStartSystemdService(serviceName string) error {
-	// TODO remove the code, because the service is stop in before
-	// but in install rauc. the stop is important. So I need to think about it.
-	if err := systemctl.StopService(fmt.Sprintf("%s.service", serviceName)); err != nil {
-		return err
-	}
-
-	if err := systemctl.StartService(fmt.Sprintf("%s.service", serviceName)); err != nil {
-		return err
-	}
-	return nil
-}
-
-func stopSystemdService(serviceName string) error {
-	if err := systemctl.StopService(fmt.Sprintf("%s.service", serviceName)); err != nil {
-		return err
-	}
-	return nil
-
 }
