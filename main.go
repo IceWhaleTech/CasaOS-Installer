@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"sync"
 	"time"
 
 	"github.com/IceWhaleTech/CasaOS-Common/model"
@@ -92,8 +93,9 @@ func main() {
 	}
 
 	service.InstallerService = &service.StatusService{
-		ImplementService: service.NewInstallerService(sysRoot),
-		SysRoot:          sysRoot,
+		ImplementService:                 service.NewInstallerService(sysRoot),
+		SysRoot:                          sysRoot,
+		Have_other_get_release_flag_lock: sync.RWMutex{},
 	}
 
 	go service.StartFallbackWebsite()
@@ -126,14 +128,16 @@ func main() {
 					}
 					if event.Has(fsnotify.Create) {
 						service.InstallerService = &service.StatusService{
-							ImplementService: service.NewInstallerService(sysRoot),
-							SysRoot:          sysRoot,
+							ImplementService:                 service.NewInstallerService(sysRoot),
+							SysRoot:                          sysRoot,
+							Have_other_get_release_flag_lock: sync.RWMutex{},
 						}
 					}
 					if event.Has(fsnotify.Remove) {
 						service.InstallerService = &service.StatusService{
-							ImplementService: service.NewInstallerService(sysRoot),
-							SysRoot:          sysRoot,
+							ImplementService:                 service.NewInstallerService(sysRoot),
+							SysRoot:                          sysRoot,
+							Have_other_get_release_flag_lock: sync.RWMutex{},
 						}
 					}
 

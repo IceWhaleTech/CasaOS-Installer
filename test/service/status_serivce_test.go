@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sync"
 	"testing"
 	"time"
 
@@ -30,8 +31,10 @@ func Test_Status_Case1_CRONJOB(t *testing.T) {
 	statusService := &service.StatusService{
 		ImplementService: &service.TestService{
 			InstallRAUCHandler: service.AlwaysSuccessInstallHandler,
+			DownloadStatusLock: sync.RWMutex{},
 		},
-		SysRoot: sysRoot,
+		SysRoot:                          sysRoot,
+		Have_other_get_release_flag_lock: sync.RWMutex{},
 	}
 
 	value, msg := service.GetStatus()
@@ -85,8 +88,10 @@ func Test_Status_Case2_HTTP_GET_Release(t *testing.T) {
 	statusService := &service.StatusService{
 		ImplementService: &service.TestService{
 			InstallRAUCHandler: service.AlwaysSuccessInstallHandler,
+			DownloadStatusLock: sync.RWMutex{},
 		},
-		SysRoot: sysRoot,
+		SysRoot:                          sysRoot,
+		Have_other_get_release_flag_lock: sync.RWMutex{},
 	}
 
 	service.UpdateStatusWithMessage(service.DownloadEnd, "ready-to-update")
@@ -123,8 +128,10 @@ func Test_Status_Case3_Install_Success(t *testing.T) {
 	statusService := &service.StatusService{
 		ImplementService: &service.TestService{
 			InstallRAUCHandler: service.AlwaysSuccessInstallHandler,
+			DownloadStatusLock: sync.RWMutex{},
 		},
-		SysRoot: sysRoot,
+		SysRoot:                          sysRoot,
+		Have_other_get_release_flag_lock: sync.RWMutex{},
 	}
 	// 模仿安装时的状态
 
@@ -184,7 +191,8 @@ func Test_Status_Case2_Upgradable(t *testing.T) {
 			CheckSumHandler:    checksum.OnlineRAUCExist,
 			UrlHandler:         service.GitHubBranchTagReleaseUrl,
 		},
-		SysRoot: sysRoot,
+		SysRoot:                          sysRoot,
+		Have_other_get_release_flag_lock: sync.RWMutex{},
 	}
 
 	fixtures.SetLocalRelease(sysRoot, "v0.4.3")
@@ -229,7 +237,8 @@ func Test_Status_Case3_Download_Failed(t *testing.T) {
 			CheckSumHandler:    checksum.AlwaysFail,
 			UrlHandler:         service.GitHubBranchTagReleaseUrl,
 		},
-		SysRoot: sysRoot,
+		SysRoot:                          sysRoot,
+		Have_other_get_release_flag_lock: sync.RWMutex{},
 	}
 
 	fixtures.SetLocalRelease(sysRoot, "v0.4.3")
@@ -272,8 +281,10 @@ func Test_Status_Case4_Install_Fail(t *testing.T) {
 	statusService := &service.StatusService{
 		ImplementService: &service.TestService{
 			InstallRAUCHandler: service.AlwaysFailedInstallHandler,
+			DownloadStatusLock: sync.RWMutex{},
 		},
-		SysRoot: sysRoot,
+		SysRoot:                          sysRoot,
+		Have_other_get_release_flag_lock: sync.RWMutex{},
 	}
 	// 模仿安装时的状态
 
@@ -328,12 +339,16 @@ func Test_Status_Get_Release_Currency(t *testing.T) {
 	statusService := &service.StatusService{
 		ImplementService: &service.TestService{
 			InstallRAUCHandler: service.AlwaysSuccessInstallHandler,
+			DownloadStatusLock: sync.RWMutex{},
 		},
-		SysRoot: sysRoot,
+		SysRoot:                          sysRoot,
+		Have_other_get_release_flag_lock: sync.RWMutex{},
 	}
 	service.UpdateStatusWithMessage(service.DownloadEnd, "ready-to-update")
 
+	service.Test_server_count_lock.Lock()
 	service.ShouldUpgradeCount = 0
+	service.Test_server_count_lock.Unlock()
 
 	go func() {
 		ctx := context.WithValue(context.Background(), types.Trigger, types.HTTP_REQUEST)
@@ -367,5 +382,8 @@ func Test_Status_Get_Release_Currency(t *testing.T) {
 	assert.Equal(t, "ready-to-update", msg)
 
 	time.Sleep(5 * time.Second)
+	service.Test_server_count_lock.Lock()
 	assert.Equal(t, 1, service.ShouldUpgradeCount)
+	service.Test_server_count_lock.Unlock()
+
 }
