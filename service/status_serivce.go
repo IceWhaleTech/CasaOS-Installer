@@ -126,13 +126,14 @@ func (r *StatusService) VerifyRelease(release codegen.Release) (string, error) {
 func (r *StatusService) DownloadRelease(ctx context.Context, release codegen.Release, force bool) (string, error) {
 	err := error(nil)
 
-	if status.Status == codegen.Downloading {
+	local_status, _ := GetStatus()
+	if local_status.Status == codegen.Downloading {
 		return "", fmt.Errorf("downloading")
 	}
-	if status.Status == codegen.FetchUpdating {
+	if local_status.Status == codegen.FetchUpdating {
 		return "", fmt.Errorf("fecthing")
 	}
-	if status.Status == codegen.Installing && ctx.Value(types.Trigger) != types.INSTALL {
+	if local_status.Status == codegen.Installing && ctx.Value(types.Trigger) != types.INSTALL {
 		return "", fmt.Errorf("installing")
 	}
 
