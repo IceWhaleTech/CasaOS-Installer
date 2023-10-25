@@ -3,15 +3,17 @@ package service
 import (
 	"context"
 	"fmt"
+	"sync"
 
 	"github.com/IceWhaleTech/CasaOS-Installer/codegen"
 	"github.com/IceWhaleTech/CasaOS-Installer/types"
 )
 
 type StatusService struct {
-	ImplementService            UpdaterServiceInterface
-	SysRoot                     string
-	have_other_get_release_flag bool
+	ImplementService                 UpdaterServiceInterface
+	SysRoot                          string
+	have_other_get_release_flag      bool
+	Have_other_get_release_flag_lock sync.RWMutex
 }
 
 type InstallProgressStatus string
@@ -28,7 +30,11 @@ func (r *StatusService) Install(release codegen.Release, sysRoot string) error {
 }
 
 func (r *StatusService) postGetRelease(ctx context.Context, release *codegen.Release) {
-	defer func() { r.have_other_get_release_flag = false }()
+	defer func() {
+		r.Have_other_get_release_flag_lock.Lock()
+		r.have_other_get_release_flag = false
+		r.Have_other_get_release_flag_lock.Unlock()
+	}()
 
 	status, _ := GetStatus()
 	if status.Status == codegen.Downloading {
@@ -57,12 +63,14 @@ func (r *StatusService) postGetRelease(ctx context.Context, release *codegen.Rel
 func (r *StatusService) GetRelease(ctx context.Context, tag string) (*codegen.Release, error) {
 	// 只允许一个release进 postGetRelease (这个是为了防止多个请求同时触发checksum)(后面已经对checksum做了缓存)，可以考虑不要
 	flag := false
+	r.Have_other_get_release_flag_lock.Lock()
 	if !r.have_other_get_release_flag {
 		if ctx.Value(types.Trigger) == types.HTTP_REQUEST {
 			r.have_other_get_release_flag = true
 			flag = true
 		}
 	}
+	r.Have_other_get_release_flag_lock.Unlock()
 
 	release := &codegen.Release{}
 
@@ -118,13 +126,14 @@ func (r *StatusService) VerifyRelease(release codegen.Release) (string, error) {
 func (r *StatusService) DownloadRelease(ctx context.Context, release codegen.Release, force bool) (string, error) {
 	err := error(nil)
 
-	if status.Status == codegen.Downloading {
+	local_status, _ := GetStatus()
+	if local_status.Status == codegen.Downloading {
 		return "", fmt.Errorf("downloading")
 	}
-	if status.Status == codegen.FetchUpdating {
+	if local_status.Status == codegen.FetchUpdating {
 		return "", fmt.Errorf("fecthing")
 	}
-	if status.Status == codegen.Installing && ctx.Value(types.Trigger) != types.INSTALL {
+	if local_status.Status == codegen.Installing && ctx.Value(types.Trigger) != types.INSTALL {
 		return "", fmt.Errorf("installing")
 	}
 
