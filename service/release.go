@@ -238,8 +238,8 @@ func CheckOfflineRAUCExist(sysRoot string) bool {
 		return "", false
 	})
 
-	if len(raucb_files) == 1 {
-		file_name := files[0]
+	if len(raucb_files) >= 1 {
+		file_name := raucb_files[0]
 		if strings.HasSuffix(file_name, ".raucb") {
 			println("find offline rauc file: ", file_name)
 			config.RAUC_OFFLINE_RAUC_FILENAME = file_name
