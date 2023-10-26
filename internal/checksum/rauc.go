@@ -87,12 +87,7 @@ func OnlineRaucChecksumExist(release codegen.Release) (string, error) {
 }
 
 func OfflineTarExist(release codegen.Release) (string, error) {
-	releaseDir, err := config.ReleaseDir(release)
-	if err != nil {
-		return "", err
-	}
-
-	packageFilePath := filepath.Join(releaseDir, config.RAUC_OFFLINE_RAUC_FILENAME)
+	packageFilePath := filepath.Join(config.SysRoot, config.RAUC_OFFLINE_PATH, config.RAUC_OFFLINE_RAUC_FILENAME)
 
 	// to check file exist
 	fmt.Println("rauc  offline verify in cache:", packageFilePath)
@@ -100,7 +95,6 @@ func OfflineTarExist(release codegen.Release) (string, error) {
 		return "", fmt.Errorf("not found offline rauc release package")
 	}
 	return packageFilePath, nil
-
 }
 
 func OfflineTarExistV2(release codegen.Release) (string, error) {
