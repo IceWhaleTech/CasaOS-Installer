@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
@@ -271,6 +272,71 @@ func GetInstallMethod(sysRoot string) (InstallerType, error) {
 	return "", fmt.Errorf("unknown system")
 }
 
+func parseVersion(v string) (major, minor, patch, revision int, tag string) {
+	parts := strings.Split(v, ".")
+	major, _ = strconv.Atoi(parts[0])
+	minor, _ = strconv.Atoi(parts[1])
+
+	tagParts := strings.Split(parts[2], "-")
+	patch, _ = strconv.Atoi(tagParts[0])
+
+	if len(tagParts) > 1 {
+		revision, _ = strconv.Atoi(tagParts[1])
+		if strings.Contains(tagParts[1], "alpha") {
+			tag = "alpha"
+			revision, _ = strconv.Atoi(strings.Trim(tagParts[1], "alpha"))
+		} else if strings.Contains(tagParts[1], "beta") {
+			tag = "beta"
+			revision, _ = strconv.Atoi(strings.Trim(tagParts[1], "beta"))
+		}
+	}
+
+	return
+}
+
+func IsNewerVersionString(current string, target string) bool {
+	currentMajor, currentMinor, currentPatch, currentRevision, currentTag := parseVersion(current)
+	targetMajor, targetMinor, targetPatch, targetRevision, targetTag := parseVersion(target)
+
+	if targetMajor != currentMajor {
+		return targetMajor > currentMajor
+	}
+	if targetMinor != currentMinor {
+		return targetMinor > currentMinor
+	}
+	if targetPatch != currentPatch {
+		return targetPatch > currentPatch
+	}
+	if targetTag != currentTag {
+		// "beta" > "alpha"
+		targetValue := 0
+		currentValue := 0
+		if targetTag == "beta" {
+			targetValue = 100 + targetRevision
+		}
+		if targetTag == "alpha" {
+			targetValue = 0 + targetRevision
+		}
+
+		if currentTag == "beta" {
+			currentValue = 100 + currentRevision
+		}
+		if currentTag == "alpha" {
+			currentValue = 0 + currentRevision
+		}
+		return targetValue > currentValue
+	}
+	if targetRevision != currentRevision {
+		fmt.Println("r", targetRevision, currentRevision)
+		return currentRevision < targetRevision // Lower revision means newer
+	}
+
+	return false
+}
+func IsNewerVersion(current *semver.Version, target *semver.Version) bool {
+	return IsNewerVersionString(current.String(), target.String())
+}
+
 func ShouldUpgrade(release codegen.Release, sysRootPath string) bool {
 	if release.Version == "" {
 		return false
@@ -288,11 +354,7 @@ func ShouldUpgrade(release codegen.Release, sysRootPath string) bool {
 		return false
 	}
 
-	if !targetVersion.GreaterThan(currentVersion) {
-		return false
-	}
-
-	return true
+	return IsNewerVersion(currentVersion, targetVersion)
 }
 
 func InstallRelease(release codegen.Release, sysRootPath string) error {
