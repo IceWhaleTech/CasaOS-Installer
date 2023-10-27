@@ -7,5 +7,5 @@ LogSaveName = installer
 LogFileExt = log
 
 [server]
-CachePath = /var/cache/casaos
+CachePath = /var/lib/casaos_data/rauc
 mirrors = https://raw.githubusercontent.com/IceWhaleTech/zimaos-rauc/main/,https://casaos.oss-cn-shanghai.aliyuncs.com/IceWhaleTech/zimaos-rauc/
