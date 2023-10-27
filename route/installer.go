@@ -83,6 +83,10 @@ func (a *api) InstallRelease(ctx echo.Context, params codegen.InstallReleasePara
 			service.UpdateStatusWithMessage(service.InstallError, message)
 		}
 
+		if release == nil {
+			service.UpdateStatusWithMessage(service.InstallError, "release is nil")
+		}
+
 		// if the err is not nil. It mean should to download
 
 		releasePath, err := service.InstallerService.DownloadRelease(ctx, *release, false)
