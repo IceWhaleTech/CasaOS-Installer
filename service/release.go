@@ -327,7 +327,6 @@ func IsNewerVersionString(current string, target string) bool {
 		return targetValue > currentValue
 	}
 	if targetRevision != currentRevision {
-		fmt.Println("r", targetRevision, currentRevision)
 		return currentRevision < targetRevision // Lower revision means newer
 	}
 

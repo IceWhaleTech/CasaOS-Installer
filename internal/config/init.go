@@ -40,10 +40,10 @@ var (
 	}
 
 	ServerInfo = &ServerModel{
-		CachePath: "/var/cache/casaos",
+		CachePath: "/var/lib/casaos_data/rauc",
 		Mirrors: []string{
-			"https://raw.githubusercontent.com/IceWhaleTech/zimaos-rauc/main/",
 			"https://casaos.oss-cn-shanghai.aliyuncs.com/IceWhaleTech/zimaos-rauc/",
+			"https://raw.githubusercontent.com/IceWhaleTech/zimaos-rauc/main/",
 		},
 	}
 
@@ -53,7 +53,7 @@ var (
 
 const (
 	// RAUC_OFFLINE_PATH             = "/DATA/rauc/"
-	RAUC_OFFLINE_PATH = "/var/cache/casaos/offline/"
+	RAUC_OFFLINE_PATH = "/var/lib/casaos_data/rauc/offline/"
 
 	RAUC_OFFLINE_RELEASE_FILENAME = "release.yaml"
 	OFFLINE_RAUC_TEMP_PATH        = "/tmp/offline_rauc"
