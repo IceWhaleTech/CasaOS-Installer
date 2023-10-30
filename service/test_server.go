@@ -81,3 +81,7 @@ func (r *TestService) PostInstall(release codegen.Release, sysRoot string) error
 func (r *TestService) PostMigration(sysRoot string) error {
 	return nil
 }
+
+func (r *TestService) InstallInfo(release codegen.Release, sysRootPath string) (string, error) {
+	return RAUCFilePath(release)
+}
