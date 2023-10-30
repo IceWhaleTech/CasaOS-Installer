@@ -208,6 +208,10 @@ func (r *StatusService) IsUpgradable(release codegen.Release, sysRootPath string
 	return r.ImplementService.IsUpgradable(release, sysRootPath)
 }
 
+func (r *StatusService) InstallInfo(release codegen.Release, sysRootPath string) (string, error) {
+	return r.ImplementService.InstallInfo(release, sysRootPath)
+}
+
 func (r *StatusService) PostMigration(sysRoot string) error {
 	UpdateStatusWithMessage(InstallBegin, "other")
 	err := r.ImplementService.PostMigration(sysRoot)

@@ -32,6 +32,10 @@ func (r *RAUCService) Install(release codegen.Release, sysRoot string) error {
 	return InstallRAUC(release, sysRoot, r.InstallRAUCHandler)
 }
 
+func (r *RAUCService) InstallInfo(release codegen.Release, sysRootPath string) (string, error) {
+	return RAUCFilePath(release)
+}
+
 func (r *RAUCService) GetRelease(ctx context.Context, tag string) (*codegen.Release, error) {
 	if r.gcache == nil {
 		r.gcache = gcache.New(20).LRU().Build()
