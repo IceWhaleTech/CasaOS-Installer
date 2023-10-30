@@ -28,6 +28,10 @@ func (r *RAUCOfflineService) Install(release codegen.Release, sysRoot string) er
 	return r.InstallRAUCHandler(OfflineRAUCFilePath())
 }
 
+func (r *RAUCOfflineService) InstallInfo(release codegen.Release, sysRootPath string) (string, error) {
+	return OfflineRAUCFilePath(), nil
+}
+
 func (r *RAUCOfflineService) LoadReleaseFromRAUC(sysRoot string) (*codegen.Release, error) {
 	if _, err := os.Stat(filepath.Join(sysRoot, config.OFFLINE_RAUC_TEMP_PATH, common.ReleaseYAMLFileName)); os.IsExist(err) {
 		// read release from cache

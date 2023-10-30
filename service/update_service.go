@@ -20,4 +20,6 @@ type UpdaterServiceInterface interface {
 
 	ShouldUpgrade(release codegen.Release, sysRoot string) bool
 	IsUpgradable(release codegen.Release, sysRootPath string) bool // 检测预下载的包好了没有
+
+	InstallInfo(release codegen.Release, sysRoot string) (string, error)
 }

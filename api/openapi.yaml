@@ -39,6 +39,16 @@ paths:
         "500":
           $ref: "#/components/responses/ResponseInternalServerError"
  
+  /install:
+    get:
+      summary: Get the Info of the installation. such as install package path
+      operationId: getInstall
+      responses:
+        "200":
+          $ref: "#/components/responses/InstallInfoOk"
+        "500":
+          $ref: "#/components/responses/ResponseInternalServerError"
+
   /status:
     get:
       summary: Get the status of the installation
@@ -125,7 +135,17 @@ components:
                     readOnly: true
                     type: boolean
                     example: false
-    
+    InstallInfoOk:
+      description: OK
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: "#/components/schemas/BaseResponse"
+              - properties:
+                  path:
+                    type: string
+                    example: /var/lib/casaos_data/offline/test.raucb
     StatusOK:
       description: OK
       content:
