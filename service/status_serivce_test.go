@@ -208,7 +208,7 @@ func Test_Status_Case2_Upgradable(t *testing.T) {
 	_, err = statusService.GetRelease(ctx, "unit-test-rauc-0.4.4-1")
 	assert.NoError(t, err)
 
-	time.Sleep(3 * time.Second)
+	time.Sleep(1 * time.Second)
 	value, msg = service.GetStatus()
 	assert.Equal(t, codegen.Downloading, value.Status)
 	assert.Equal(t, "下载中", msg)
