@@ -81,10 +81,12 @@ func (a *api) InstallRelease(ctx echo.Context, params codegen.InstallReleasePara
 		if err != nil {
 			message := err.Error()
 			service.UpdateStatusWithMessage(service.InstallError, message)
+			return
 		}
 
 		if release == nil {
 			service.UpdateStatusWithMessage(service.InstallError, "release is nil")
+			return
 		}
 
 		// if the err is not nil. It mean should to download
