@@ -177,6 +177,10 @@ func Test_Status_Case3_Install_Success(t *testing.T) {
 // 这个是测试cron触发的更新的下载的更新的
 func Test_Status_Case2_Upgradable(t *testing.T) {
 	logger.LogInitConsoleOnly()
+	if _, exists := os.LookupEnv("CI"); exists {
+		t.Skip("skipping test in CI environment")
+		// 这个在github上的环境跳过测试，因为下载太快了，没有办法断言到downloading
+	}
 
 	tmpDir, err := os.MkdirTemp("", "casaos-status-test-case-2")
 	assert.NoError(t, err)
@@ -208,7 +212,7 @@ func Test_Status_Case2_Upgradable(t *testing.T) {
 	_, err = statusService.GetRelease(ctx, "unit-test-rauc-0.4.4-1")
 	assert.NoError(t, err)
 
-	time.Sleep(3 * time.Second)
+	time.Sleep(1 * time.Second)
 	value, msg = service.GetStatus()
 	assert.Equal(t, codegen.Downloading, value.Status)
 	assert.Equal(t, "下载中", msg)

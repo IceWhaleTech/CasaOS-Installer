@@ -23,6 +23,22 @@ jobs:
       - name: Go Generate
         run: go generate
       - name: Run coverage
-        run: go test -race -failfast -coverprofile=coverage.txt -covermode=atomic -v ./...
+        run: go test -race -failfast -coverprofile=coverage.txt -covermode=atomic -v ./test/...
+      - name: Run coverage
+        run: go test -race -failfast -coverprofile=coverage.txt -covermode=atomic -v ./internal/...
+      - name: Run Status Test
+        run: go test -timeout 30s -run ^Test_Status_Case1_CRONJOB$ github.com/IceWhaleTech/CasaOS-Installer/service -race -failfast -coverprofile=coverage.txt -covermode=atomic -v
+      - name: Run Status Test
+        run: go test -timeout 30s -run ^Test_Status_Case2_HTTP_GET_Release$ github.com/IceWhaleTech/CasaOS-Installer/service -race -failfast -coverprofile=coverage.txt -covermode=atomic -v
+      - name: Run Status Test
+        run: go test -timeout 30s -run ^Test_Status_Case3_Install_Success$ github.com/IceWhaleTech/CasaOS-Installer/service -race -failfast -coverprofile=coverage.txt -covermode=atomic -v
+      - name: Run Status Test
+        run: go test -timeout 30s -run ^Test_Status_Case2_Upgradable$ github.com/IceWhaleTech/CasaOS-Installer/service -race -failfast -coverprofile=coverage.txt -covermode=atomic -v
+      - name: Run Status Test
+        run: go test -timeout 30s -run ^Test_Status_Case3_Download_Failed$ github.com/IceWhaleTech/CasaOS-Installer/service -race -failfast -coverprofile=coverage.txt -covermode=atomic -v
+      - name: Run Status Test
+        run: go test -timeout 30s -run ^Test_Status_Case4_Install_Fail$ github.com/IceWhaleTech/CasaOS-Installer/service -race -failfast -coverprofile=coverage.txt -covermode=atomic -v
+      - name: Run Status Test
+        run: go test -timeout 30s -run ^Test_Status_Get_Release_Currency$ github.com/IceWhaleTech/CasaOS-Installer/service -race -failfast -coverprofile=coverage.txt -covermode=atomic -v
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
