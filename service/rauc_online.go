@@ -41,7 +41,7 @@ func (r *RAUCService) GetRelease(ctx context.Context, tag string) (*codegen.Rele
 		r.gcache = gcache.New(20).LRU().Build()
 		r.gcache.SetWithExpire("key", "ok", time.Minute*50)
 	}
-	// 从缓存中获取
+	// get release from cache
 	if v, err := r.gcache.Get(tag); err == nil {
 		return v.(*codegen.Release), nil
 	}
@@ -107,8 +107,8 @@ func (r *RAUCService) ShouldUpgrade(release codegen.Release, sysRoot string) boo
 	return ShouldUpgrade(release, sysRoot)
 }
 
-func (r *RAUCService) IsUpgradable(release codegen.Release, sysrootPath string) bool {
-	if !r.ShouldUpgrade(release, sysrootPath) {
+func (r *RAUCService) IsUpgradable(release codegen.Release, sysRootPath string) bool {
+	if !r.ShouldUpgrade(release, sysRootPath) {
 		return false
 	}
 

@@ -183,7 +183,7 @@ func GetRAUCInfo(path string) (string, error) {
 	cmd.Stdout = &out
 	err := cmd.Run()
 
-	return out.String(), err
+	return out.String(), fmt.Errorf("get rauc info failed: %w", err)
 }
 
 func GetDescription(raucInfo string) (string, error) {

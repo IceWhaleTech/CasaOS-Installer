@@ -55,8 +55,7 @@ func (r *RAUCOfflineService) LoadReleaseFromRAUC(sysRoot string) (*codegen.Relea
 
 	release, err := internal.GetReleaseFromContent(releaseContent)
 	if err != nil {
-		fmt.Println("write release to temp error:", err)
-		return release, nil
+		return release, err
 	}
 
 	// write release to temp
@@ -69,12 +68,9 @@ func (r *RAUCOfflineService) GetRelease(ctx context.Context, tag string) (*codeg
 	_, err := os.Stat(cachePath)
 
 	if os.IsNotExist(err) {
-		fmt.Println("rauc file not found")
-
 		release, err := r.LoadReleaseFromRAUC(r.SysRoot)
 		return release, err
 	} else {
-		fmt.Println("rauc file found")
 		return internal.GetReleaseFromLocal(cachePath)
 	}
 }
@@ -104,8 +100,7 @@ func (r *RAUCOfflineService) DownloadRelease(ctx context.Context, release codege
 }
 
 func (r *RAUCOfflineService) ExtractRelease(packageFilepath string, release codegen.Release) error {
-	// 这个offline没有变化
-	// return ExtractRAUCRelease(packageFilepath, release)
+	// offline rauc didn't need to extract
 	return nil
 }
 
@@ -126,39 +121,8 @@ func (r *RAUCOfflineService) IsUpgradable(release codegen.Release, sysRootPath s
 	return err == nil
 }
 
-func ExtractOfflineRAUCToTemp(sysRoot string) error {
-	// to check temp file exist.
-	// TODO should also check rauc file
-	if _, err := os.Stat(filepath.Join(sysRoot, config.OFFLINE_RAUC_TEMP_PATH, config.RAUC_OFFLINE_RELEASE_FILENAME)); os.IsNotExist(err) {
-		err := os.MkdirAll(filepath.Join(sysRoot, config.OFFLINE_RAUC_TEMP_PATH), 0755)
-		if err != nil {
-			return err
-		}
-
-		err = internal.Extract(filepath.Join(sysRoot, config.RAUC_OFFLINE_PATH, config.RAUC_OFFLINE_RAUC_FILENAME), filepath.Join(sysRoot, config.OFFLINE_RAUC_TEMP_PATH))
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-func (r *RAUCOfflineService) LoadReleaseFromOfflineRAUC(sysRoot string) (*codegen.Release, error) {
-	err := ExtractOfflineRAUCToTemp(sysRoot)
-	if err != nil {
-		return nil, err
-	}
-
-	fmt.Println(filepath.Join(sysRoot, config.OFFLINE_RAUC_TEMP_PATH, config.RAUC_OFFLINE_RELEASE_FILENAME))
-	if _, err := os.Stat(filepath.Join(sysRoot, config.OFFLINE_RAUC_TEMP_PATH, config.RAUC_OFFLINE_RELEASE_FILENAME)); err != nil {
-		return nil, fmt.Errorf("rauc release file not found")
-	}
-
-	return internal.GetReleaseFromLocal(filepath.Join(sysRoot, config.OFFLINE_RAUC_TEMP_PATH, config.RAUC_OFFLINE_RELEASE_FILENAME))
-}
-
 func (r *RAUCOfflineService) PostMigration(sysRoot string) error {
 	// return MarkGood()
+	// install didn't need to process rauc status now.
 	return nil
 }
