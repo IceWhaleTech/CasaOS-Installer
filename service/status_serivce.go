@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/IceWhaleTech/CasaOS-Common/utils/logger"
 	"github.com/IceWhaleTech/CasaOS-Installer/codegen"
 	"github.com/IceWhaleTech/CasaOS-Installer/types"
 )
@@ -106,7 +107,9 @@ func (r *StatusService) GetRelease(ctx context.Context, tag string) (*codegen.Re
 
 	release, err = r.ImplementService.GetRelease(ctx, tag)
 	if err != nil {
-		fmt.Println(err)
+		logger.Error(fmt.Sprintf("Get Release Faile %s tag:%s", err.Error(), tag))
+	} else {
+		logger.Info(fmt.Sprintf("Get Release success! %s", release.Version))
 	}
 	return release, err
 }
