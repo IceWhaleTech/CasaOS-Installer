@@ -23,6 +23,8 @@ import (
 
 	util_http "github.com/IceWhaleTech/CasaOS-Common/utils/http"
 	"github.com/IceWhaleTech/CasaOS-Installer/codegen"
+	"github.com/IceWhaleTech/CasaOS-Installer/codegen/message_bus"
+
 	"github.com/IceWhaleTech/CasaOS-Installer/common"
 	"github.com/IceWhaleTech/CasaOS-Installer/internal/config"
 	"github.com/IceWhaleTech/CasaOS-Installer/route"
@@ -47,50 +49,54 @@ var (
 	_confSample string
 )
 
+func init() {
+
+	configFlag := flag.String("c", "", "config file path")
+	versionFlag := flag.Bool("v", false, "version")
+
+	flag.Parse()
+
+	if *versionFlag {
+		fmt.Printf("v%s\n", common.InstallerVersion)
+		os.Exit(0)
+	}
+
+	println("git commit:", commit)
+	println("build date:", date)
+
+	ConfigFilePath := filepath.Join(constants.DefaultConfigPath, common.InstallerName+"."+common.InstallerConfigType)
+	if _, err := os.Stat(ConfigFilePath); os.IsNotExist(err) {
+		// create config file
+		file, err := os.Create(ConfigFilePath)
+		if err != nil {
+			panic(err)
+		}
+		defer file.Close()
+
+		// write default config
+		_, err = file.WriteString(_confSample)
+		if err != nil {
+			panic(err)
+		}
+	}
+
+	config.InitSetup(*configFlag)
+	config.SysRoot = sysRoot
+
+	logger.LogInit(config.AppInfo.LogPath, config.AppInfo.LogSaveName, config.AppInfo.LogFileExt)
+
+	service.MyService = service.NewService(config.CommonInfo.RuntimePath)
+	go func() {
+		var releaseURL []string
+		for _, mirror := range config.ServerInfo.Mirrors {
+			releaseURL = append(releaseURL, service.HyperFileTagReleaseUrl(service.GetReleaseBranch(sysRoot), mirror))
+		}
+		var best service.BestURLFunc = service.BestByDelay // dependency inject
+		best(releaseURL)
+	}()
+}
+
 func main() {
-	// create config
-	{
-		// create default config file if not exist
-		ConfigFilePath := filepath.Join(constants.DefaultConfigPath, common.InstallerName+"."+common.InstallerConfigType)
-		if _, err := os.Stat(ConfigFilePath); os.IsNotExist(err) {
-			println("config file not exist, create it")
-			// create config file
-			file, err := os.Create(ConfigFilePath)
-			if err != nil {
-				panic(err)
-			}
-			defer file.Close()
-
-			// write default config
-			_, err = file.WriteString(_confSample)
-			if err != nil {
-				panic(err)
-			}
-		}
-	}
-
-	// parse arguments and intialize
-	{
-		configFlag := flag.String("c", "", "config file path")
-		versionFlag := flag.Bool("v", false, "version")
-
-		flag.Parse()
-
-		if *versionFlag {
-			fmt.Printf("v%s\n", common.InstallerVersion)
-			os.Exit(0)
-		}
-
-		println("git commit:", commit)
-		println("build date:", date)
-
-		config.InitSetup(*configFlag)
-		config.SysRoot = sysRoot
-
-		logger.LogInit(config.AppInfo.LogPath, config.AppInfo.LogSaveName, config.AppInfo.LogFileExt)
-
-		service.MyService = service.NewService(config.CommonInfo.RuntimePath)
-	}
 
 	service.InstallerService = &service.StatusService{
 		ImplementService:                 service.NewInstallerService(sysRoot),
@@ -98,66 +104,17 @@ func main() {
 		Have_other_get_release_flag_lock: sync.RWMutex{},
 	}
 
-	go service.StartFallbackWebsite()
-
 	service.InstallerService.Launch(sysRoot)
 
 	// watch rauc offline
-	{
-		// 这个是临时放这里，为了watch里不会没有东西。
-		err := os.MkdirAll(config.RAUC_OFFLINE_PATH, os.ModePerm)
-		if err != nil {
-			fmt.Println(err)
-			os.MkdirAll(config.RAUC_OFFLINE_PATH, os.ModePerm)
-		}
-
-		watcher, err := fsnotify.NewWatcher()
-		if err != nil {
-			logger.Error(err.Error())
-			panic(err)
-		}
+	os.MkdirAll(config.RAUC_OFFLINE_PATH, os.ModePerm)
+	watcher, err := fsnotify.NewWatcher()
+	if err != nil {
+		logger.Error("offline create watcher error ", zap.Any("error", err))
+	} else {
 		defer watcher.Close()
-
-		// Start listening for events.
-		go func() {
-			for {
-				select {
-				case event, ok := <-watcher.Events:
-					if !ok {
-						return
-					}
-					if event.Has(fsnotify.Create) {
-						service.InstallerService = &service.StatusService{
-							ImplementService:                 service.NewInstallerService(sysRoot),
-							SysRoot:                          sysRoot,
-							Have_other_get_release_flag_lock: sync.RWMutex{},
-						}
-					}
-					if event.Has(fsnotify.Remove) {
-						service.InstallerService = &service.StatusService{
-							ImplementService:                 service.NewInstallerService(sysRoot),
-							SysRoot:                          sysRoot,
-							Have_other_get_release_flag_lock: sync.RWMutex{},
-						}
-					}
-
-				case err, ok := <-watcher.Errors:
-					if !ok {
-						return
-					}
-					logger.Error(err.Error())
-				}
-			}
-		}()
-
-		// Add a path.
-		err = watcher.Add(filepath.Join(sysRoot, config.RAUC_OFFLINE_PATH))
-		if err != nil {
-			logger.Error(err.Error())
-			os.MkdirAll(config.RAUC_OFFLINE_PATH, os.ModePerm)
-		}
 	}
-
+	watchOfflineDir(watcher)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -167,8 +124,6 @@ func main() {
 			"doc": route.InitV2DocRouter(_docHTML, _docYAML),
 		},
 	}
-
-	service.StopFallbackWebsite()
 
 	// notify systemd that we are ready
 	{
@@ -187,68 +142,8 @@ func main() {
 		panic(err)
 	}
 
-	go func() {
-		for {
-			// initialize routers and register at gateway
-			if gateway, err := service.MyService.Gateway(); err != nil {
-				logger.Info("error when trying to connect to gateway... skipping", zap.Error(err))
-			} else {
-				apiPaths := []string{
-					route.V2APIPath,
-					route.V2DocPath,
-				}
-
-				for _, apiPath := range apiPaths {
-					if err := gateway.CreateRoute(&model.Route{
-						Path:   apiPath,
-						Target: "http://" + listener.Addr().String(),
-					}); err != nil {
-						panic(err)
-					}
-				}
-				logger.Info("gateway register success")
-				break
-			}
-			time.Sleep(5 * time.Second)
-		}
-	}()
-
-	// 上面notify之后，才有必要去注册
-	go func(context.Context) {
-		for {
-			select {
-			case <-ctx.Done():
-				return
-			case <-time.After(1 * time.Second):
-				if messageBus, err := service.MyService.MessageBus(); err != nil {
-					logger.Info("error when trying to connect to message bus... skipping", zap.Error(err))
-					continue
-				} else {
-					response, err := messageBus.RegisterEventTypesWithResponse(ctx, common.EventTypes)
-					if err != nil {
-						logger.Error("error when trying to register one or more event types - some event type will not be discoverable", zap.Error(err))
-						continue
-					}
-					if response != nil && response.StatusCode() != http.StatusOK {
-						logger.Error("error when trying to register one or more event types - some event type will not be discoverable", zap.String("status", response.Status()), zap.String("body", string(response.Body)))
-						continue
-					}
-					logger.Info("message bus register success")
-					return
-				}
-			}
-		}
-	}(ctx)
-
-	// 等待一下，让gateway注册成功
-	time.Sleep(10 * time.Second)
-	// 这里应该还要把文件删一下
-	service.InstallerService.PostMigration(sysRoot)
-
-	s := &http.Server{
-		Handler:           mux,
-		ReadHeaderTimeout: 5 * time.Second, // fix G112: Potential slowloris attack (see https://github.com/securego/gosec)
-	}
+	go registerRouter(listener)
+	go registerMsg()
 
 	{
 		crontab := cron.New(cron.WithSeconds())
@@ -256,21 +151,23 @@ func main() {
 		go cronjob(ctx) // run once immediately
 
 		if _, err := crontab.AddFunc("@every 60m", func() { cronjob(ctx) }); err != nil {
-			panic(err)
-		}
-
-		// every 10 seconds for debug
-		if _, err := crontab.AddFunc("@every 1s", func() {
-		}); err != nil {
-			panic(err)
+			logger.Error("error when trying to add cron job", zap.Error(err))
 		}
 
 		crontab.Start()
 		defer crontab.Stop()
 	}
 
+	service.InstallerService.PostMigration(sysRoot)
+
+	s := &http.Server{
+		Handler:           mux,
+		ReadHeaderTimeout: 5 * time.Second, // fix G112: Potential slowloris attack (see https://github.com/securego/gosec)
+	}
+
 	logger.Info("installer service is listening...", zap.String("address", listener.Addr().String()))
 	if err := s.Serve(listener); err != nil {
+		logger.Error("error when trying to serve", zap.Error(err))
 		panic(err)
 	}
 
@@ -295,24 +192,94 @@ func cronjob(ctx context.Context) {
 		logger.Error("error when trying to get release", zap.Error(err))
 		return
 	}
-
 	// cache release packages if not already cached
 	shouldUpgrade := service.InstallerService.ShouldUpgrade(*release, sysRoot)
-	isUpgradable := service.InstallerService.IsUpgradable(*release, sysRoot)
-	if shouldUpgrade && !isUpgradable {
-
-		logger.Info("error while verifying release - continue to download", zap.Error(err))
-
+	if shouldUpgrade {
 		releaseFilePath, err := service.InstallerService.DownloadRelease(ctx, *release, true)
-
 		if err != nil {
-			logger.Error("error when trying to download release", zap.Error(err))
+			logger.Error("error when trying to download release", zap.Error(err), zap.String("release file path", releaseFilePath))
 			return
 		}
-		logger.Info("downloaded release", zap.String("release file path", releaseFilePath))
-	} else {
-		// fmt.Println("不需要更新")
-		// fmt.Println("service.ShouldUpgrade", shouldUpgrade)
-		// fmt.Println("service.IsUpgradable", isUpgradable)
+	}
+	//isUpgradable := service.InstallerService.IsUpgradable(*release, sysRoot)
+
+}
+
+func watchOfflineDir(watcher *fsnotify.Watcher) {
+
+	// Start listening for events.
+	go func() {
+		for {
+			select {
+			case event, ok := <-watcher.Events:
+				if !ok {
+					return
+				}
+				if event.Has(fsnotify.Remove) || event.Has(fsnotify.Create) {
+					service.InstallerService = &service.StatusService{
+						ImplementService:                 service.NewInstallerService(sysRoot),
+						SysRoot:                          sysRoot,
+						Have_other_get_release_flag_lock: sync.RWMutex{},
+					}
+				}
+
+			case err, ok := <-watcher.Errors:
+				if !ok {
+					return
+				}
+				logger.Error("offline watch err", zap.Any("error info", err))
+			}
+		}
+	}()
+
+	err := watcher.Add(filepath.Join(sysRoot, config.RAUC_OFFLINE_PATH))
+	if err != nil {
+		logger.Error("offline watch err", zap.Any("error info", err))
+	}
+}
+func registerMsg() {
+	var messageBus *message_bus.ClientWithResponses
+	var err error
+	for i := 0; i < 10; i++ {
+		if messageBus, err = service.MyService.MessageBus(); err != nil {
+			logger.Error("error when trying to connect to message bus... skipping", zap.Error(err))
+			continue
+		}
+		response, err := messageBus.RegisterEventTypesWithResponse(context.Background(), common.EventTypes)
+		if err != nil {
+			logger.Error("error when trying to register one or more event types - some event type will not be discoverable", zap.Error(err))
+			continue
+		}
+		if response != nil && response.StatusCode() != http.StatusOK {
+			logger.Error("error when trying to register one or more event types - some event type will not be discoverable", zap.String("status", response.Status()), zap.String("body", string(response.Body)))
+			continue
+		}
+		time.Sleep(3 * time.Second)
+	}
+}
+
+func registerRouter(listener net.Listener) {
+	for i := 0; i < 10; i++ {
+		// initialize routers and register at gateway
+		if gateway, err := service.MyService.Gateway(); err != nil {
+			logger.Info("error when trying to connect to gateway... skipping", zap.Error(err))
+		} else {
+			apiPaths := []string{
+				route.V2APIPath,
+				route.V2DocPath,
+			}
+
+			for _, apiPath := range apiPaths {
+				if err := gateway.CreateRoute(&model.Route{
+					Path:   apiPath,
+					Target: "http://" + listener.Addr().String(),
+				}); err != nil {
+					panic(err)
+				}
+			}
+			logger.Info("gateway register success")
+			break
+		}
+		time.Sleep(1 * time.Second)
 	}
 }

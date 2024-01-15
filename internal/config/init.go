@@ -22,8 +22,10 @@ type APPModel struct {
 }
 
 type ServerModel struct {
-	Mirrors   []string `ini:"mirrors,,allowshadow"`
-	CachePath string
+	Mirrors     []string `ini:"mirrors,,allowshadow"`
+	CachePath   string
+	BestUrl     string
+	ReleasePath string
 }
 
 const InstallerConfigFilePath = "/etc/casaos/installer.conf"
@@ -45,6 +47,7 @@ var (
 			"https://casaos.oss-cn-shanghai.aliyuncs.com/IceWhaleTech/zimaos-rauc/",
 			"https://raw.githubusercontent.com/IceWhaleTech/zimaos-rauc/main/",
 		},
+		ReleasePath: "/var/lib/casaos/release.yaml",
 	}
 
 	Cfg            *ini.File
@@ -53,7 +56,7 @@ var (
 
 const (
 	// RAUC_OFFLINE_PATH             = "/DATA/rauc/"
-	RAUC_OFFLINE_PATH = "/var/lib/casaos_data/rauc/offline/"
+	RAUC_OFFLINE_PATH = "/DATA/rauc/offline/"
 
 	RAUC_OFFLINE_RELEASE_FILENAME = "release.yaml"
 	OFFLINE_RAUC_TEMP_PATH        = "/tmp/offline_rauc"
