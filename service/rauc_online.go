@@ -2,16 +2,17 @@ package service
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"path/filepath"
-	"time"
 
+	"github.com/IceWhaleTech/CasaOS-Common/utils/logger"
 	"github.com/IceWhaleTech/CasaOS-Installer/codegen"
+	"github.com/IceWhaleTech/CasaOS-Installer/internal"
 	"github.com/IceWhaleTech/CasaOS-Installer/internal/checksum"
 	"github.com/IceWhaleTech/CasaOS-Installer/internal/config"
 	"github.com/IceWhaleTech/CasaOS-Installer/service/out"
 	"github.com/bluele/gcache"
+	"go.uber.org/zap"
 )
 
 type RAUCService struct {
@@ -37,19 +38,21 @@ func (r *RAUCService) InstallInfo(release codegen.Release, sysRootPath string) (
 }
 
 func (r *RAUCService) GetRelease(ctx context.Context, tag string) (*codegen.Release, error) {
-	if r.gcache == nil {
-		r.gcache = gcache.New(20).LRU().Build()
-		r.gcache.SetWithExpire("key", "ok", time.Minute*50)
+	release, err := internal.GetReleaseFromLocal(config.ServerInfo.ReleasePath)
+	if err == nil {
+		go func(context.Context, string, ConstructReleaseFileUrlFunc) {
+			release, err = FetchRelease(ctx, tag, r.UrlHandler)
+			if err == nil {
+				internal.WriteReleaseToLocal(release, config.ServerInfo.ReleasePath)
+			}
+		}(ctx, tag, r.UrlHandler)
+		return release, nil
 	}
-	// get release from cache
-	if v, err := r.gcache.Get(tag); err == nil {
-		return v.(*codegen.Release), nil
+	release, err = FetchRelease(ctx, tag, r.UrlHandler)
+	if err == nil {
+		internal.WriteReleaseToLocal(release, config.ServerInfo.ReleasePath)
 	}
 
-	release, err := FetchRelease(ctx, tag, r.UrlHandler)
-	if err == nil {
-		r.gcache.SetWithExpire(tag, release, time.Minute*2)
-	}
 	return release, err
 }
 
@@ -58,7 +61,6 @@ func (r *RAUCService) VerifyRelease(release codegen.Release) (string, error) {
 	if err == nil && r.hasChecked {
 		return r.path, nil
 	}
-	// 这个是验证下载包的，验证的是下载之前的包。
 	path, err := r.CheckSumHandler(release)
 	if err == nil {
 		r.path = path
@@ -77,24 +79,20 @@ func (r *RAUCService) CleanRelease(ctx context.Context, release codegen.Release)
 func (r *RAUCService) DownloadRelease(ctx context.Context, release codegen.Release, force bool) (string, error) {
 	filePath, err := r.VerifyRelease(release)
 	if err != nil {
-		fmt.Println("verify release error:", err, "to clean release file")
-
+		logger.Error("verify release error", zap.Error(err))
 		// delete the old release
 		r.CleanRelease(ctx, release)
 	}
 	if err == nil {
 		return filePath, nil
-		// 不用下载
 	}
 
-	// 重新下载
 	_, err = DownloadRelease(ctx, release, force)
 	r.hasChecked = false
 	if err != nil {
 		return "", err
 	}
 	filePath, err = r.VerifyRelease(release)
-	fmt.Println("download release success", err)
 	return filePath, err
 }
 
