@@ -27,9 +27,15 @@ func init() {
 
 func WriteReleaseToLocal(release *codegen.Release, releasePath string) error {
 	// create the yaml file
-
+	localRelease, _ := GetReleaseFromLocal(releasePath)
+	if release == localRelease {
+		return nil
+	}
 	os.MkdirAll(filepath.Dir(releasePath), 0755)
 	f, err := os.Create(releasePath)
+	if err != nil {
+		return err
+	}
 	defer f.Close()
 
 	if err != nil {
