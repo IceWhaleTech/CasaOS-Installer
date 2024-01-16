@@ -44,7 +44,7 @@ func (r *StatusService) postGetRelease(ctx context.Context, release *codegen.Rel
 	if status.Status == codegen.Installing {
 		return
 	}
-	UpdateStatusWithMessage(FetchUpdateEnd, "up-to-date")
+	UpdateStatusWithMessage(FetchUpdateEnd, types.UP_TO_DATE)
 }
 
 func (r *StatusService) GetRelease(ctx context.Context, tag string) (*codegen.Release, error) {
