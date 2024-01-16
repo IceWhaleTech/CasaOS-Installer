@@ -18,9 +18,9 @@ type STATUS_MSG string
 
 const (
 	// 1. FetchUpdate
-	OUT_OF_DATE     STATUS_MSG = "out-of-date"
-	READY_TO_UPDATE STATUS_MSG = "ready-to-update"
-	UP_TO_DATE      STATUS_MSG = "up-to-date"
+	OUT_OF_DATE     = "out-of-date"
+	READY_TO_UPDATE = "ready-to-update"
+	UP_TO_DATE      = "up-to-date"
 
 	// 2. Install
 	FETCHING    = "fetching"

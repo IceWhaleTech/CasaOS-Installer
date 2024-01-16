@@ -47,13 +47,13 @@ func (r *StatusService) postGetRelease(ctx context.Context, release *codegen.Rel
 
 	// 这里怎么判断如果有其它fetching就不搞这个了?
 	if !r.ShouldUpgrade(*release, r.SysRoot) {
-		UpdateStatusWithMessage(FetchUpdateEnd, "up-to-date")
+		UpdateStatusWithMessage(FetchUpdateEnd, types.UP_TO_DATE)
 		return
 	} else {
 		if r.IsUpgradable(*release, r.SysRoot) {
-			UpdateStatusWithMessage(FetchUpdateEnd, "ready-to-update")
+			UpdateStatusWithMessage(FetchUpdateEnd, types.READY_TO_UPDATE)
 		} else {
-			UpdateStatusWithMessage(FetchUpdateEnd, "out-of-date")
+			UpdateStatusWithMessage(FetchUpdateEnd, types.OUT_OF_DATE)
 			// 这里应该去触发下载
 			go r.DownloadRelease(ctx, *release, false)
 		}
@@ -102,7 +102,7 @@ func (r *StatusService) GetRelease(ctx context.Context, tag string) (*codegen.Re
 
 	if ctx.Value(types.Trigger) == types.INSTALL {
 		// 如果是HTTP请求的话，则不更新状态
-		UpdateStatusWithMessage(InstallBegin, "fetching")
+		UpdateStatusWithMessage(InstallBegin, types.FETCHING)
 	}
 
 	release, err = r.ImplementService.GetRelease(ctx, tag)
@@ -116,8 +116,8 @@ func (r *StatusService) GetRelease(ctx context.Context, tag string) (*codegen.Re
 
 func (r *StatusService) Launch(sysRoot string) error {
 	// 在这里会把状态更新为installing或者继续idle
-	UpdateStatusWithMessage(InstallBegin, "migration") // 事实上已经没有migration了，但是为了兼容性， 先留着
-	defer UpdateStatusWithMessage(InstallBegin, "other")
+	UpdateStatusWithMessage(InstallBegin, types.MIGRATION) // 事实上已经没有migration了，但是为了兼容性， 先留着
+	defer UpdateStatusWithMessage(InstallBegin, types.OTHER)
 	// defer UpdateStatusWithMessage(InstallEnd, "migration")
 	return r.ImplementService.Launch(sysRoot)
 }
@@ -141,14 +141,11 @@ func (r *StatusService) DownloadRelease(ctx context.Context, release codegen.Rel
 	}
 
 	if ctx.Value(types.Trigger) == types.CRON_JOB {
-		fmt.Println("开始下载的状态")
 
-		UpdateStatusWithMessage(DownloadBegin, "下载中")
+		UpdateStatusWithMessage(DownloadBegin, types.DOWNLOADING)
 		defer func() {
-			fmt.Println("下载完成")
-
 			if err == nil {
-				UpdateStatusWithMessage(DownloadEnd, "ready-to-update")
+				UpdateStatusWithMessage(DownloadEnd, types.READY_TO_UPDATE)
 			} else {
 				UpdateStatusWithMessage(DownloadError, err.Error())
 			}
@@ -159,7 +156,7 @@ func (r *StatusService) DownloadRelease(ctx context.Context, release codegen.Rel
 		UpdateStatusWithMessage(DownloadBegin, "http 触发的下载")
 		defer func() {
 			if err == nil {
-				UpdateStatusWithMessage(DownloadEnd, "ready-to-update")
+				UpdateStatusWithMessage(DownloadEnd, types.READY_TO_UPDATE)
 			} else {
 				UpdateStatusWithMessage(DownloadError, err.Error())
 			}
@@ -167,7 +164,7 @@ func (r *StatusService) DownloadRelease(ctx context.Context, release codegen.Rel
 	}
 
 	if ctx.Value(types.Trigger) == types.INSTALL {
-		UpdateStatusWithMessage(InstallBegin, "downloading")
+		UpdateStatusWithMessage(InstallBegin, types.DOWNLOADING)
 		defer func() {
 			if err != nil {
 				UpdateStatusWithMessage(InstallError, err.Error())
@@ -216,11 +213,11 @@ func (r *StatusService) InstallInfo(release codegen.Release, sysRootPath string)
 }
 
 func (r *StatusService) PostMigration(sysRoot string) error {
-	UpdateStatusWithMessage(InstallBegin, "other")
+	UpdateStatusWithMessage(InstallBegin, types.OTHER)
 	err := r.ImplementService.PostMigration(sysRoot)
 	defer func() {
 		if err == nil {
-			UpdateStatusWithMessage(InstallEnd, "up-to-date")
+			UpdateStatusWithMessage(InstallEnd, types.READY_TO_UPDATE)
 		} else {
 			UpdateStatusWithMessage(InstallError, err.Error())
 		}
