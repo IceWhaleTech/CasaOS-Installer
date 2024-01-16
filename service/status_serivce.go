@@ -217,16 +217,18 @@ func (r *StatusService) InstallInfo(release codegen.Release, sysRootPath string)
 }
 
 func (r *StatusService) PostMigration(sysRoot string) error {
-	UpdateStatusWithMessage(InstallBegin, types.OTHER)
-	err := r.ImplementService.PostMigration(sysRoot)
-	defer func() {
-		if err == nil {
-			UpdateStatusWithMessage(InstallEnd, types.READY_TO_UPDATE)
-		} else {
-			UpdateStatusWithMessage(InstallError, err.Error())
-		}
-	}()
-	return err
+	UpdateStatusWithMessage(InstallEnd, types.UP_TO_DATE)
+	return nil
+	// UpdateStatusWithMessage(InstallBegin, "other")
+	// err := r.ImplementService.PostMigration(sysRoot)
+	// defer func() {
+	// 	if err == nil {
+	// 		UpdateStatusWithMessage(InstallEnd, "up-to-date")
+	// 	} else {
+	// 		UpdateStatusWithMessage(InstallError, err.Error())
+	// 	}
+	// }()
+	// return err
 }
 
 func (r *StatusService) Cronjob(sysRoot string) error {
