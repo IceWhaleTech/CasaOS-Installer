@@ -105,7 +105,7 @@ func (r *StatusService) GetRelease(ctx context.Context, tag string) (*codegen.Re
 }
 
 func (r *StatusService) Launch(sysRoot string) error {
-	// 在这里会把状态更新为installing或者继续idle
+	//send status to frontend
 	UpdateStatusWithMessage(InstallBegin, types.MIGRATION) // 事实上已经没有migration了，但是为了兼容性， 先留着
 	defer UpdateStatusWithMessage(InstallBegin, types.OTHER)
 	// defer UpdateStatusWithMessage(InstallEnd, "migration")
