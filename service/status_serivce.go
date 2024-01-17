@@ -44,7 +44,21 @@ func (r *StatusService) postGetRelease(ctx context.Context, release *codegen.Rel
 	if status.Status == codegen.Installing {
 		return
 	}
-	UpdateStatusWithMessage(FetchUpdateEnd, types.UP_TO_DATE)
+
+	// 这里怎么判断如果有其它fetching就不搞这个了?
+	if !r.ShouldUpgrade(*release, r.SysRoot) {
+		UpdateStatusWithMessage(FetchUpdateEnd, "up-to-date")
+		return
+	} else {
+		if r.IsUpgradable(*release, r.SysRoot) {
+			UpdateStatusWithMessage(FetchUpdateEnd, "ready-to-update")
+		} else {
+			UpdateStatusWithMessage(FetchUpdateEnd, "out-of-date")
+			// 这里应该去触发下载
+			go r.DownloadRelease(ctx, *release, false)
+		}
+		return
+	}
 }
 
 func (r *StatusService) GetRelease(ctx context.Context, tag string) (*codegen.Release, error) {
@@ -105,9 +119,9 @@ func (r *StatusService) GetRelease(ctx context.Context, tag string) (*codegen.Re
 }
 
 func (r *StatusService) Launch(sysRoot string) error {
-	//send status to frontend
-	UpdateStatusWithMessage(InstallBegin, types.MIGRATION) // 事实上已经没有migration了，但是为了兼容性， 先留着
-	defer UpdateStatusWithMessage(InstallBegin, types.OTHER)
+	// 在这里会把状态更新为installing或者继续idle
+	UpdateStatusWithMessage(InstallBegin, "migration") // 事实上已经没有migration了，但是为了兼容性， 先留着
+	defer UpdateStatusWithMessage(InstallBegin, "other")
 	// defer UpdateStatusWithMessage(InstallEnd, "migration")
 	//return r.ImplementService.Launch(sysRoot)
 	return nil
@@ -181,15 +195,15 @@ func (r *StatusService) ExtractRelease(packageFilepath string, release codegen.R
 
 func (r *StatusService) PostInstall(release codegen.Release, sysRoot string) error {
 	UpdateStatusWithMessage(InstallBegin, types.RESTARTING)
-	// err := r.ImplementService.PostInstall(release, sysRoot)
-	// defer func() {
-	// 	if err != nil {
-	// 		UpdateStatusWithMessage(InstallError, err.Error())
-	// 	} else {
-	// 		fmt.Println(err)
-	// 	}
-	// }()
-	return nil
+	err := r.ImplementService.PostInstall(release, sysRoot)
+	defer func() {
+		if err != nil {
+			UpdateStatusWithMessage(InstallError, err.Error())
+		} else {
+			fmt.Println(err)
+		}
+	}()
+	return err
 }
 
 func (r *StatusService) ShouldUpgrade(release codegen.Release, sysRoot string) bool {
@@ -217,18 +231,16 @@ func (r *StatusService) InstallInfo(release codegen.Release, sysRootPath string)
 }
 
 func (r *StatusService) PostMigration(sysRoot string) error {
-	UpdateStatusWithMessage(InstallEnd, types.UP_TO_DATE)
-	return nil
-	// UpdateStatusWithMessage(InstallBegin, "other")
-	// err := r.ImplementService.PostMigration(sysRoot)
-	// defer func() {
-	// 	if err == nil {
-	// 		UpdateStatusWithMessage(InstallEnd, "up-to-date")
-	// 	} else {
-	// 		UpdateStatusWithMessage(InstallError, err.Error())
-	// 	}
-	// }()
-	// return err
+	UpdateStatusWithMessage(InstallBegin, "other")
+	err := r.ImplementService.PostMigration(sysRoot)
+	defer func() {
+		if err == nil {
+			UpdateStatusWithMessage(InstallEnd, "up-to-date")
+		} else {
+			UpdateStatusWithMessage(InstallError, err.Error())
+		}
+	}()
+	return err
 }
 
 func (r *StatusService) Cronjob(sysRoot string) error {
