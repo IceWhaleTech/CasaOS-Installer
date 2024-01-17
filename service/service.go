@@ -56,8 +56,6 @@ type services struct {
 }
 
 func GetStatus() (codegen.Status, string) {
-	lock.RLock()
-	defer lock.RUnlock()
 	return status, packageStatus
 }
 
@@ -163,13 +161,11 @@ func NewInstallerService(sysRoot string) UpdaterServiceInterface {
 
 	installMethod, err := GetInstallMethod(sysRoot)
 	if err != nil {
-		panic(err)
+		logger.Error("failed to get install method", zap.Error(err))
 	}
 
-	// 这里搞个工厂模式。
-
 	if installMethod == RAUC {
-		fmt.Println("RAUC Online mode")
+		logger.Info("RAUC Online mode")
 		return &RAUCService{
 			InstallRAUCHandler: InstallRAUCImp,
 			DownloadHandler:    nil,
@@ -179,8 +175,7 @@ func NewInstallerService(sysRoot string) UpdaterServiceInterface {
 	}
 
 	if installMethod == RAUCOFFLINE {
-		fmt.Println("RAUC Offline mode")
-
+		logger.Info("RAUC Offline mode")
 		return &RAUCOfflineService{
 			SysRoot:            sysRoot,
 			InstallRAUCHandler: InstallRAUCImp,
@@ -189,19 +184,20 @@ func NewInstallerService(sysRoot string) UpdaterServiceInterface {
 		}
 	}
 
-	// 回头做这个社区版。
-	if installMethod == TAR {
-		fmt.Println("TAR 模式")
-
-		// 暂时先用 rauc mock 一下
-		return &RAUCService{
-			InstallRAUCHandler: InstallRAUCImp,
-			CheckSumHandler:    checksum.OnlineRAUCExist,
-			UrlHandler:         HyperFileTagReleaseUrl,
-		}
+	// if installMethod == TAR {
+	// 	return &RAUCService{
+	// 		InstallRAUCHandler: InstallRAUCImp,
+	// 		CheckSumHandler:    checksum.OnlineRAUCExist,
+	// 		UrlHandler:         HyperFileTagReleaseUrl,
+	// 	}
+	// }
+	logger.Info("default mode")
+	return &RAUCService{
+		InstallRAUCHandler: InstallRAUCImp,
+		DownloadHandler:    nil,
+		CheckSumHandler:    checksum.OnlineRaucChecksumExist,
+		UrlHandler:         HyperFileTagReleaseUrl,
 	}
-
-	panic(fmt.Errorf("install method %s not supported", installMethod))
 }
 
 func (s *services) Gateway() (external.ManagementService, error) {

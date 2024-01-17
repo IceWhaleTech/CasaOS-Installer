@@ -56,46 +56,35 @@ func HyperFileTagReleaseUrl(tag string, mirror string) string {
 type BestURLFunc func(urls []string) string
 
 func BestByDelay(urls []string) string {
-	type result struct {
-		url     string
-		latency time.Duration
-	}
-
-	ch := make(chan result)
-
+	ch := make(chan string)
 	for _, url := range urls {
 		go func(url string) {
-			start := time.Now()
-			resp, err := http.Get(url)
+			client := &http.Client{
+				Timeout: 5 * time.Second,
+			}
+			resp, err := client.Head(url)
 			if err != nil || resp.StatusCode != http.StatusOK {
-				ch <- result{url: url, latency: 0}
 				return
 			}
-			latency := time.Since(start)
-			ch <- result{url: url, latency: latency}
+			ch <- url
 		}(url)
 	}
 
-	var first result
-	for range urls {
-		res := <-ch
-		if res.latency != 0 && (first.latency == 0 || res.latency < first.latency) {
-			first = res
-		}
-	}
-
-	return first.url
+	first := <-ch
+	config.ServerInfo.BestUrl = first
+	return first
 }
 func FetchRelease(ctx context.Context, tag string, constructReleaseFileUrlFunc ConstructReleaseFileUrlFunc) (*codegen.Release, error) {
-	var releaseURL []string
 
-	for _, mirror := range config.ServerInfo.Mirrors {
-		releaseURL = append(releaseURL, constructReleaseFileUrlFunc(tag, mirror))
+	url := config.ServerInfo.BestUrl
+	if len(config.ServerInfo.BestUrl) == 0 {
+		var releaseURL []string
+		for _, mirror := range config.ServerInfo.Mirrors {
+			releaseURL = append(releaseURL, constructReleaseFileUrlFunc(tag, mirror))
+		}
+		var best BestURLFunc = BestByDelay // dependency inject
+		url = best(releaseURL)
 	}
-
-	var best BestURLFunc = BestByDelay // dependency inject
-
-	url := best(releaseURL)
 	var release *codegen.Release
 	release, err := internal.GetReleaseFrom(ctx, url)
 	if err != nil {
@@ -229,7 +218,6 @@ func CheckOfflineRAUCExist(sysRoot string) bool {
 	// get all file from /DATA/rauc
 	// if the file have "*.tar" return true
 	files := internal.GetAllFile(filepath.Join(sysRoot, config.RAUC_OFFLINE_PATH))
-	fmt.Println("files : ", files)
 
 	// only allow one tar file
 	raucb_files := lo.FilterMap(files, func(filename string, _ int) (string, bool) {
@@ -242,7 +230,6 @@ func CheckOfflineRAUCExist(sysRoot string) bool {
 	if len(raucb_files) >= 1 {
 		file_name := raucb_files[0]
 		if strings.HasSuffix(file_name, ".raucb") {
-			println("find offline rauc file: ", file_name)
 			config.RAUC_OFFLINE_RAUC_FILENAME = file_name
 			return true
 		}

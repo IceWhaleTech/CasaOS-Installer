@@ -12,10 +12,12 @@ import (
 	"strings"
 	"time"
 
+	"github.com/IceWhaleTech/CasaOS-Common/utils/logger"
 	"github.com/IceWhaleTech/CasaOS-Installer/codegen"
 	"github.com/IceWhaleTech/CasaOS-Installer/internal"
 	"github.com/IceWhaleTech/CasaOS-Installer/internal/config"
 	"github.com/holoplot/go-rauc/rauc"
+	"go.uber.org/zap"
 )
 
 const (
@@ -182,8 +184,11 @@ func GetRAUCInfo(path string) (string, error) {
 	var out bytes.Buffer
 	cmd.Stdout = &out
 	err := cmd.Run()
+	if err != nil {
+		logger.Error("rauc error", zap.Error(err))
+	}
 
-	return out.String(), fmt.Errorf("get rauc info failed: %w", err)
+	return out.String(), err
 }
 
 func GetDescription(raucInfo string) (string, error) {
