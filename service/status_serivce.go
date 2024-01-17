@@ -182,14 +182,14 @@ func (r *StatusService) ExtractRelease(packageFilepath string, release codegen.R
 
 func (r *StatusService) PostInstall(release codegen.Release, sysRoot string) error {
 	UpdateStatusWithMessage(InstallBegin, types.RESTARTING)
-	// err := r.ImplementService.PostInstall(release, sysRoot)
-	// defer func() {
-	// 	if err != nil {
-	// 		UpdateStatusWithMessage(InstallError, err.Error())
-	// 	} else {
-	// 		fmt.Println(err)
-	// 	}
-	// }()
+	err := r.ImplementService.PostInstall(release, sysRoot)
+	defer func() {
+		if err != nil {
+			UpdateStatusWithMessage(InstallError, err.Error())
+		} else {
+			fmt.Println(err)
+		}
+	}()
 	return nil
 }
 

@@ -90,11 +90,12 @@ func PostInstallRAUC(release codegen.Release, sysRoot string) error {
 	time.Sleep(5 * time.Second)
 
 	// write 1+1=2  to sysRoot + FlagUpgradeFile
-	d1 := []byte("1+1=2")
-	err := os.WriteFile(filepath.Join(sysRoot, FlagUpgradeFile), d1, 0644)
+	// d1 := []byte("1+1=2")
+	// err := os.WriteFile(filepath.Join(sysRoot, FlagUpgradeFile), d1, 0644)
 
 	RebootSystem()
-	return err
+	//return err
+	return nil
 }
 func OfflineRAUCFilePath() string {
 	return filepath.Join(config.SysRoot, config.RAUC_OFFLINE_PATH, config.RAUC_OFFLINE_RAUC_FILENAME)
