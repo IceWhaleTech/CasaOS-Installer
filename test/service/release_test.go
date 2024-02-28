@@ -178,12 +178,12 @@ func TestDownloadRelease(t *testing.T) {
 
 func TestBestByDelay(t *testing.T) {
 	url := service.BestByDelay([]string{
-		"https://casaos.oss-cn-shanghai.aliyuncs.com/IceWhaleTech/zimaos-rauc/rauc",
+		"https://casaos.oss-cn-shanghai.aliyuncs.com/IceWhaleTech/zimaos-rauc/rauc.txt",
 		"https://raw.githubusercontent.com/IceWhaleTech/zimaos-rauc/main/rau242342c",
 		"https://baidu.com/weqteqrwerwerwr",
 		"https://baid2342341234123411231412u.com/weqteqrwerwerwr",
 	})
-	assert.Equal(t, "https://casaos.oss-cn-shanghai.aliyuncs.com/IceWhaleTech/zimaos-rauc/rauc", url)
+	assert.Equal(t, "https://casaos.oss-cn-shanghai.aliyuncs.com/IceWhaleTech/zimaos-rauc/rauc.txt", url)
 }
 
 // func TestIsUpgradable(t *testing.T) {
