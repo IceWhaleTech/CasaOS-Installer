@@ -63,12 +63,12 @@ func Test_Status_Case1_CRONJOB(t *testing.T) {
 	time.Sleep(1 * time.Second)
 	value, msg = service.GetStatus()
 	assert.Equal(t, codegen.FetchUpdating, value.Status)
-	assert.Equal(t, "触发更新", msg)
+	assert.Equal(t, "fetching", msg)
 
 	time.Sleep(2 * time.Second)
 	value, msg = service.GetStatus()
 	assert.Equal(t, codegen.Downloading, value.Status)
-	assert.Equal(t, "下载中", msg)
+	assert.Equal(t, "downloading", msg)
 
 	time.Sleep(2 * time.Second)
 	value, msg = service.GetStatus()
@@ -215,7 +215,7 @@ func Test_Status_Case2_Upgradable(t *testing.T) {
 	time.Sleep(1 * time.Second)
 	value, msg = service.GetStatus()
 	assert.Equal(t, codegen.Downloading, value.Status)
-	assert.Equal(t, "下载中", msg)
+	assert.Equal(t, "downloading", msg)
 
 	time.Sleep(5 * time.Second)
 	fmt.Println("断言")
@@ -264,7 +264,7 @@ func Test_Status_Case3_Download_Failed(t *testing.T) {
 
 	value, msg = service.GetStatus()
 	assert.Equal(t, codegen.FetchUpdating, value.Status)
-	assert.Equal(t, "触发更新", msg)
+	assert.Equal(t, "fetching", msg)
 
 	time.Sleep(10 * time.Second)
 
