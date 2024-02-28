@@ -14,6 +14,61 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestGetOldRelease(t *testing.T) {
+	logger.LogInitConsoleOnly()
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	release, err := service.GetRelease(ctx, "unit-test-rauc-0.4.4-1")
+	assert.NoError(t, err)
+	assert.NotNil(t, release)
+
+	assert.NotNil(t, release.Mirrors)
+	assert.NotEmpty(t, release.Mirrors)
+
+	assert.NotNil(t, release.Modules)
+	assert.NotEmpty(t, release.Modules)
+
+	assert.NotNil(t, release.Packages)
+	assert.NotEmpty(t, release.Packages)
+
+	assert.NotEmpty(t, release.ReleaseNotes)
+	assert.NotEmpty(t, release.Version)
+
+	assert.Nil(t, release.Code)
+	assert.Nil(t, release.Background)
+}
+
+func TestGetNewRelease(t *testing.T) {
+	logger.LogInitConsoleOnly()
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	release, err := service.GetRelease(ctx, "unit-test-release-1.1.0")
+	assert.NoError(t, err)
+	assert.NotNil(t, release)
+
+	assert.NotNil(t, release.Mirrors)
+	assert.NotEmpty(t, release.Mirrors)
+
+	assert.NotNil(t, release.Modules)
+	assert.NotEmpty(t, release.Modules)
+
+	assert.NotNil(t, release.Packages)
+	assert.NotEmpty(t, release.Packages)
+
+	assert.NotEmpty(t, release.ReleaseNotes)
+	assert.NotEmpty(t, release.Version)
+
+	assert.NotNil(t, release.Code)
+	assert.Equal(t, "Super Man", *release.Code)
+	assert.NotNil(t, release.Background)
+	assert.Equal(t, "https://upload.wikimedia.org/wikipedia/commons/thumb/0/09/Central_Californian_Coastline%2C_Big_Sur_-_May_2013.jpg/1200px-Central_Californian_Coastline%2C_Big_Sur_-_May_2013.jpg", *release.Background)
+
+}
+
 func TestDownloadRauc(t *testing.T) {
 	logger.LogInitConsoleOnly()
 

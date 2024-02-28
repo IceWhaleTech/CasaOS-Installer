@@ -201,6 +201,12 @@ components:
             ...
           x-oapi-codegen-extra-tags:
             yaml: "release_notes,omitempty"
+        code:
+          type: string
+          example: Big Sur
+        background:
+          type: string
+          example: https://ubuntu/get/releases/download/v0.4.4-alpha2/background.png
         mirrors:
           type: array
           minItems: 1
