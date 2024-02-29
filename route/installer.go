@@ -43,16 +43,17 @@ func (a *api) GetRelease(ctx echo.Context, params codegen.GetReleaseParams) erro
 			Message: &message,
 		})
 	}
-	shouldUpgrade := service.InstallerService.ShouldUpgrade(*release, config.SysRoot)
-	if shouldUpgrade {
-		releaseFilePath, err := service.InstallerService.DownloadRelease(context.Background(), *release, true)
-		if err != nil {
-			logger.Error("error when trying to download release", zap.Error(err), zap.String("release file path", releaseFilePath))
-			return ctx.JSON(http.StatusInternalServerError, &codegen.ResponseInternalServerError{
-				Message: utils.Ptr(err.Error()),
-			})
+
+	go func() {
+		shouldUpgrade := service.InstallerService.ShouldUpgrade(*release, config.SysRoot)
+		if shouldUpgrade {
+			releaseFilePath, err := service.InstallerService.DownloadRelease(context.Background(), *release, true)
+			if err != nil {
+				logger.Error("error when trying to download release", zap.Error(err), zap.String("release file path", releaseFilePath))
+			}
 		}
-	}
+	}()
+
 	return ctx.JSON(http.StatusOK, &codegen.ReleaseOK{
 		Data:       release,
 		Upgradable: nil,
