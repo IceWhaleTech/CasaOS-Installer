@@ -30,6 +30,8 @@ type ServerModel struct {
 
 const InstallerConfigFilePath = "/etc/casaos/installer.conf"
 
+const BackgroundCachePath = "/tmp/background"
+
 var (
 	CommonInfo = &CommonModel{
 		RuntimePath: "/var/run/casaos",
