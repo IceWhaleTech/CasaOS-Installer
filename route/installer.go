@@ -12,6 +12,7 @@ import (
 	"github.com/IceWhaleTech/CasaOS-Installer/internal/config"
 	"github.com/IceWhaleTech/CasaOS-Installer/service"
 	"github.com/IceWhaleTech/CasaOS-Installer/types"
+	"github.com/hashicorp/go-getter"
 	"github.com/labstack/echo/v4"
 	"go.uber.org/zap"
 )
@@ -59,10 +60,23 @@ func (a *api) GetRelease(ctx echo.Context, params codegen.GetReleaseParams) erro
 		}
 	}()
 
-	go func() {
-		// http cache control
-		internal.DownloadAs(ctx.Request().Context(), config.BackgroundCachePath, *release.Background)
-	}()
+	go func(url string) {
+		// download a url as a file
+		getClient := getter.Client{
+			Ctx:   context.Background(),
+			Dst:   config.BackgroundCachePath,
+			Mode:  getter.ClientModeFile,
+			Src:   url,
+			Umask: 0o022,
+			Options: []getter.ClientOption{
+				getter.WithProgress(internal.NewTracker(func(downloaded, totalSize int64) {})),
+			},
+		}
+		err := getClient.Get()
+		if err != nil {
+			logger.Error("error while download background", zap.Error(err))
+		}
+	}(*release.Background)
 
 	// replace the background url with the local one
 	release.Background = utils.Ptr("/v2/installer/background")
