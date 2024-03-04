@@ -12,6 +12,22 @@ security:
   - access_token: []
 
 paths:
+  /background:
+    get:
+      summary: Get the background image of the latest release
+      operationId: getBackground
+      responses:
+        "200":
+          description: OK
+          content:
+            image/png:
+              schema:
+                type: string
+                format: binary
+        "404":
+          $ref: "#/components/responses/ResponseNotFound"
+        "500":
+          $ref: "#/components/responses/ResponseInternalServerError"
   /release:
     get:
       summary: Get the information about the latest release of CasaOS

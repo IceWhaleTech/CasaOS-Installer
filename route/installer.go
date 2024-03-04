@@ -8,12 +8,17 @@ import (
 	"github.com/IceWhaleTech/CasaOS-Common/utils"
 	"github.com/IceWhaleTech/CasaOS-Common/utils/logger"
 	"github.com/IceWhaleTech/CasaOS-Installer/codegen"
+	"github.com/IceWhaleTech/CasaOS-Installer/internal"
 	"github.com/IceWhaleTech/CasaOS-Installer/internal/config"
 	"github.com/IceWhaleTech/CasaOS-Installer/service"
 	"github.com/IceWhaleTech/CasaOS-Installer/types"
 	"github.com/labstack/echo/v4"
 	"go.uber.org/zap"
 )
+
+func (a *api) GetBackground(ctx echo.Context) error {
+	return ctx.File(config.BackgroundCachePath)
+}
 
 func (a *api) GetStatus(ctx echo.Context) error {
 	status, packageStatus := service.GetStatus()
@@ -53,6 +58,14 @@ func (a *api) GetRelease(ctx echo.Context, params codegen.GetReleaseParams) erro
 			}
 		}
 	}()
+
+	go func() {
+		// http cache control
+		internal.DownloadAs(ctx.Request().Context(), config.BackgroundCachePath, *release.Background)
+	}()
+
+	// replace the background url with the local one
+	release.Background = utils.Ptr("/v2/installer/background")
 
 	return ctx.JSON(http.StatusOK, &codegen.ReleaseOK{
 		Data:       release,
