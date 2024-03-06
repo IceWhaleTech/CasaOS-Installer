@@ -3,6 +3,7 @@ package route
 import (
 	"context"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/IceWhaleTech/CasaOS-Common/utils"
@@ -61,6 +62,22 @@ func (a *api) GetRelease(ctx echo.Context, params codegen.GetReleaseParams) erro
 	}()
 
 	go func(url string) {
+		// to check if the file exist
+		// file exist, return
+		if file, err := os.Stat(config.BackgroundCachePath); err == nil {
+			return
+		} else {
+			// to check file create time
+			// if the file is created within 24 hours, return
+			// if the file is created before 24 hours, delete the file
+			if file.ModTime().Add(24 * time.Hour).Before(time.Now()) {
+				if err := os.Remove(config.BackgroundCachePath); err != nil {
+					logger.Error("error while delete background", zap.Error(err))
+				}
+			}
+		}
+
+		// if the background url is nil, return
 		// download a url as a file
 		getClient := getter.Client{
 			Ctx:   context.Background(),
@@ -78,8 +95,10 @@ func (a *api) GetRelease(ctx echo.Context, params codegen.GetReleaseParams) erro
 		}
 	}(*release.Background)
 
-	// replace the background url with the local one
-	release.Background = utils.Ptr("/v2/installer/background")
+	// if config.BackgroundCachePath file exist, replace the background url with the local one
+	if _, err := os.Stat(config.BackgroundCachePath); err == nil {
+		release.Background = utils.Ptr("/v2/installer/background")
+	}
 
 	return ctx.JSON(http.StatusOK, &codegen.ReleaseOK{
 		Data:       release,
