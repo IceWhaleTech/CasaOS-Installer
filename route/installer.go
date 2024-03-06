@@ -3,6 +3,7 @@ package route
 import (
 	"context"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/IceWhaleTech/CasaOS-Common/utils"
@@ -17,8 +18,12 @@ import (
 	"go.uber.org/zap"
 )
 
-func (a *api) GetBackground(ctx echo.Context) error {
-	return ctx.File(config.BackgroundCachePath)
+func backgroundPath(version codegen.Version) string {
+	return config.BackgroundCachePath + version
+}
+
+func (a *api) GetBackground(ctx echo.Context, param codegen.GetBackgroundParams) error {
+	return ctx.File(backgroundPath(*param.Version))
 }
 
 func (a *api) GetStatus(ctx echo.Context) error {
@@ -60,11 +65,18 @@ func (a *api) GetRelease(ctx echo.Context, params codegen.GetReleaseParams) erro
 		}
 	}()
 
-	go func(url string) {
+	go func(url string, version string) {
+		// to check if the file exist
+		if _, err := os.Stat(backgroundPath(version)); err == nil {
+			return
+
+		}
+
+		// if the background url is nil, return
 		// download a url as a file
 		getClient := getter.Client{
 			Ctx:   context.Background(),
-			Dst:   config.BackgroundCachePath,
+			Dst:   backgroundPath(version),
 			Mode:  getter.ClientModeFile,
 			Src:   url,
 			Umask: 0o022,
@@ -76,10 +88,9 @@ func (a *api) GetRelease(ctx echo.Context, params codegen.GetReleaseParams) erro
 		if err != nil {
 			logger.Error("error while download background", zap.Error(err))
 		}
-	}(*release.Background)
+	}(*release.Background, release.Version)
 
-	// replace the background url with the local one
-	release.Background = utils.Ptr("/v2/installer/background")
+	release.Background = utils.Ptr("/v2/installer/background?version=" + release.Version)
 
 	return ctx.JSON(http.StatusOK, &codegen.ReleaseOK{
 		Data:       release,
