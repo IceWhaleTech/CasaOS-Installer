@@ -18,8 +18,12 @@ import (
 	"go.uber.org/zap"
 )
 
-func (a *api) GetBackground(ctx echo.Context) error {
-	return ctx.File(config.BackgroundCachePath)
+func backgroundPath(version codegen.Version) string {
+	return config.BackgroundCachePath + version
+}
+
+func (a *api) GetBackground(ctx echo.Context, param codegen.GetBackgroundParams) error {
+	return ctx.File(backgroundPath(*param.Version))
 }
 
 func (a *api) GetStatus(ctx echo.Context) error {
@@ -61,27 +65,18 @@ func (a *api) GetRelease(ctx echo.Context, params codegen.GetReleaseParams) erro
 		}
 	}()
 
-	go func(url string) {
+	go func(url string, version string) {
 		// to check if the file exist
-		// file exist, return
-		if file, err := os.Stat(config.BackgroundCachePath); err == nil {
+		if _, err := os.Stat(backgroundPath(version)); err == nil {
 			return
-		} else {
-			// to check file create time
-			// if the file is created within 24 hours, return
-			// if the file is created before 24 hours, delete the file
-			if file.ModTime().Add(24 * time.Hour).Before(time.Now()) {
-				if err := os.Remove(config.BackgroundCachePath); err != nil {
-					logger.Error("error while delete background", zap.Error(err))
-				}
-			}
+
 		}
 
 		// if the background url is nil, return
 		// download a url as a file
 		getClient := getter.Client{
 			Ctx:   context.Background(),
-			Dst:   config.BackgroundCachePath,
+			Dst:   backgroundPath(version),
 			Mode:  getter.ClientModeFile,
 			Src:   url,
 			Umask: 0o022,
@@ -93,12 +88,9 @@ func (a *api) GetRelease(ctx echo.Context, params codegen.GetReleaseParams) erro
 		if err != nil {
 			logger.Error("error while download background", zap.Error(err))
 		}
-	}(*release.Background)
+	}(*release.Background, release.Version)
 
-	// if config.BackgroundCachePath file exist, replace the background url with the local one
-	if _, err := os.Stat(config.BackgroundCachePath); err == nil {
-		release.Background = utils.Ptr("/v2/installer/background")
-	}
+	release.Background = utils.Ptr("/v2/installer/background?version=" + release.Version)
 
 	return ctx.JSON(http.StatusOK, &codegen.ReleaseOK{
 		Data:       release,

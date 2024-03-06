@@ -16,6 +16,8 @@ paths:
     get:
       summary: Get the background image of the latest release
       operationId: getBackground
+      parameters:
+        - $ref: "#/components/parameters/Version"
       responses:
         "200":
           description: OK
