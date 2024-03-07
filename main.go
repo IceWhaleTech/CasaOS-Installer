@@ -24,6 +24,7 @@ import (
 	util_http "github.com/IceWhaleTech/CasaOS-Common/utils/http"
 	"github.com/IceWhaleTech/CasaOS-Installer/codegen"
 	"github.com/IceWhaleTech/CasaOS-Installer/codegen/message_bus"
+	"github.com/IceWhaleTech/CasaOS-Installer/internal"
 
 	"github.com/IceWhaleTech/CasaOS-Installer/common"
 	"github.com/IceWhaleTech/CasaOS-Installer/internal/config"
@@ -187,6 +188,7 @@ func cronjob(ctx context.Context) {
 	// release, err := service.GetRelease(ctx, service.GetReleaseBranch(sysRoot))
 	ctx = context.WithValue(ctx, types.Trigger, types.CRON_JOB)
 	release, err := service.InstallerService.GetRelease(ctx, service.GetReleaseBranch(sysRoot))
+	go internal.DownloadReleaseBackground(*release.Background, release.Version)
 
 	if err != nil {
 		logger.Error("error when trying to get release", zap.Error(err))
