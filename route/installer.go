@@ -3,7 +3,6 @@ package route
 import (
 	"context"
 	"net/http"
-	"os"
 	"time"
 
 	"github.com/IceWhaleTech/CasaOS-Common/utils"
@@ -13,17 +12,14 @@ import (
 	"github.com/IceWhaleTech/CasaOS-Installer/internal/config"
 	"github.com/IceWhaleTech/CasaOS-Installer/service"
 	"github.com/IceWhaleTech/CasaOS-Installer/types"
-	"github.com/hashicorp/go-getter"
 	"github.com/labstack/echo/v4"
 	"go.uber.org/zap"
 )
 
-func backgroundPath(version codegen.Version) string {
-	return config.BackgroundCachePath + version
-}
-
 func (a *api) GetBackground(ctx echo.Context, param codegen.GetBackgroundParams) error {
-	return ctx.File(backgroundPath(*param.Version))
+	// no cache
+	ctx.Response().Header().Set("Cache-Control", "no-cache")
+	return ctx.File(internal.BackgroundPath(*param.Version))
 }
 
 func (a *api) GetStatus(ctx echo.Context) error {
@@ -65,30 +61,7 @@ func (a *api) GetRelease(ctx echo.Context, params codegen.GetReleaseParams) erro
 		}
 	}()
 
-	go func(url string, version string) {
-		// to check if the file exist
-		if _, err := os.Stat(backgroundPath(version)); err == nil {
-			return
-
-		}
-
-		// if the background url is nil, return
-		// download a url as a file
-		getClient := getter.Client{
-			Ctx:   context.Background(),
-			Dst:   backgroundPath(version),
-			Mode:  getter.ClientModeFile,
-			Src:   url,
-			Umask: 0o022,
-			Options: []getter.ClientOption{
-				getter.WithProgress(internal.NewTracker(func(downloaded, totalSize int64) {})),
-			},
-		}
-		err := getClient.Get()
-		if err != nil {
-			logger.Error("error while download background", zap.Error(err))
-		}
-	}(*release.Background, release.Version)
+	go internal.DownloadReleaseBackground(*release.Background, release.Version)
 
 	release.Background = utils.Ptr("/v2/installer/background?version=" + release.Version)
 
