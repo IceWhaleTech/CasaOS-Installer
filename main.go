@@ -188,7 +188,12 @@ func cronjob(ctx context.Context) {
 	// release, err := service.GetRelease(ctx, service.GetReleaseBranch(sysRoot))
 	ctx = context.WithValue(ctx, types.Trigger, types.CRON_JOB)
 	release, err := service.InstallerService.GetRelease(ctx, service.GetReleaseBranch(sysRoot))
-	go internal.DownloadReleaseBackground(*release.Background, release.Version)
+
+	if release.Background == nil {
+		go internal.DownloadReleaseBackground(*release.Background, release.Version)
+	} else {
+		fmt.Println("release.Background is nil")
+	}
 
 	if err != nil {
 		logger.Error("error when trying to get release", zap.Error(err))

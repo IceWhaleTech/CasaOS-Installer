@@ -61,7 +61,11 @@ func (a *api) GetRelease(ctx echo.Context, params codegen.GetReleaseParams) erro
 		}
 	}()
 
-	go internal.DownloadReleaseBackground(*release.Background, release.Version)
+	if release.Background == nil {
+		go internal.DownloadReleaseBackground(*release.Background, release.Version)
+	} else {
+		logger.Error("release.Background is nil")
+	}
 
 	release.Background = utils.Ptr("/v2/installer/background?version=" + release.Version)
 
