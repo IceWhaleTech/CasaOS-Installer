@@ -193,7 +193,7 @@ func cronjob(ctx context.Context) {
 	if release.Background == nil {
 		go internal.DownloadReleaseBackground(*release.Background, release.Version)
 	} else {
-		fmt.Println("release.Background is nil")
+		logger.Error("release.Background is nil")
 	}
 
 	if err != nil {
