@@ -27,9 +27,7 @@ var (
 	ErrReleaseNotFound = fmt.Errorf("release not found")
 )
 
-var (
-	CurrentReleaseLocalPath = "/etc/release.yaml"
-)
+var CurrentReleaseLocalPath = "/etc/release.yaml"
 
 type InstallerType string
 
@@ -74,8 +72,8 @@ func BestByDelay(urls []string) string {
 	config.ServerInfo.BestUrl = first
 	return first
 }
-func FetchRelease(ctx context.Context, tag string, constructReleaseFileUrlFunc ConstructReleaseFileUrlFunc) (*codegen.Release, error) {
 
+func FetchRelease(ctx context.Context, tag string, constructReleaseFileUrlFunc ConstructReleaseFileUrlFunc) (*codegen.Release, error) {
 	url := config.ServerInfo.BestUrl
 	if len(config.ServerInfo.BestUrl) == 0 {
 		var releaseURL []string
@@ -281,44 +279,56 @@ func parseVersion(v string) (major, minor, patch, revision int, tag string) {
 	return
 }
 
+// Helper function to compare version tags, returns true if targetTag is considered higher
+func compareTags(currentTag, targetTag string) bool {
+	// Define order for known tags
+	tagPriority := map[string]int{
+		"alpha": 1,
+		"beta":  2,
+	}
+
+	currentTagValue, currentTagExists := tagPriority[currentTag]
+	targetTagValue, targetTagExists := tagPriority[targetTag]
+
+	// If both tags are known, compare their priorities
+	if currentTagExists && targetTagExists {
+		return targetTagValue > currentTagValue
+	}
+
+	// If one tag is unknown, it is considered lower than known tags
+	return !targetTagExists
+}
+
 func IsNewerVersionString(current string, target string) bool {
 	currentMajor, currentMinor, currentPatch, currentRevision, currentTag := parseVersion(current)
 	targetMajor, targetMinor, targetPatch, targetRevision, targetTag := parseVersion(target)
 
+	// Compare major versions
 	if targetMajor != currentMajor {
 		return targetMajor > currentMajor
 	}
+	// Compare minor versions
 	if targetMinor != currentMinor {
 		return targetMinor > currentMinor
 	}
+	// Compare patch versions
 	if targetPatch != currentPatch {
 		return targetPatch > currentPatch
 	}
-	if targetTag != currentTag {
-		// "beta" > "alpha"
-		targetValue := 0
-		currentValue := 0
-		if targetTag == "beta" {
-			targetValue = 100 + targetRevision
-		}
-		if targetTag == "alpha" {
-			targetValue = 0 + targetRevision
-		}
 
-		if currentTag == "beta" {
-			currentValue = 100 + currentRevision
-		}
-		if currentTag == "alpha" {
-			currentValue = 0 + currentRevision
-		}
-		return targetValue > currentValue
-	}
-	if targetRevision != currentRevision {
-		return currentRevision < targetRevision // Lower revision means newer
+	// Compare tag values where no tag is considered higher than any tagged version
+	if currentTag == "" && targetTag != "" {
+		return false
+	} else if currentTag != "" && targetTag == "" {
+		return true
+	} else if currentTag != targetTag {
+		return compareTags(currentTag, targetTag)
 	}
 
-	return false
+	// Compare revisions under the same tag or revision number if no tag exists
+	return targetRevision > currentRevision
 }
+
 func IsNewerVersion(current *semver.Version, target *semver.Version) bool {
 	return IsNewerVersionString(current.String(), target.String())
 }
