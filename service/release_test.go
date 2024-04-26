@@ -20,7 +20,7 @@ func TestReleaseCompare(t *testing.T) {
 	target, _ = semver.NewVersion(service.NormalizeVersion("0.4.8"))
 	current, _ = semver.NewVersion(service.NormalizeVersion("0.4.8"))
 	assert.Equal(t, false, service.IsNewerVersion(current, target))
-	// ///////////
+	//
 	target, _ = semver.NewVersion(service.NormalizeVersion("0.4.8"))
 	current, _ = semver.NewVersion(service.NormalizeVersion("0.4.9"))
 	assert.Equal(t, false, service.IsNewerVersion(current, target))
@@ -29,7 +29,7 @@ func TestReleaseCompare(t *testing.T) {
 	current, _ = semver.NewVersion(service.NormalizeVersion("0.4.8"))
 	assert.Equal(t, true, service.IsNewerVersion(current, target))
 
-	///////////
+	//
 
 	target, _ = semver.NewVersion(service.NormalizeVersion("0.4.9"))
 	current, _ = semver.NewVersion(service.NormalizeVersion("0.4.9-2"))
@@ -39,7 +39,7 @@ func TestReleaseCompare(t *testing.T) {
 	current, _ = semver.NewVersion(service.NormalizeVersion("0.4.9"))
 	assert.Equal(t, true, service.IsNewerVersion(current, target))
 
-	///////////
+	//
 
 	target, _ = semver.NewVersion(service.NormalizeVersion("0.4.9-1"))
 	current, _ = semver.NewVersion(service.NormalizeVersion("0.4.9-2"))
@@ -49,29 +49,44 @@ func TestReleaseCompare(t *testing.T) {
 	current, _ = semver.NewVersion(service.NormalizeVersion("0.4.9-1"))
 	assert.Equal(t, true, service.IsNewerVersion(current, target))
 
-	////
+	//
+	target, _ = semver.NewVersion(service.NormalizeVersion("0.4.9-2"))
+	current, _ = semver.NewVersion(service.NormalizeVersion("0.4.10-alpha2"))
+	assert.Equal(t, false, service.IsNewerVersion(current, target))
 
+	target, _ = semver.NewVersion(service.NormalizeVersion("0.4.10-alpha2"))
+	current, _ = semver.NewVersion(service.NormalizeVersion("0.4.9-2"))
+	assert.Equal(t, true, service.IsNewerVersion(current, target))
+
+	//
 	target, _ = semver.NewVersion(service.NormalizeVersion("0.4.9-alpha1"))
 	current, _ = semver.NewVersion(service.NormalizeVersion("0.4.9-alpha2"))
 	assert.Equal(t, false, service.IsNewerVersion(current, target))
 
+	//
 	target, _ = semver.NewVersion(service.NormalizeVersion("0.4.9-alpha5"))
 	current, _ = semver.NewVersion(service.NormalizeVersion("0.4.9-beta2"))
 	assert.Equal(t, false, service.IsNewerVersion(current, target))
 
+	target, _ = semver.NewVersion(service.NormalizeVersion("0.4.9-beta2"))
+	current, _ = semver.NewVersion(service.NormalizeVersion("0.4.9-alpha5"))
+	assert.Equal(t, true, service.IsNewerVersion(current, target))
+
+	//
 	target, _ = semver.NewVersion(service.NormalizeVersion("0.4.9-alpha5"))
 	current, _ = semver.NewVersion(service.NormalizeVersion("0.4.9-2"))
-	assert.Equal(t, true, service.IsNewerVersion(current, target))
+	assert.Equal(t, false, service.IsNewerVersion(current, target))
 
 	target, _ = semver.NewVersion(service.NormalizeVersion("0.4.9-2"))
 	current, _ = semver.NewVersion(service.NormalizeVersion("0.4.9-beta5"))
-	assert.Equal(t, false, service.IsNewerVersion(current, target))
+	assert.Equal(t, true, service.IsNewerVersion(current, target))
 
+	//
 	target, _ = semver.NewVersion(service.NormalizeVersion("0.4.9"))
 	current, _ = semver.NewVersion(service.NormalizeVersion("0.4.9-beta5"))
-	assert.Equal(t, false, service.IsNewerVersion(current, target))
+	assert.Equal(t, true, service.IsNewerVersion(current, target))
 
 	target, _ = semver.NewVersion(service.NormalizeVersion("0.4.9-beta5"))
 	current, _ = semver.NewVersion(service.NormalizeVersion("0.4.9"))
-	assert.Equal(t, true, service.IsNewerVersion(current, target))
+	assert.Equal(t, false, service.IsNewerVersion(current, target))
 }
