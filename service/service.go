@@ -4,11 +4,9 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"sync"
 
 	"github.com/IceWhaleTech/CasaOS-Common/external"
 	"github.com/IceWhaleTech/CasaOS-Common/utils/logger"
-	"github.com/IceWhaleTech/CasaOS-Installer/codegen"
 	"github.com/IceWhaleTech/CasaOS-Installer/codegen/message_bus"
 	"github.com/IceWhaleTech/CasaOS-Installer/common"
 	"github.com/IceWhaleTech/CasaOS-Installer/internal/checksum"
@@ -18,33 +16,8 @@ import (
 
 type EventType string
 
-const (
-	DownloadBegin    EventType = "downloadBegin"
-	DownloadEnd      EventType = "downloadEnd"
-	DownloadError    EventType = "downloadError"
-	FetchUpdateEnd   EventType = "fetchUpdateEnd"
-	FetchUpdateBegin EventType = "fetchUpdateBegin"
-	FetchUpdateError EventType = "fetchUpdateError"
-
-	Idle         EventType = "idle"
-	InstallEnd   EventType = "installEnd"
-	InstallBegin EventType = "installBegin"
-	InstallError EventType = "installError"
-)
-
-var EventTypeMapStatus = make(map[EventType]codegen.Status)
-var EventTypeMapMessageType = make(map[EventType]message_bus.EventType)
-
 var MyService Services
 var InstallerService UpdaterServiceInterface
-
-// TODO move to another place
-var status codegen.Status = codegen.Status{
-	Status: codegen.Idle,
-}
-
-var packageStatus string = ""
-var lock sync.RWMutex
 
 type Services interface {
 	Gateway() (external.ManagementService, error)
@@ -53,97 +26,6 @@ type Services interface {
 
 type services struct {
 	runtimePath string
-}
-
-func GetStatus() (codegen.Status, string) {
-	return status, packageStatus
-}
-
-func UpdateStatusWithMessage(eventType EventType, newPackageStatus string) {
-	lock.Lock()
-	defer lock.Unlock()
-	if (eventType != InstallEnd && eventType != InstallError && eventType != InstallBegin) && (status.Status == codegen.Installing) {
-		return
-	}
-
-	// TODO only run once
-	InitEventTypeMapStatus()
-
-	switch eventType {
-	case DownloadBegin:
-		status = EventTypeMapStatus[DownloadBegin]
-	case DownloadEnd:
-		status = EventTypeMapStatus[DownloadEnd]
-	case DownloadError:
-		status = EventTypeMapStatus[DownloadError]
-	case FetchUpdateBegin:
-		status = EventTypeMapStatus[FetchUpdateBegin]
-	case FetchUpdateEnd:
-		status = EventTypeMapStatus[FetchUpdateEnd]
-	case FetchUpdateError:
-		status = EventTypeMapStatus[FetchUpdateError]
-	case InstallBegin:
-		status = EventTypeMapStatus[InstallBegin]
-	case InstallEnd:
-		status = EventTypeMapStatus[InstallEnd]
-	case InstallError:
-		status = EventTypeMapStatus[InstallError]
-	}
-
-	packageStatus = newPackageStatus
-
-	ctx := context.Background()
-
-	// 这里怎么map一下?🤔
-	event := EventTypeMapMessageType[eventType]
-
-	go PublishEventWrapper(ctx, event, map[string]string{
-		common.PropertyTypeMessage.Name: newPackageStatus,
-	})
-}
-
-func InitEventTypeMapStatus() {
-	EventTypeMapStatus[DownloadBegin] = codegen.Status{
-		Status: codegen.Downloading,
-	}
-	EventTypeMapStatus[DownloadEnd] = codegen.Status{
-		Status: codegen.Idle,
-	}
-	EventTypeMapStatus[DownloadError] = codegen.Status{
-		Status: codegen.DownloadError,
-	}
-
-	EventTypeMapStatus[FetchUpdateBegin] = codegen.Status{
-		Status: codegen.FetchUpdating,
-	}
-	EventTypeMapStatus[FetchUpdateEnd] = codegen.Status{
-		Status: codegen.Idle,
-	}
-	EventTypeMapStatus[FetchUpdateError] = codegen.Status{
-		Status: codegen.FetchError,
-	}
-
-	EventTypeMapStatus[InstallBegin] = codegen.Status{
-		Status: codegen.Installing,
-	}
-	EventTypeMapStatus[InstallEnd] = codegen.Status{
-		Status: codegen.Idle,
-	}
-	EventTypeMapStatus[InstallError] = codegen.Status{
-		Status: codegen.InstallError,
-	}
-
-	EventTypeMapMessageType[FetchUpdateBegin] = common.EventTypeCheckUpdateBegin
-	EventTypeMapMessageType[FetchUpdateEnd] = common.EventTypeCheckUpdateEnd
-	EventTypeMapMessageType[FetchUpdateError] = common.EventTypeCheckUpdateError
-
-	EventTypeMapMessageType[DownloadBegin] = common.EventTypeDownloadUpdateBegin
-	EventTypeMapMessageType[DownloadEnd] = common.EventTypeDownloadUpdateEnd
-	EventTypeMapMessageType[DownloadError] = common.EventTypeDownloadUpdateError
-
-	EventTypeMapMessageType[InstallBegin] = common.EventTypeInstallUpdateBegin
-	EventTypeMapMessageType[InstallEnd] = common.EventTypeInstallUpdateEnd
-	EventTypeMapMessageType[InstallError] = common.EventTypeInstallUpdateError
 }
 
 func NewService(RuntimePath string) Services {
