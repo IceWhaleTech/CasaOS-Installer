@@ -133,6 +133,28 @@ builds:
       - arm
     goarm:
       - "7"
+  - id: channel-tool-amd64
+    binary: build/sysroot/usr/bin/channel-tool
+    main: ./cmd/channel
+    env:
+      - CC=x86_64-linux-gnu-gcc
+    gcflags:
+      - all=-N -l
+    ldflags:
+      - -X main.commit={{.Commit}}
+      - -X main.date={{.Date}}
+      - -s
+      - -w
+      - -extldflags "-static"
+    tags:
+      - musl
+      - netgo
+      - osusergo
+    goos:
+      - linux
+    goarch:
+      - amd64
+
 archives:
   - name_template: >-
       {{ .Os }}-{{- if eq .Arch "arm" }}arm-7{{- else }}{{ .Arch }}{{- end }}-{{ .ProjectName }}-v{{ .Version }}
@@ -141,6 +163,7 @@ archives:
       - casaos-installer-amd64
       - casaos-installer-arm64
       - casaos-installer-arm-7
+      - channel-tool-amd64
     files:
       - build/**/*
 checksum:
