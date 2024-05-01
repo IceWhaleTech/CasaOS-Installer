@@ -19,26 +19,21 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+// 测试项目说明
+// 这里是状态测试，功能代码是mock。只测试状态是否正确
 func Test_Status_Case1_CRONJOB(t *testing.T) {
 	// 测试说明: 老版本在就绪之后重新检测更新,并触发新的更新
 	// 本地版本 老版本
 	// 线上版本 新版本
 	logger.LogInitConsoleOnly()
 
-	tmpDir, err := os.MkdirTemp("", "casaos-status-test-case-1")
-	assert.NoError(t, err)
-
-	sysRoot := tmpDir
+	sysRoot := t.TempDir()
 	fixtures.SetLocalRelease(sysRoot, "v0.4.4")
 
-	statusService := &service.StatusService{
-		ImplementService: &service.TestService{
-			InstallRAUCHandler: service.AlwaysSuccessInstallHandler,
-			DownloadStatusLock: sync.RWMutex{},
-		},
-		SysRoot:                          sysRoot,
-		Have_other_get_release_flag_lock: sync.RWMutex{},
-	}
+	statusService := service.NewStatusService(&service.TestService{
+		InstallRAUCHandler: service.AlwaysSuccessInstallHandler,
+		DownloadStatusLock: sync.RWMutex{},
+	}, sysRoot)
 
 	value, msg := statusService.GetStatus()
 	assert.Equal(t, codegen.Idle, value.Status)
@@ -85,10 +80,7 @@ func Test_Status_Case2_HTTP_GET_Release(t *testing.T) {
 	// 线上版本 新版本
 	logger.LogInitConsoleOnly()
 
-	tmpDir, err := os.MkdirTemp("", "casaos-status-test-case-2")
-	assert.NoError(t, err)
-
-	sysRoot := tmpDir
+	sysRoot := t.TempDir()
 	fixtures.SetLocalRelease(sysRoot, "v0.4.3")
 
 	statusService := service.NewStatusService(&service.TestService{
@@ -332,10 +324,7 @@ func Test_Status_Get_Release_Currency(t *testing.T) {
 
 	logger.LogInitConsoleOnly()
 
-	tmpDir, err := os.MkdirTemp("", "casaos-status-test-case-5")
-	assert.NoError(t, err)
-
-	sysRoot := tmpDir
+	sysRoot := t.TempDir()
 	fixtures.SetLocalRelease(sysRoot, "v0.4.5")
 
 	statusService := service.NewStatusService(&service.TestService{
@@ -383,5 +372,4 @@ func Test_Status_Get_Release_Currency(t *testing.T) {
 	service.Test_server_count_lock.Lock()
 	assert.Equal(t, 1, service.ShouldUpgradeCount)
 	service.Test_server_count_lock.Unlock()
-
 }
