@@ -41,6 +41,9 @@ const (
 )
 
 func (r *StatusService) InitEventTypeMapStatus() {
+	r.EventTypeMapStatus = make(map[EventType]codegen.Status)
+	r.EventTypeMapMessageType = make(map[EventType]message_bus.EventType)
+
 	r.EventTypeMapStatus[DownloadBegin] = codegen.Status{
 		Status: codegen.Downloading,
 	}
@@ -82,6 +85,16 @@ func (r *StatusService) InitEventTypeMapStatus() {
 	r.EventTypeMapMessageType[InstallBegin] = common.EventTypeInstallUpdateBegin
 	r.EventTypeMapMessageType[InstallEnd] = common.EventTypeInstallUpdateEnd
 	r.EventTypeMapMessageType[InstallError] = common.EventTypeInstallUpdateError
+}
+
+func NewStatusService(implementService UpdaterServiceInterface, sysRoot string) *StatusService {
+	statusService := &StatusService{
+		ImplementService:                 implementService,
+		SysRoot:                          sysRoot,
+		Have_other_get_release_flag_lock: sync.RWMutex{},
+	}
+	statusService.InitEventTypeMapStatus()
+	return statusService
 }
 
 func (r *StatusService) GetStatus() (codegen.Status, string) {

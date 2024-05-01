@@ -20,6 +20,9 @@ import (
 )
 
 func Test_Status_Case1_CRONJOB(t *testing.T) {
+	// 测试说明: 老版本在就绪之后重新检测更新,并触发新的更新
+	// 本地版本 老版本
+	// 线上版本 新版本
 	logger.LogInitConsoleOnly()
 
 	tmpDir, err := os.MkdirTemp("", "casaos-status-test-case-1")
@@ -77,6 +80,9 @@ func Test_Status_Case1_CRONJOB(t *testing.T) {
 }
 
 func Test_Status_Case2_HTTP_GET_Release(t *testing.T) {
+	// 测试说明: 老版本在就绪之后重新检测更新,并触发新的更新
+	// 本地版本 老版本
+	// 线上版本 新版本
 	logger.LogInitConsoleOnly()
 
 	tmpDir, err := os.MkdirTemp("", "casaos-status-test-case-2")
@@ -85,19 +91,15 @@ func Test_Status_Case2_HTTP_GET_Release(t *testing.T) {
 	sysRoot := tmpDir
 	fixtures.SetLocalRelease(sysRoot, "v0.4.3")
 
-	statusService := &service.StatusService{
-		ImplementService: &service.TestService{
-			InstallRAUCHandler: service.AlwaysSuccessInstallHandler,
-			DownloadStatusLock: sync.RWMutex{},
-		},
-		SysRoot:                          sysRoot,
-		Have_other_get_release_flag_lock: sync.RWMutex{},
-	}
+	statusService := service.NewStatusService(&service.TestService{
+		InstallRAUCHandler: service.AlwaysSuccessInstallHandler,
+		DownloadStatusLock: sync.RWMutex{},
+	}, sysRoot)
 
-	statusService.UpdateStatusWithMessage(service.DownloadEnd, "ready-to-update")
+	statusService.UpdateStatusWithMessage(service.DownloadEnd, types.READY_TO_UPDATE)
 	value, msg := statusService.GetStatus()
 	assert.Equal(t, codegen.Idle, value.Status)
-	assert.Equal(t, "ready-to-update", msg)
+	assert.Equal(t, types.READY_TO_UPDATE, msg)
 
 	ctx := context.WithValue(context.Background(), types.Trigger, types.HTTP_REQUEST)
 	// 现在模仿HTTP请求拿更新
@@ -117,6 +119,10 @@ func Test_Status_Case2_HTTP_GET_Release(t *testing.T) {
 }
 
 func Test_Status_Case3_Install_Success(t *testing.T) {
+	// 测试说明: 测试完整的安装流程
+	// 本地版本 老版本
+	// 线上版本 新版本
+
 	logger.LogInitConsoleOnly()
 
 	tmpDir, err := os.MkdirTemp("", "casaos-status-test-case-3")
@@ -125,14 +131,10 @@ func Test_Status_Case3_Install_Success(t *testing.T) {
 	sysRoot := tmpDir
 	fixtures.SetLocalRelease(sysRoot, "v0.4.3")
 
-	statusService := &service.StatusService{
-		ImplementService: &service.TestService{
-			InstallRAUCHandler: service.AlwaysSuccessInstallHandler,
-			DownloadStatusLock: sync.RWMutex{},
-		},
-		SysRoot:                          sysRoot,
-		Have_other_get_release_flag_lock: sync.RWMutex{},
-	}
+	statusService := service.NewStatusService(&service.TestService{
+		InstallRAUCHandler: service.AlwaysSuccessInstallHandler,
+		DownloadStatusLock: sync.RWMutex{},
+	}, sysRoot)
 	// 模仿安装时的状态
 
 	statusService.UpdateStatusWithMessage(service.DownloadEnd, "ready-to-update")
@@ -189,15 +191,11 @@ func Test_Status_Case2_Upgradable(t *testing.T) {
 
 	fixtures.SetLocalRelease(sysRoot, "v0.4.4")
 
-	statusService := &service.StatusService{
-		ImplementService: &service.RAUCService{
-			InstallRAUCHandler: service.MockInstallRAUC,
-			CheckSumHandler:    checksum.OnlineRAUCExist,
-			UrlHandler:         service.GitHubBranchTagReleaseUrl,
-		},
-		SysRoot:                          sysRoot,
-		Have_other_get_release_flag_lock: sync.RWMutex{},
-	}
+	statusService := service.NewStatusService(&service.RAUCService{
+		InstallRAUCHandler: service.MockInstallRAUC,
+		CheckSumHandler:    checksum.OnlineRAUCExist,
+		UrlHandler:         service.GitHubBranchTagReleaseUrl,
+	}, sysRoot)
 
 	fixtures.SetLocalRelease(sysRoot, "v0.4.3")
 
@@ -235,15 +233,11 @@ func Test_Status_Case3_Download_Failed(t *testing.T) {
 
 	fixtures.SetLocalRelease(sysRoot, "v0.4.4")
 
-	statusService := &service.StatusService{
-		ImplementService: &service.RAUCService{
-			InstallRAUCHandler: service.MockInstallRAUC,
-			CheckSumHandler:    checksum.AlwaysFail,
-			UrlHandler:         service.GitHubBranchTagReleaseUrl,
-		},
-		SysRoot:                          sysRoot,
-		Have_other_get_release_flag_lock: sync.RWMutex{},
-	}
+	statusService := service.NewStatusService(&service.RAUCService{
+		InstallRAUCHandler: service.MockInstallRAUC,
+		CheckSumHandler:    checksum.AlwaysFail,
+		UrlHandler:         service.GitHubBranchTagReleaseUrl,
+	}, sysRoot)
 
 	fixtures.SetLocalRelease(sysRoot, "v0.4.3")
 
@@ -274,6 +268,10 @@ func Test_Status_Case3_Download_Failed(t *testing.T) {
 }
 
 func Test_Status_Case4_Install_Fail(t *testing.T) {
+	// 测试说明: 测试下载成功、安装时失败
+	// 本地版本 老版本
+	// 线上版本 新版本
+
 	logger.LogInitConsoleOnly()
 
 	tmpDir, err := os.MkdirTemp("", "casaos-status-test-case-4")
@@ -282,14 +280,10 @@ func Test_Status_Case4_Install_Fail(t *testing.T) {
 	sysRoot := tmpDir
 	fixtures.SetLocalRelease(sysRoot, "v0.4.3")
 
-	statusService := &service.StatusService{
-		ImplementService: &service.TestService{
-			InstallRAUCHandler: service.AlwaysFailedInstallHandler,
-			DownloadStatusLock: sync.RWMutex{},
-		},
-		SysRoot:                          sysRoot,
-		Have_other_get_release_flag_lock: sync.RWMutex{},
-	}
+	statusService := service.NewStatusService(&service.TestService{
+		InstallRAUCHandler: service.AlwaysFailedInstallHandler,
+		DownloadStatusLock: sync.RWMutex{},
+	}, sysRoot)
 	// 模仿安装时的状态
 
 	statusService.UpdateStatusWithMessage(service.DownloadEnd, "ready-to-update")
@@ -332,6 +326,10 @@ func Test_Status_Case4_Install_Fail(t *testing.T) {
 }
 
 func Test_Status_Get_Release_Currency(t *testing.T) {
+	// 测试说明: 测试同时拿多次 release
+	// 本地版本 老版本
+	// 线上版本 新版本
+
 	logger.LogInitConsoleOnly()
 
 	tmpDir, err := os.MkdirTemp("", "casaos-status-test-case-5")
@@ -340,14 +338,10 @@ func Test_Status_Get_Release_Currency(t *testing.T) {
 	sysRoot := tmpDir
 	fixtures.SetLocalRelease(sysRoot, "v0.4.5")
 
-	statusService := &service.StatusService{
-		ImplementService: &service.TestService{
-			InstallRAUCHandler: service.AlwaysSuccessInstallHandler,
-			DownloadStatusLock: sync.RWMutex{},
-		},
-		SysRoot:                          sysRoot,
-		Have_other_get_release_flag_lock: sync.RWMutex{},
-	}
+	statusService := service.NewStatusService(&service.TestService{
+		InstallRAUCHandler: service.AlwaysSuccessInstallHandler,
+		DownloadStatusLock: sync.RWMutex{},
+	}, sysRoot)
 	statusService.UpdateStatusWithMessage(service.DownloadEnd, "ready-to-update")
 
 	service.Test_server_count_lock.Lock()
