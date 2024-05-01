@@ -10,7 +10,6 @@ import (
 	"github.com/IceWhaleTech/CasaOS-Installer/codegen/message_bus"
 	"github.com/IceWhaleTech/CasaOS-Installer/common"
 	"github.com/IceWhaleTech/CasaOS-Installer/types"
-	"google.golang.org/grpc/status"
 )
 
 type StatusService struct {
@@ -92,7 +91,7 @@ func (r *StatusService) GetStatus() (codegen.Status, string) {
 func (r *StatusService) UpdateStatusWithMessage(eventType EventType, newPackageStatus string) {
 	r.lock.Lock()
 	defer r.lock.Unlock()
-	if (eventType != InstallEnd && eventType != InstallError && eventType != InstallBegin) && (status.Status == codegen.Installing) {
+	if (eventType != InstallEnd && eventType != InstallError && eventType != InstallBegin) && (r.status.Status == codegen.Installing) {
 		return
 	}
 

@@ -176,7 +176,7 @@ func main() {
 
 func cronjob(ctx context.Context) {
 
-	status, _ := service.GetStatus()
+	status, _ := service.InstallerService.GetStatus()
 	if status.Status == codegen.Downloading {
 		return
 	}

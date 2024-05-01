@@ -17,7 +17,7 @@ import (
 type EventType string
 
 var MyService Services
-var InstallerService UpdaterServiceInterface
+var InstallerService *StatusService
 
 type Services interface {
 	Gateway() (external.ManagementService, error)

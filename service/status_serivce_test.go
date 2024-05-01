@@ -37,21 +37,21 @@ func Test_Status_Case1_CRONJOB(t *testing.T) {
 		Have_other_get_release_flag_lock: sync.RWMutex{},
 	}
 
-	value, msg := service.GetStatus()
+	value, msg := statusService.GetStatus()
 	assert.Equal(t, codegen.Idle, value.Status)
 	assert.Equal(t, "", msg)
 
 	// main的过程
 	statusService.Launch(sysRoot)
-	value, msg = service.GetStatus()
+	value, msg = statusService.GetStatus()
 	assert.Equal(t, codegen.Installing, value.Status)
 	assert.Equal(t, "other", msg)
 
 	statusService.PostMigration(sysRoot)
 
-	value, msg = service.GetStatus()
+	value, msg = statusService.GetStatus()
 	assert.Equal(t, codegen.Idle, value.Status)
-	assert.Equal(t, "up-to-date", msg)
+	assert.Equal(t, types.UP_TO_DATE, msg)
 
 	// 模拟cron
 	go func() {
@@ -61,19 +61,19 @@ func Test_Status_Case1_CRONJOB(t *testing.T) {
 	}()
 
 	time.Sleep(1 * time.Second)
-	value, msg = service.GetStatus()
+	value, msg = statusService.GetStatus()
 	assert.Equal(t, codegen.FetchUpdating, value.Status)
 	assert.Equal(t, "fetching", msg)
 
 	time.Sleep(2 * time.Second)
-	value, msg = service.GetStatus()
+	value, msg = statusService.GetStatus()
 	assert.Equal(t, codegen.Downloading, value.Status)
-	assert.Equal(t, "downloading", msg)
+	assert.Equal(t, types.DOWNLOADING, msg)
 
 	time.Sleep(2 * time.Second)
-	value, msg = service.GetStatus()
+	value, msg = statusService.GetStatus()
 	assert.Equal(t, codegen.Idle, value.Status)
-	assert.Equal(t, "ready-to-update", msg)
+	assert.Equal(t, types.READY_TO_UPDATE, msg)
 }
 
 func Test_Status_Case2_HTTP_GET_Release(t *testing.T) {
@@ -94,8 +94,8 @@ func Test_Status_Case2_HTTP_GET_Release(t *testing.T) {
 		Have_other_get_release_flag_lock: sync.RWMutex{},
 	}
 
-	service.UpdateStatusWithMessage(service.DownloadEnd, "ready-to-update")
-	value, msg := service.GetStatus()
+	statusService.UpdateStatusWithMessage(service.DownloadEnd, "ready-to-update")
+	value, msg := statusService.GetStatus()
 	assert.Equal(t, codegen.Idle, value.Status)
 	assert.Equal(t, "ready-to-update", msg)
 
@@ -105,13 +105,13 @@ func Test_Status_Case2_HTTP_GET_Release(t *testing.T) {
 
 	time.Sleep(1 * time.Second)
 	// HTTP 请求的getRelease不会更新状态
-	value, msg = service.GetStatus()
+	value, msg = statusService.GetStatus()
 	assert.Equal(t, codegen.Idle, value.Status)
 	assert.Equal(t, string(types.READY_TO_UPDATE), msg)
 
 	time.Sleep(2 * time.Second)
 	// 但是应该会说需要更新
-	value, msg = service.GetStatus()
+	value, msg = statusService.GetStatus()
 	assert.Equal(t, codegen.Downloading, value.Status)
 	assert.Equal(t, "http 触发的下载", msg)
 }
@@ -135,8 +135,8 @@ func Test_Status_Case3_Install_Success(t *testing.T) {
 	}
 	// 模仿安装时的状态
 
-	service.UpdateStatusWithMessage(service.DownloadEnd, "ready-to-update")
-	value, msg := service.GetStatus()
+	statusService.UpdateStatusWithMessage(service.DownloadEnd, "ready-to-update")
+	value, msg := statusService.GetStatus()
 	assert.Equal(t, codegen.Idle, value.Status)
 	assert.Equal(t, "ready-to-update", msg)
 
@@ -146,7 +146,7 @@ func Test_Status_Case3_Install_Success(t *testing.T) {
 
 	time.Sleep(1 * time.Second)
 	// 安装 请求的getRelease会把状态变成installing
-	value, msg = service.GetStatus()
+	value, msg = statusService.GetStatus()
 	assert.Equal(t, codegen.Installing, value.Status)
 	assert.Equal(t, string(types.FETCHING), msg)
 
@@ -155,21 +155,21 @@ func Test_Status_Case3_Install_Success(t *testing.T) {
 
 	time.Sleep(1 * time.Second)
 	// 安装 请求的dowing会把状态变成installing
-	value, msg = service.GetStatus()
+	value, msg = statusService.GetStatus()
 	assert.Equal(t, codegen.Installing, value.Status)
 	assert.Equal(t, string(types.DOWNLOADING), msg)
 
 	go statusService.ExtractRelease("", codegen.Release{})
 
 	time.Sleep(1 * time.Second)
-	value, msg = service.GetStatus()
+	value, msg = statusService.GetStatus()
 	assert.Equal(t, codegen.Installing, value.Status)
 	assert.Equal(t, string(types.DECOMPRESS), msg)
 
 	go statusService.Install(codegen.Release{}, "")
 
 	time.Sleep(1 * time.Second)
-	value, msg = service.GetStatus()
+	value, msg = statusService.GetStatus()
 	assert.Equal(t, codegen.Installing, value.Status)
 	assert.Equal(t, string(types.INSTALLING), msg)
 }
@@ -203,9 +203,9 @@ func Test_Status_Case2_Upgradable(t *testing.T) {
 
 	ctx := context.WithValue(context.Background(), types.Trigger, types.CRON_JOB)
 
-	service.UpdateStatusWithMessage(service.FetchUpdateEnd, "")
+	statusService.UpdateStatusWithMessage(service.FetchUpdateEnd, "")
 
-	value, msg := service.GetStatus()
+	value, msg := statusService.GetStatus()
 	assert.Equal(t, codegen.Idle, value.Status)
 	assert.Equal(t, "", msg)
 
@@ -213,13 +213,13 @@ func Test_Status_Case2_Upgradable(t *testing.T) {
 	assert.NoError(t, err)
 
 	time.Sleep(1 * time.Second)
-	value, msg = service.GetStatus()
+	value, msg = statusService.GetStatus()
 	assert.Equal(t, codegen.Downloading, value.Status)
 	assert.Equal(t, "downloading", msg)
 
 	time.Sleep(5 * time.Second)
 	fmt.Println("断言")
-	value, msg = service.GetStatus()
+	value, msg = statusService.GetStatus()
 	assert.Equal(t, codegen.Idle, value.Status)
 	assert.Equal(t, "ready-to-update", msg)
 
@@ -249,9 +249,9 @@ func Test_Status_Case3_Download_Failed(t *testing.T) {
 
 	ctx := context.WithValue(context.Background(), types.Trigger, types.CRON_JOB)
 
-	service.UpdateStatusWithMessage(service.FetchUpdateEnd, "")
+	statusService.UpdateStatusWithMessage(service.FetchUpdateEnd, "")
 
-	value, msg := service.GetStatus()
+	value, msg := statusService.GetStatus()
 	assert.Equal(t, codegen.Idle, value.Status)
 	assert.Equal(t, "", msg)
 
@@ -262,13 +262,13 @@ func Test_Status_Case3_Download_Failed(t *testing.T) {
 
 	time.Sleep(100 * time.Microsecond)
 
-	value, msg = service.GetStatus()
+	value, msg = statusService.GetStatus()
 	assert.Equal(t, codegen.FetchUpdating, value.Status)
 	assert.Equal(t, "fetching", msg)
 
 	time.Sleep(10 * time.Second)
 
-	value, msg = service.GetStatus()
+	value, msg = statusService.GetStatus()
 	assert.Equal(t, codegen.DownloadError, value.Status)
 	assert.Equal(t, "download fail", msg)
 }
@@ -292,8 +292,8 @@ func Test_Status_Case4_Install_Fail(t *testing.T) {
 	}
 	// 模仿安装时的状态
 
-	service.UpdateStatusWithMessage(service.DownloadEnd, "ready-to-update")
-	value, msg := service.GetStatus()
+	statusService.UpdateStatusWithMessage(service.DownloadEnd, "ready-to-update")
+	value, msg := statusService.GetStatus()
 	assert.Equal(t, codegen.Idle, value.Status)
 	assert.Equal(t, "ready-to-update", msg)
 
@@ -303,7 +303,7 @@ func Test_Status_Case4_Install_Fail(t *testing.T) {
 
 	time.Sleep(1 * time.Second)
 	// 安装 请求的getRelease会把状态变成installing
-	value, msg = service.GetStatus()
+	value, msg = statusService.GetStatus()
 	assert.Equal(t, codegen.Installing, value.Status)
 	assert.Equal(t, string(types.FETCHING), msg)
 
@@ -312,21 +312,21 @@ func Test_Status_Case4_Install_Fail(t *testing.T) {
 
 	time.Sleep(1 * time.Second)
 	// 安装 请求的dowing会把状态变成installing
-	value, msg = service.GetStatus()
+	value, msg = statusService.GetStatus()
 	assert.Equal(t, codegen.Installing, value.Status)
 	assert.Equal(t, string(types.DOWNLOADING), msg)
 
 	go statusService.ExtractRelease("", codegen.Release{})
 
 	time.Sleep(1 * time.Second)
-	value, msg = service.GetStatus()
+	value, msg = statusService.GetStatus()
 	assert.Equal(t, codegen.Installing, value.Status)
 	assert.Equal(t, string(types.DECOMPRESS), msg)
 
 	go statusService.Install(codegen.Release{}, "")
 
 	time.Sleep(1 * time.Second)
-	value, msg = service.GetStatus()
+	value, msg = statusService.GetStatus()
 	assert.Equal(t, codegen.InstallError, value.Status)
 	assert.Equal(t, "rauc is not compatible", msg)
 }
@@ -348,7 +348,7 @@ func Test_Status_Get_Release_Currency(t *testing.T) {
 		SysRoot:                          sysRoot,
 		Have_other_get_release_flag_lock: sync.RWMutex{},
 	}
-	service.UpdateStatusWithMessage(service.DownloadEnd, "ready-to-update")
+	statusService.UpdateStatusWithMessage(service.DownloadEnd, "ready-to-update")
 
 	service.Test_server_count_lock.Lock()
 	service.ShouldUpgradeCount = 0
@@ -381,7 +381,7 @@ func Test_Status_Get_Release_Currency(t *testing.T) {
 
 	time.Sleep(1 * time.Second)
 
-	status, msg := service.GetStatus()
+	status, msg := statusService.GetStatus()
 	assert.Equal(t, codegen.Idle, status.Status)
 	assert.Equal(t, "ready-to-update", msg)
 
