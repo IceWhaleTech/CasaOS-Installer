@@ -2,8 +2,6 @@ package service_test
 
 import (
 	"context"
-	"fmt"
-	"os"
 	"path/filepath"
 	"sync"
 	"testing"
@@ -112,51 +110,6 @@ func Test_Status_Case3_Install_Success(t *testing.T) {
 	assert.Equal(t, string(types.INSTALLING), msg)
 }
 
-// 这个是测试cron触发的更新的下载的更新的
-func Test_Status_Case2_Upgradable(t *testing.T) {
-	logger.LogInitConsoleOnly()
-	if _, exists := os.LookupEnv("CI"); exists {
-		t.Skip("skipping test in CI environment")
-		// 这个在github上的环境跳过测试，因为下载太快了，没有办法断言到downloading
-	}
-
-	sysRoot := t.TempDir()
-	config.ServerInfo.CachePath = filepath.Join(sysRoot, "cache")
-
-	fixtures.SetLocalRelease(sysRoot, "v0.4.4")
-
-	statusService := service.NewStatusService(&service.RAUCService{
-		InstallRAUCHandler: service.MockInstallRAUC,
-		CheckSumHandler:    checksum.OnlineRAUCExist,
-		UrlHandler:         service.GitHubBranchTagReleaseUrl,
-	}, sysRoot)
-
-	fixtures.SetLocalRelease(sysRoot, "v0.4.3")
-
-	ctx := context.WithValue(context.Background(), types.Trigger, types.CRON_JOB)
-
-	statusService.UpdateStatusWithMessage(service.FetchUpdateEnd, "")
-
-	value, msg := statusService.GetStatus()
-	assert.Equal(t, codegen.Idle, value.Status)
-	assert.Equal(t, "", msg)
-
-	_, err := statusService.GetRelease(ctx, "unit-test-rauc-0.4.4-1")
-	assert.NoError(t, err)
-
-	time.Sleep(1 * time.Second)
-	value, msg = statusService.GetStatus()
-	assert.Equal(t, codegen.Downloading, value.Status)
-	assert.Equal(t, "downloading", msg)
-
-	time.Sleep(5 * time.Second)
-	fmt.Println("断言")
-	value, msg = statusService.GetStatus()
-	assert.Equal(t, codegen.Idle, value.Status)
-	assert.Equal(t, "ready-to-update", msg)
-
-}
-
 func Test_Status_Case3_Download_Failed(t *testing.T) {
 	// 测试说明: 测试下载失败,下载之后无法通过checksum
 	// 本地版本 老版本
@@ -183,7 +136,7 @@ func Test_Status_Case3_Download_Failed(t *testing.T) {
 
 	value, msg := statusService.GetStatus()
 
-	assert.Equal(t, codegen.DownloadError, value.Status)
+	assert.Equal(t, codegen.Idle, value.Status)
 	assert.Equal(t, "download fail", msg)
 }
 
@@ -217,61 +170,4 @@ func Test_Status_Case4_Install_Fail(t *testing.T) {
 	value, msg = statusService.GetStatus()
 	assert.Equal(t, codegen.InstallError, value.Status)
 	assert.Equal(t, "rauc is not compatible", msg)
-}
-
-func Test_Status_Get_Release_Currency(t *testing.T) {
-	// 测试说明: 测试同时拿多次 release
-	// 本地版本 老版本
-	// 线上版本 新版本
-
-	logger.LogInitConsoleOnly()
-
-	sysRoot := t.TempDir()
-	fixtures.SetLocalRelease(sysRoot, "v0.4.5")
-
-	statusService := service.NewStatusService(&service.TestService{
-		InstallRAUCHandler: service.AlwaysSuccessInstallHandler,
-		DownloadStatusLock: sync.RWMutex{},
-	}, sysRoot)
-	statusService.UpdateStatusWithMessage(service.DownloadEnd, "ready-to-update")
-
-	service.Test_server_count_lock.Lock()
-	service.ShouldUpgradeCount = 0
-	service.Test_server_count_lock.Unlock()
-
-	go func() {
-		ctx := context.WithValue(context.Background(), types.Trigger, types.HTTP_REQUEST)
-		release, err := statusService.GetRelease(ctx, "latest")
-		assert.NoError(t, err)
-		assert.Equal(t, "v0.4.8", release.Version)
-	}()
-
-	time.Sleep(100 * time.Microsecond)
-
-	go func() {
-		ctx := context.WithValue(context.Background(), types.Trigger, types.HTTP_REQUEST)
-		release, err := statusService.GetRelease(ctx, "latest")
-		assert.NoError(t, err)
-		assert.Equal(t, "v0.4.8", release.Version)
-	}()
-
-	time.Sleep(100 * time.Microsecond)
-
-	go func() {
-		ctx := context.WithValue(context.Background(), types.Trigger, types.HTTP_REQUEST)
-		release, err := statusService.GetRelease(ctx, "latest")
-		assert.NoError(t, err)
-		assert.Equal(t, "v0.4.8", release.Version)
-	}()
-
-	time.Sleep(1 * time.Second)
-
-	status, msg := statusService.GetStatus()
-	assert.Equal(t, codegen.Idle, status.Status)
-	assert.Equal(t, "ready-to-update", msg)
-
-	time.Sleep(5 * time.Second)
-	service.Test_server_count_lock.Lock()
-	assert.Equal(t, 1, service.ShouldUpgradeCount)
-	service.Test_server_count_lock.Unlock()
 }

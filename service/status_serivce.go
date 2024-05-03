@@ -190,8 +190,8 @@ func (r *StatusService) DownloadRelease(ctx context.Context, release codegen.Rel
 		return "", fmt.Errorf("installing")
 	}
 
-	if ctx.Value(types.Trigger) == types.CRON_JOB {
-
+	switch ctx.Value(types.Trigger) {
+	case types.CRON_JOB:
 		r.UpdateStatusWithMessage(DownloadBegin, types.DOWNLOADING)
 		defer func() {
 			if err == nil {
@@ -200,20 +200,8 @@ func (r *StatusService) DownloadRelease(ctx context.Context, release codegen.Rel
 				r.UpdateStatusWithMessage(DownloadError, err.Error())
 			}
 		}()
-	}
 
-	if ctx.Value(types.Trigger) == types.HTTP_REQUEST {
-		r.UpdateStatusWithMessage(DownloadBegin, "http 触发的下载")
-		defer func() {
-			if err == nil {
-				r.UpdateStatusWithMessage(DownloadEnd, types.READY_TO_UPDATE)
-			} else {
-				r.UpdateStatusWithMessage(DownloadError, err.Error())
-			}
-		}()
-	}
-
-	if ctx.Value(types.Trigger) == types.INSTALL {
+	case types.INSTALL:
 		r.UpdateStatusWithMessage(InstallBegin, types.DOWNLOADING)
 		defer func() {
 			if err != nil {
@@ -314,19 +302,17 @@ func (r *StatusService) Cronjob(ctx context.Context, sysRoot string) error {
 
 	if shouldUpgrade {
 		r.UpdateStatusWithMessage(FetchUpdateEnd, types.OUT_OF_DATE)
-		r.UpdateStatusWithMessage(DownloadBegin, types.DOWNLOADING)
+
 		releaseFilePath, err := r.DownloadRelease(ctx, *release, true)
 		if err != nil {
 			logger.Error("error when trying to download release", zap.Error(err), zap.String("release file path", releaseFilePath))
 			r.UpdateStatusWithMessage(DownloadEnd, err.Error())
-			return nil
 		} else {
 			r.UpdateStatusWithMessage(DownloadEnd, types.READY_TO_UPDATE)
 		}
 	} else {
 		r.UpdateStatusWithMessage(FetchUpdateEnd, types.UP_TO_DATE)
 	}
-	//isUpgradable := service.InstallerService.IsUpgradable(*release, sysRoot)
 
 	return nil
 }
