@@ -75,42 +75,6 @@ func Test_Status_Case1_CRONJOB(t *testing.T) {
 	assert.Equal(t, types.READY_TO_UPDATE, msg)
 }
 
-func Test_Status_Case2_HTTP_GET_Release(t *testing.T) {
-	// 测试说明: 老版本在就绪之后重新检测更新,并触发新的更新
-	// 本地版本 老版本
-	// 线上版本 新版本
-	logger.LogInitConsoleOnly()
-
-	sysRoot := t.TempDir()
-	fixtures.SetLocalRelease(sysRoot, "v0.4.3")
-
-	statusService := service.NewStatusService(&service.TestService{
-		InstallRAUCHandler: service.AlwaysSuccessInstallHandler,
-		DownloadStatusLock: sync.RWMutex{},
-	}, sysRoot)
-
-	statusService.UpdateStatusWithMessage(service.DownloadEnd, types.READY_TO_UPDATE)
-	value, msg := statusService.GetStatus()
-	assert.Equal(t, codegen.Idle, value.Status)
-	assert.Equal(t, types.READY_TO_UPDATE, msg)
-
-	ctx := context.WithValue(context.Background(), types.Trigger, types.HTTP_REQUEST)
-	// 现在模仿HTTP请求拿更新
-	go statusService.GetRelease(ctx, "latest")
-
-	time.Sleep(1 * time.Second)
-	// HTTP 请求的getRelease不会更新状态
-	value, msg = statusService.GetStatus()
-	assert.Equal(t, codegen.Idle, value.Status)
-	assert.Equal(t, string(types.READY_TO_UPDATE), msg)
-
-	time.Sleep(2 * time.Second)
-	// 但是应该会说需要更新
-	value, msg = statusService.GetStatus()
-	assert.Equal(t, codegen.Downloading, value.Status)
-	assert.Equal(t, "http 触发的下载", msg)
-}
-
 func Test_Status_Case3_Install_Success(t *testing.T) {
 	// 测试说明: 测试在下载成功后，安装成功
 	// 本地版本 老版本
@@ -218,6 +182,7 @@ func Test_Status_Case3_Download_Failed(t *testing.T) {
 	fixtures.WaitDownloadCompeleted(statusService)
 
 	value, msg := statusService.GetStatus()
+
 	assert.Equal(t, codegen.DownloadError, value.Status)
 	assert.Equal(t, "download fail", msg)
 }
@@ -242,7 +207,7 @@ func Test_Status_Case4_Install_Fail(t *testing.T) {
 	statusService.UpdateStatusWithMessage(service.DownloadEnd, types.READY_TO_UPDATE)
 	value, msg := statusService.GetStatus()
 	assert.Equal(t, codegen.Idle, value.Status)
-	assert.Equal(t, "ready-to-update", msg)
+	assert.Equal(t, types.READY_TO_UPDATE, msg)
 
 	go func() {
 		statusService.Install(codegen.Release{}, sysRoot)

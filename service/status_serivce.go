@@ -46,6 +46,8 @@ const (
 )
 
 func (r *StatusService) InitEventTypeMapStatus() {
+	r.lock.Lock()
+	defer r.lock.Unlock()
 	r.EventTypeMapStatus = make(map[EventType]codegen.Status)
 	r.EventTypeMapMessageType = make(map[EventType]message_bus.EventType)
 
@@ -106,6 +108,8 @@ func NewStatusService(implementService UpdaterServiceInterface, sysRoot string) 
 }
 
 func (r *StatusService) GetStatus() (codegen.Status, string) {
+	r.lock.Lock()
+	defer r.lock.Unlock()
 	return r.status, r.message
 }
 
@@ -310,13 +314,14 @@ func (r *StatusService) Cronjob(ctx context.Context, sysRoot string) error {
 
 	if shouldUpgrade {
 		r.UpdateStatusWithMessage(FetchUpdateEnd, types.OUT_OF_DATE)
+		r.UpdateStatusWithMessage(DownloadBegin, types.DOWNLOADING)
 		releaseFilePath, err := r.DownloadRelease(ctx, *release, true)
-		r.UpdateStatusWithMessage(FetchUpdateEnd, "up-to-date")
 		if err != nil {
 			logger.Error("error when trying to download release", zap.Error(err), zap.String("release file path", releaseFilePath))
+			r.UpdateStatusWithMessage(DownloadEnd, err.Error())
 			return nil
 		} else {
-			r.UpdateStatusWithMessage(FetchUpdateEnd, types.READY_TO_UPDATE)
+			r.UpdateStatusWithMessage(DownloadEnd, types.READY_TO_UPDATE)
 		}
 	} else {
 		r.UpdateStatusWithMessage(FetchUpdateEnd, types.UP_TO_DATE)
