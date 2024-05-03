@@ -22,15 +22,12 @@ import (
 	"github.com/robfig/cron/v3"
 
 	util_http "github.com/IceWhaleTech/CasaOS-Common/utils/http"
-	"github.com/IceWhaleTech/CasaOS-Installer/codegen"
 	"github.com/IceWhaleTech/CasaOS-Installer/codegen/message_bus"
-	"github.com/IceWhaleTech/CasaOS-Installer/internal"
 
 	"github.com/IceWhaleTech/CasaOS-Installer/common"
 	"github.com/IceWhaleTech/CasaOS-Installer/internal/config"
 	"github.com/IceWhaleTech/CasaOS-Installer/route"
 	"github.com/IceWhaleTech/CasaOS-Installer/service"
-	"github.com/IceWhaleTech/CasaOS-Installer/types"
 	"github.com/coreos/go-systemd/daemon"
 	"go.uber.org/zap"
 )
@@ -175,41 +172,7 @@ func main() {
 }
 
 func cronjob(ctx context.Context) {
-
-	status, _ := service.InstallerService.GetStatus()
-	if status.Status == codegen.Downloading {
-		return
-	}
-
-	if status.Status == codegen.Installing {
-		return
-	}
-
-	// release, err := service.GetRelease(ctx, service.GetReleaseBranch(sysRoot))
-	ctx = context.WithValue(ctx, types.Trigger, types.CRON_JOB)
-	release, err := service.InstallerService.GetRelease(ctx, service.GetReleaseBranch(sysRoot))
-
-	if release.Background == nil {
-		logger.Error("release.Background is nil")
-	} else {
-		go internal.DownloadReleaseBackground(*release.Background, release.Version)
-	}
-
-	if err != nil {
-		logger.Error("error when trying to get release", zap.Error(err))
-		return
-	}
-	// cache release packages if not already cached
-	shouldUpgrade := service.InstallerService.ShouldUpgrade(*release, sysRoot)
-	if shouldUpgrade {
-		releaseFilePath, err := service.InstallerService.DownloadRelease(ctx, *release, true)
-		if err != nil {
-			logger.Error("error when trying to download release", zap.Error(err), zap.String("release file path", releaseFilePath))
-			return
-		}
-	}
-	//isUpgradable := service.InstallerService.IsUpgradable(*release, sysRoot)
-
+	service.InstallerService.Cronjob(ctx, sysRoot)
 }
 
 func watchOfflineDir(watcher *fsnotify.Watcher) {

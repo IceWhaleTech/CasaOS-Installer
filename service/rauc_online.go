@@ -11,7 +11,6 @@ import (
 	"github.com/IceWhaleTech/CasaOS-Installer/internal/checksum"
 	"github.com/IceWhaleTech/CasaOS-Installer/internal/config"
 	"github.com/IceWhaleTech/CasaOS-Installer/service/out"
-	"github.com/bluele/gcache"
 	"go.uber.org/zap"
 )
 
@@ -22,7 +21,6 @@ type RAUCService struct {
 	UrlHandler         ConstructReleaseFileUrlFunc
 	hasChecked         bool
 	path               string
-	gcache             gcache.Cache
 }
 
 func (r *RAUCService) Install(release codegen.Release, sysRoot string) error {
@@ -76,6 +74,7 @@ func (r *RAUCService) CleanRelease(ctx context.Context, release codegen.Release)
 	}
 	return os.RemoveAll(releaseDir)
 }
+
 func (r *RAUCService) DownloadRelease(ctx context.Context, release codegen.Release, force bool) (string, error) {
 	filePath, err := r.VerifyRelease(release)
 	if err != nil {

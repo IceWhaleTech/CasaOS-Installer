@@ -1,9 +1,15 @@
 package fixtures
 
-import "github.com/IceWhaleTech/CasaOS-Installer/service"
+import (
+	"time"
+
+	"github.com/IceWhaleTech/CasaOS-Installer/service"
+)
 
 func WaitFecthRleaseCompeleted(s *service.StatusService) {
+	time.Sleep(service.GetReleaseCostTime + 500*time.Millisecond)
 }
 
 func WaitDownloadCompeleted(s *service.StatusService) {
+	time.Sleep(service.DownloadCostTime + 500*time.Millisecond)
 }

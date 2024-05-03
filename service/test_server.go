@@ -12,6 +12,11 @@ import (
 var Test_server_count_lock sync.RWMutex = sync.RWMutex{}
 var ShouldUpgradeCount int = 0
 
+const (
+	DownloadCostTime   = 2 * time.Second
+	GetReleaseCostTime = 2 * time.Second
+)
+
 type TestService struct {
 	InstallRAUCHandler func(raucPath string) error
 	downloaded         bool
@@ -31,7 +36,7 @@ func (r *TestService) Install(release codegen.Release, sysRoot string) error {
 }
 
 func (r *TestService) GetRelease(ctx context.Context, tag string) (*codegen.Release, error) {
-	time.Sleep(2 * time.Second)
+	time.Sleep(GetReleaseCostTime)
 	r.DownloadStatusLock.Lock()
 	r.downloaded = false
 	r.DownloadStatusLock.Unlock()
@@ -45,7 +50,8 @@ func (r *TestService) VerifyRelease(release codegen.Release) (string, error) {
 }
 
 func (r *TestService) DownloadRelease(ctx context.Context, release codegen.Release, force bool) (string, error) {
-	time.Sleep(2 * time.Second)
+	time.Sleep(DownloadCostTime)
+
 	r.DownloadStatusLock.Lock()
 	r.downloaded = true
 	r.DownloadStatusLock.Unlock()

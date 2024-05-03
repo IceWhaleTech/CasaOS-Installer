@@ -9,13 +9,16 @@ import (
 	"github.com/IceWhaleTech/CasaOS-Installer/codegen"
 	"github.com/IceWhaleTech/CasaOS-Installer/codegen/message_bus"
 	"github.com/IceWhaleTech/CasaOS-Installer/common"
+	"github.com/IceWhaleTech/CasaOS-Installer/internal"
 	"github.com/IceWhaleTech/CasaOS-Installer/types"
+	"go.uber.org/zap"
 )
+
+var ErrHaveOtherCron = fmt.Errorf("have other cron")
 
 type StatusService struct {
 	ImplementService                 UpdaterServiceInterface
 	SysRoot                          string
-	have_other_get_release_flag      bool
 	Have_other_get_release_flag_lock sync.RWMutex
 
 	status  codegen.Status
@@ -24,6 +27,8 @@ type StatusService struct {
 
 	EventTypeMapStatus      map[EventType]codegen.Status
 	EventTypeMapMessageType map[EventType]message_bus.EventType
+
+	release *codegen.Release
 }
 
 const (
@@ -94,6 +99,9 @@ func NewStatusService(implementService UpdaterServiceInterface, sysRoot string) 
 		Have_other_get_release_flag_lock: sync.RWMutex{},
 	}
 	statusService.InitEventTypeMapStatus()
+	statusService.status = codegen.Status{
+		Status: codegen.Idle,
+	}
 	return statusService
 }
 
@@ -152,100 +160,14 @@ func (r *StatusService) Install(release codegen.Release, sysRoot string) error {
 	return err
 }
 
-func (r *StatusService) postGetRelease(ctx context.Context, release *codegen.Release) {
-	// defer func() {
-	// 	r.Have_other_get_release_flag_lock.Lock()
-	// 	r.have_other_get_release_flag = false
-	// 	r.Have_other_get_release_flag_lock.Unlock()
-	// }()
-
-	status, _ := r.GetStatus()
-	if status.Status == codegen.Downloading {
-		return
-	}
-	if status.Status == codegen.Installing {
-		return
-	}
-
-	// 这里怎么判断如果有其它fetching就不搞这个了?
-	if !r.ShouldUpgrade(*release, r.SysRoot) {
-		r.UpdateStatusWithMessage(FetchUpdateEnd, "up-to-date")
-		return
-	} else {
-		if r.IsUpgradable(*release, r.SysRoot) {
-			r.UpdateStatusWithMessage(FetchUpdateEnd, "ready-to-update")
-		} else {
-			r.UpdateStatusWithMessage(FetchUpdateEnd, "out-of-date")
-			// 这里应该去触发下载
-			go r.DownloadRelease(ctx, *release, false)
-		}
-		return
-	}
-}
-
 func (r *StatusService) GetRelease(ctx context.Context, tag string) (*codegen.Release, error) {
-	// // 只允许一个release进 postGetRelease (这个是为了防止多个请求同时触发checksum)(后面已经对checksum做了缓存)，可以考虑不要
-	// flag := false
-	// r.Have_other_get_release_flag_lock.Lock()
-	// if !r.have_other_get_release_flag {
-	// 	if ctx.Value(types.Trigger) == types.HTTP_REQUEST {
-	// 		r.have_other_get_release_flag = true
-	// 		flag = true
-	// 	}
-	// }
-	// r.Have_other_get_release_flag_lock.Unlock()
-
-	if ctx.Value(types.Trigger) == types.CRON_JOB {
-		r.UpdateStatusWithMessage(FetchUpdateBegin, "fetching")
-	}
-
-	if ctx.Value(types.Trigger) == types.INSTALL {
-		// 如果是HTTP请求的话，则不更新状态
-		r.UpdateStatusWithMessage(InstallBegin, types.FETCHING)
-	}
-
-	var release = &codegen.Release{}
-	err := error(nil)
-	release, err = r.ImplementService.GetRelease(ctx, tag)
-	if err != nil {
-		logger.Error(fmt.Sprintf("Get Release Faile %s tag:%s", err.Error(), tag))
-	} else {
-		logger.Info(fmt.Sprintf("Get Release success! %s", release.Version))
-	}
-
-	// // 因为更新完进入主页又要拿一次release
-	// if ctx.Value(types.Trigger) == types.HTTP_REQUEST || ctx.Value(types.Trigger) == types.CRON_JOB {
-	// 	defer func() {
-	// 		if err == nil && release != nil {
-	// 			go func() {
-	// 				r.postGetRelease(ctx, release)
-	// 			}()
-	// 		}
-	// 	}()
-	// }
-
-	// if {
-	// 	UpdateStatusWithMessage(FetchUpdateBegin, "fetching")
-
-	// 	// 如果是HTTP请求的话，则不更新状态
-	// 	defer func() {
-	// 		if err == nil && release != nil {
-	// 			go func() {
-	r.postGetRelease(ctx, release)
-	// 			}()
-	// 		}
-	// 	}()
-	// }
-
-	return release, err
+	return r.release, nil
 }
 
 func (r *StatusService) Launch(sysRoot string) error {
-	// 在这里会把状态更新为installing或者继续idle
-	r.UpdateStatusWithMessage(InstallBegin, "migration") // 事实上已经没有migration了，但是为了兼容性， 先留着
+	// 事实上已经没有migration了，但是为了兼容性， 先留着
+	r.UpdateStatusWithMessage(InstallBegin, "migration")
 	defer r.UpdateStatusWithMessage(InstallBegin, "other")
-	// defer UpdateStatusWithMessage(InstallEnd, "migration")
-	//return r.ImplementService.Launch(sysRoot)
 	return nil
 }
 
@@ -259,9 +181,6 @@ func (r *StatusService) DownloadRelease(ctx context.Context, release codegen.Rel
 	local_status, _ := r.GetStatus()
 	if local_status.Status == codegen.Downloading {
 		return "", fmt.Errorf("downloading")
-	}
-	if local_status.Status == codegen.FetchUpdating {
-		return "", fmt.Errorf("fecthing")
 	}
 	if local_status.Status == codegen.Installing && ctx.Value(types.Trigger) != types.INSTALL {
 		return "", fmt.Errorf("installing")
@@ -305,13 +224,6 @@ func (r *StatusService) DownloadRelease(ctx context.Context, release codegen.Rel
 
 func (r *StatusService) ExtractRelease(packageFilepath string, release codegen.Release) error {
 	r.UpdateStatusWithMessage(InstallBegin, types.DECOMPRESS)
-	// err := r.ImplementService.ExtractRelease(packageFilepath, release)
-	// defer func() {
-	// 	if err != nil {
-	// 		UpdateStatusWithMessage(InstallError, err.Error())
-	// 	}
-	// }()
-	//return err
 	return nil
 }
 
@@ -365,6 +277,51 @@ func (r *StatusService) PostMigration(sysRoot string) error {
 	return err
 }
 
-func (r *StatusService) Cronjob(sysRoot string) error {
+func (r *StatusService) Cronjob(ctx context.Context, sysRoot string) error {
+	ctx = context.WithValue(ctx, types.Trigger, types.CRON_JOB)
+
+	status, _ := r.GetStatus()
+	if status.Status == codegen.Downloading {
+		return nil
+	}
+
+	if status.Status == codegen.Installing {
+		return nil
+	}
+
+	r.UpdateStatusWithMessage(FetchUpdateBegin, types.FETCHING)
+	release, err := r.ImplementService.GetRelease(ctx, GetReleaseBranch(sysRoot))
+	r.release = release
+
+	r.UpdateStatusWithMessage(DownloadBegin, types.DOWNLOADING)
+	if release.Background == nil {
+		logger.Error("release.Background is nil")
+	} else {
+		go internal.DownloadReleaseBackground(*release.Background, release.Version)
+	}
+
+	if err != nil {
+		logger.Error("error when trying to get release", zap.Error(err))
+		return nil
+	}
+
+	// cache release packages if not already cached
+	shouldUpgrade := r.ShouldUpgrade(*release, sysRoot)
+
+	if shouldUpgrade {
+		r.UpdateStatusWithMessage(FetchUpdateEnd, types.OUT_OF_DATE)
+		releaseFilePath, err := r.DownloadRelease(ctx, *release, true)
+		r.UpdateStatusWithMessage(FetchUpdateEnd, "up-to-date")
+		if err != nil {
+			logger.Error("error when trying to download release", zap.Error(err), zap.String("release file path", releaseFilePath))
+			return nil
+		} else {
+			r.UpdateStatusWithMessage(FetchUpdateEnd, types.READY_TO_UPDATE)
+		}
+	} else {
+		r.UpdateStatusWithMessage(FetchUpdateEnd, types.UP_TO_DATE)
+	}
+	//isUpgradable := service.InstallerService.IsUpgradable(*release, sysRoot)
+
 	return nil
 }

@@ -22,12 +22,15 @@ import (
 // 测试项目说明
 // 这里是状态测试，功能代码是mock。只测试状态是否正确
 func Test_Status_Case1_CRONJOB(t *testing.T) {
-	// 测试说明: 老版本在就绪之后重新检测更新,并触发新的更新
+	// 测试说明: 老版本在就绪之后重新检测更新,并触发新的下载，下载完
+	// 成之后，状态应该是ready-to-update
+
 	// 本地版本 老版本
 	// 线上版本 新版本
 	logger.LogInitConsoleOnly()
 
 	sysRoot := t.TempDir()
+	ctx := context.Background()
 	fixtures.SetLocalRelease(sysRoot, "v0.4.4")
 
 	statusService := service.NewStatusService(&service.TestService{
@@ -53,22 +56,20 @@ func Test_Status_Case1_CRONJOB(t *testing.T) {
 
 	// 模拟cron
 	go func() {
-		ctx := context.WithValue(context.Background(), types.Trigger, types.CRON_JOB)
-		statusService.GetRelease(ctx, "latest")
-		statusService.DownloadRelease(ctx, codegen.Release{}, false)
+		statusService.Cronjob(ctx, sysRoot)
 	}()
 
 	time.Sleep(1 * time.Second)
 	value, msg = statusService.GetStatus()
 	assert.Equal(t, codegen.FetchUpdating, value.Status)
-	assert.Equal(t, "fetching", msg)
+	assert.Equal(t, types.FETCHING, msg)
 
-	time.Sleep(2 * time.Second)
+	fixtures.WaitFecthRleaseCompeleted(statusService)
 	value, msg = statusService.GetStatus()
 	assert.Equal(t, codegen.Downloading, value.Status)
 	assert.Equal(t, types.DOWNLOADING, msg)
 
-	time.Sleep(2 * time.Second)
+	fixtures.WaitDownloadCompeleted(statusService)
 	value, msg = statusService.GetStatus()
 	assert.Equal(t, codegen.Idle, value.Status)
 	assert.Equal(t, types.READY_TO_UPDATE, msg)
@@ -111,16 +112,14 @@ func Test_Status_Case2_HTTP_GET_Release(t *testing.T) {
 }
 
 func Test_Status_Case3_Install_Success(t *testing.T) {
-	// 测试说明: 测试完整的安装流程
+	// 测试说明: 测试在下载成功后，安装成功
 	// 本地版本 老版本
 	// 线上版本 新版本
 
 	logger.LogInitConsoleOnly()
 
-	tmpDir, err := os.MkdirTemp("", "casaos-status-test-case-3")
-	assert.NoError(t, err)
-
-	sysRoot := tmpDir
+	sysRoot := t.TempDir()
+	ctx := context.Background()
 	fixtures.SetLocalRelease(sysRoot, "v0.4.3")
 
 	statusService := service.NewStatusService(&service.TestService{
@@ -129,38 +128,19 @@ func Test_Status_Case3_Install_Success(t *testing.T) {
 	}, sysRoot)
 	// 模仿安装时的状态
 
-	statusService.UpdateStatusWithMessage(service.DownloadEnd, "ready-to-update")
+	go func() {
+		statusService.Cronjob(ctx, sysRoot)
+	}()
+
+	fixtures.WaitFecthRleaseCompeleted(statusService)
+	fixtures.WaitDownloadCompeleted(statusService)
 	value, msg := statusService.GetStatus()
 	assert.Equal(t, codegen.Idle, value.Status)
-	assert.Equal(t, "ready-to-update", msg)
+	assert.Equal(t, types.READY_TO_UPDATE, msg)
 
-	ctx := context.WithValue(context.Background(), types.Trigger, types.INSTALL)
-	// 现在模仿install请求拿更新
-	go statusService.GetRelease(ctx, "latest")
-
-	time.Sleep(1 * time.Second)
-	// 安装 请求的getRelease会把状态变成installing
-	value, msg = statusService.GetStatus()
-	assert.Equal(t, codegen.Installing, value.Status)
-	assert.Equal(t, string(types.FETCHING), msg)
-
-	time.Sleep(3 * time.Second)
-	go statusService.DownloadRelease(ctx, codegen.Release{}, false)
-
-	time.Sleep(1 * time.Second)
-	// 安装 请求的dowing会把状态变成installing
-	value, msg = statusService.GetStatus()
-	assert.Equal(t, codegen.Installing, value.Status)
-	assert.Equal(t, string(types.DOWNLOADING), msg)
-
-	go statusService.ExtractRelease("", codegen.Release{})
-
-	time.Sleep(1 * time.Second)
-	value, msg = statusService.GetStatus()
-	assert.Equal(t, codegen.Installing, value.Status)
-	assert.Equal(t, string(types.DECOMPRESS), msg)
-
-	go statusService.Install(codegen.Release{}, "")
+	release, err := statusService.GetRelease(ctx, "latest")
+	assert.NoError(t, err)
+	go statusService.Install(*release, sysRoot)
 
 	time.Sleep(1 * time.Second)
 	value, msg = statusService.GetStatus()
@@ -176,10 +156,8 @@ func Test_Status_Case2_Upgradable(t *testing.T) {
 		// 这个在github上的环境跳过测试，因为下载太快了，没有办法断言到downloading
 	}
 
-	tmpDir, err := os.MkdirTemp("", "casaos-status-test-case-2")
-	assert.NoError(t, err)
-	sysRoot := tmpDir
-	config.ServerInfo.CachePath = filepath.Join(tmpDir, "cache")
+	sysRoot := t.TempDir()
+	config.ServerInfo.CachePath = filepath.Join(sysRoot, "cache")
 
 	fixtures.SetLocalRelease(sysRoot, "v0.4.4")
 
@@ -199,7 +177,7 @@ func Test_Status_Case2_Upgradable(t *testing.T) {
 	assert.Equal(t, codegen.Idle, value.Status)
 	assert.Equal(t, "", msg)
 
-	_, err = statusService.GetRelease(ctx, "unit-test-rauc-0.4.4-1")
+	_, err := statusService.GetRelease(ctx, "unit-test-rauc-0.4.4-1")
 	assert.NoError(t, err)
 
 	time.Sleep(1 * time.Second)
@@ -218,10 +196,8 @@ func Test_Status_Case2_Upgradable(t *testing.T) {
 func Test_Status_Case3_Download_Failed(t *testing.T) {
 	logger.LogInitConsoleOnly()
 
-	tmpDir, err := os.MkdirTemp("", "casaos-status-test-case-2")
-	assert.NoError(t, err)
-	sysRoot := tmpDir
-	config.ServerInfo.CachePath = filepath.Join(tmpDir, "cache")
+	sysRoot := t.TempDir()
+	config.ServerInfo.CachePath = filepath.Join(sysRoot, "cache")
 
 	fixtures.SetLocalRelease(sysRoot, "v0.4.4")
 
@@ -242,7 +218,7 @@ func Test_Status_Case3_Download_Failed(t *testing.T) {
 	assert.Equal(t, "", msg)
 
 	go func() {
-		_, err = statusService.GetRelease(ctx, "unit-test-rauc-0.4.4-1")
+		_, err := statusService.GetRelease(ctx, "unit-test-rauc-0.4.4-1")
 		assert.NoError(t, err)
 	}()
 
@@ -266,10 +242,7 @@ func Test_Status_Case4_Install_Fail(t *testing.T) {
 
 	logger.LogInitConsoleOnly()
 
-	tmpDir, err := os.MkdirTemp("", "casaos-status-test-case-4")
-	assert.NoError(t, err)
-
-	sysRoot := tmpDir
+	sysRoot := t.TempDir()
 	fixtures.SetLocalRelease(sysRoot, "v0.4.3")
 
 	statusService := service.NewStatusService(&service.TestService{
