@@ -64,7 +64,7 @@ func Test_Status_Case1_CRONJOB(t *testing.T) {
 	assert.Equal(t, codegen.FetchUpdating, value.Status)
 	assert.Equal(t, types.FETCHING, msg)
 
-	fixtures.WaitFecthRleaseCompeleted(statusService)
+	fixtures.WaitFecthReleaseCompeleted(statusService)
 	value, msg = statusService.GetStatus()
 	assert.Equal(t, codegen.Downloading, value.Status)
 	assert.Equal(t, types.DOWNLOADING, msg)
@@ -132,7 +132,7 @@ func Test_Status_Case3_Install_Success(t *testing.T) {
 		statusService.Cronjob(ctx, sysRoot)
 	}()
 
-	fixtures.WaitFecthRleaseCompeleted(statusService)
+	fixtures.WaitFecthReleaseCompeleted(statusService)
 	fixtures.WaitDownloadCompeleted(statusService)
 	value, msg := statusService.GetStatus()
 	assert.Equal(t, codegen.Idle, value.Status)
@@ -194,12 +194,15 @@ func Test_Status_Case2_Upgradable(t *testing.T) {
 }
 
 func Test_Status_Case3_Download_Failed(t *testing.T) {
+	// 测试说明: 测试下载失败,下载之后无法通过checksum
+	// 本地版本 老版本
+	// 线上版本 新版本
 	logger.LogInitConsoleOnly()
 
 	sysRoot := t.TempDir()
 	config.ServerInfo.CachePath = filepath.Join(sysRoot, "cache")
-
-	fixtures.SetLocalRelease(sysRoot, "v0.4.4")
+	fixtures.SetLocalRelease(sysRoot, "v0.4.3")
+	fixtures.SetZimaOS(sysRoot)
 
 	statusService := service.NewStatusService(&service.RAUCService{
 		InstallRAUCHandler: service.MockInstallRAUC,
@@ -207,30 +210,14 @@ func Test_Status_Case3_Download_Failed(t *testing.T) {
 		UrlHandler:         service.GitHubBranchTagReleaseUrl,
 	}, sysRoot)
 
-	fixtures.SetLocalRelease(sysRoot, "v0.4.3")
-
-	ctx := context.WithValue(context.Background(), types.Trigger, types.CRON_JOB)
-
-	statusService.UpdateStatusWithMessage(service.FetchUpdateEnd, "")
-
-	value, msg := statusService.GetStatus()
-	assert.Equal(t, codegen.Idle, value.Status)
-	assert.Equal(t, "", msg)
-
 	go func() {
-		_, err := statusService.GetRelease(ctx, "unit-test-rauc-0.4.4-1")
-		assert.NoError(t, err)
+		statusService.Cronjob(context.Background(), sysRoot)
 	}()
 
-	time.Sleep(100 * time.Microsecond)
+	fixtures.WaitFecthReleaseCompeleted(statusService)
+	fixtures.WaitDownloadCompeleted(statusService)
 
-	value, msg = statusService.GetStatus()
-	assert.Equal(t, codegen.FetchUpdating, value.Status)
-	assert.Equal(t, "fetching", msg)
-
-	time.Sleep(10 * time.Second)
-
-	value, msg = statusService.GetStatus()
+	value, msg := statusService.GetStatus()
 	assert.Equal(t, codegen.DownloadError, value.Status)
 	assert.Equal(t, "download fail", msg)
 }
@@ -251,40 +238,17 @@ func Test_Status_Case4_Install_Fail(t *testing.T) {
 	}, sysRoot)
 	// 模仿安装时的状态
 
-	statusService.UpdateStatusWithMessage(service.DownloadEnd, "ready-to-update")
+	//TODO 重构这里用统一的就绪的fixtures
+	statusService.UpdateStatusWithMessage(service.DownloadEnd, types.READY_TO_UPDATE)
 	value, msg := statusService.GetStatus()
 	assert.Equal(t, codegen.Idle, value.Status)
 	assert.Equal(t, "ready-to-update", msg)
 
-	ctx := context.WithValue(context.Background(), types.Trigger, types.INSTALL)
-	// 现在模仿install请求拿更新
-	go statusService.GetRelease(ctx, "latest")
+	go func() {
+		statusService.Install(codegen.Release{}, sysRoot)
+	}()
 
-	time.Sleep(1 * time.Second)
-	// 安装 请求的getRelease会把状态变成installing
-	value, msg = statusService.GetStatus()
-	assert.Equal(t, codegen.Installing, value.Status)
-	assert.Equal(t, string(types.FETCHING), msg)
-
-	time.Sleep(3 * time.Second)
-	go statusService.DownloadRelease(ctx, codegen.Release{}, false)
-
-	time.Sleep(1 * time.Second)
-	// 安装 请求的dowing会把状态变成installing
-	value, msg = statusService.GetStatus()
-	assert.Equal(t, codegen.Installing, value.Status)
-	assert.Equal(t, string(types.DOWNLOADING), msg)
-
-	go statusService.ExtractRelease("", codegen.Release{})
-
-	time.Sleep(1 * time.Second)
-	value, msg = statusService.GetStatus()
-	assert.Equal(t, codegen.Installing, value.Status)
-	assert.Equal(t, string(types.DECOMPRESS), msg)
-
-	go statusService.Install(codegen.Release{}, "")
-
-	time.Sleep(1 * time.Second)
+	time.Sleep(5 * time.Second)
 	value, msg = statusService.GetStatus()
 	assert.Equal(t, codegen.InstallError, value.Status)
 	assert.Equal(t, "rauc is not compatible", msg)

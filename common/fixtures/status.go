@@ -6,7 +6,7 @@ import (
 	"github.com/IceWhaleTech/CasaOS-Installer/service"
 )
 
-func WaitFecthRleaseCompeleted(s *service.StatusService) {
+func WaitFecthReleaseCompeleted(s *service.StatusService) {
 	time.Sleep(service.GetReleaseCostTime + 500*time.Millisecond)
 }
 
