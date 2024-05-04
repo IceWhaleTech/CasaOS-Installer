@@ -152,8 +152,6 @@ archives:
     id: casaos-installer
     builds:
       - casaos-installer-amd64
-      - casaos-installer-amd64
-      - casaos-installer-arm64
       - channel-tool-amd64
     files:
       - build/**/*

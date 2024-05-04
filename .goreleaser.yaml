@@ -133,6 +133,7 @@ builds:
       - arm
     goarm:
       - "7"
+  
   - id: channel-tool-amd64
     binary: build/sysroot/usr/bin/channel-tool
     main: ./cmd/channel
@@ -161,8 +162,6 @@ archives:
     id: casaos-installer
     builds:
       - casaos-installer-amd64
-      - casaos-installer-arm64
-      - casaos-installer-arm-7
       - channel-tool-amd64
     files:
       - build/**/*
