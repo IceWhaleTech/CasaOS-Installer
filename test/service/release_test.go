@@ -2,7 +2,6 @@ package service_test
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
@@ -104,7 +103,6 @@ func TestDownloadRauc(t *testing.T) {
 
 	assert.NoError(t, err)
 	assert.FileExists(t, releaseFilePath)
-	// fmt.Println(releaseFilePath)
 
 	releaseFilePath, err = service.RAUCFilePath(*release)
 	assert.NoError(t, err)
@@ -173,7 +171,6 @@ func TestDownloadRelease(t *testing.T) {
 	releaseFilePath, err := service.DownloadRelease(ctx, *release, false)
 	assert.NoError(t, err)
 	assert.FileExists(t, releaseFilePath)
-	fmt.Println(releaseFilePath)
 }
 
 func TestBestByDelay(t *testing.T) {

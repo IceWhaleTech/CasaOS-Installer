@@ -121,6 +121,7 @@ func NewDecompressor(filepath string) getter.Decompressor {
 	return getter.Decompressors[archiveV]
 }
 
+// TODO: remove this. the code is for install casaos
 func InstallDependencies() error {
 	CASA_DEPANDS_PACKAGE := []string{"curl", "smartmontools", "parted", "ntfs-3g", "net-tools", "udevil", "samba", "cifs-utils", "rclone"}
 	Output, err := exec.Command("apt", "update").Output()

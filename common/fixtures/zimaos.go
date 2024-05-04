@@ -1,13 +1,14 @@
 package fixtures
 
 import (
-	"fmt"
 	"path/filepath"
 
+	"github.com/IceWhaleTech/CasaOS-Common/utils/logger"
 	"github.com/IceWhaleTech/CasaOS-Installer/codegen"
 	"github.com/IceWhaleTech/CasaOS-Installer/internal"
 	"github.com/IceWhaleTech/CasaOS-Installer/internal/config"
 	"github.com/IceWhaleTech/CasaOS-Installer/service"
+	"go.uber.org/zap"
 )
 
 const rauc_info_049 = `Compatible: 	'zimaos-zimacube'
@@ -98,7 +99,7 @@ func SetOfflineRAUCRelease_050(sysRoot string) error {
 		Version:      "v0.5.0",
 		ReleaseNotes: "# private test\n",
 	}
-	fmt.Println("write:", filepath.Join(sysRoot, config.OFFLINE_RAUC_TEMP_PATH, config.RAUC_OFFLINE_RELEASE_FILENAME))
+	logger.Info("mock local zimaos version as 050", zap.String("sysRoot", sysRoot), zap.String("release file path", filepath.Join(sysRoot, config.OFFLINE_RAUC_TEMP_PATH, config.RAUC_OFFLINE_RELEASE_FILENAME)))
 	err := internal.WriteReleaseToLocal(release, filepath.Join(sysRoot, config.OFFLINE_RAUC_TEMP_PATH, config.RAUC_OFFLINE_RELEASE_FILENAME))
 	return err
 }

@@ -226,7 +226,7 @@ func (r *StatusService) PostInstall(release codegen.Release, sysRoot string) err
 		if err != nil {
 			r.UpdateStatusWithMessage(InstallError, err.Error())
 		} else {
-			fmt.Println(err)
+			logger.Error("error when trying to post install", zap.Error(err))
 		}
 	}()
 	return err
@@ -235,16 +235,6 @@ func (r *StatusService) PostInstall(release codegen.Release, sysRoot string) err
 func (r *StatusService) ShouldUpgrade(release codegen.Release, sysRoot string) bool {
 
 	su := r.ImplementService.ShouldUpgrade(release, sysRoot)
-
-	// if !su {
-	// 	r.UpdateStatusWithMessage(FetchUpdateEnd, types.UP_TO_DATE)
-	// } else {
-	// 	if r.IsUpgradable(release, r.SysRoot) {
-	// 		r.UpdateStatusWithMessage(FetchUpdateEnd, "ready-to-update")
-	// 	} else {
-	// 		r.UpdateStatusWithMessage(FetchUpdateEnd, "out-of-date")
-	// 	}
-	// }
 	return su
 }
 
@@ -270,6 +260,9 @@ func (r *StatusService) PostMigration(sysRoot string) error {
 }
 
 func (r *StatusService) Cronjob(ctx context.Context, sysRoot string) error {
+
+	logger.Info("start a check update job")
+
 	ctx = context.WithValue(ctx, types.Trigger, types.CRON_JOB)
 
 	status, _ := r.GetStatus()
@@ -290,6 +283,8 @@ func (r *StatusService) Cronjob(ctx context.Context, sysRoot string) error {
 	}
 	r.release = release
 
+	logger.Info("get online release success", zap.String("online release version", release.Version))
+
 	r.UpdateStatusWithMessage(DownloadBegin, types.DOWNLOADING)
 	if release.Background == nil {
 		logger.Error("release.Background is nil")
@@ -304,13 +299,17 @@ func (r *StatusService) Cronjob(ctx context.Context, sysRoot string) error {
 		r.UpdateStatusWithMessage(FetchUpdateEnd, types.OUT_OF_DATE)
 
 		releaseFilePath, err := r.DownloadRelease(ctx, *release, true)
+		logger.Info("download release rauc update package success")
+
 		if err != nil {
 			logger.Error("error when trying to download release", zap.Error(err), zap.String("release file path", releaseFilePath))
 			r.UpdateStatusWithMessage(DownloadError, err.Error())
 		} else {
+			logger.Info("system is ready to update")
 			r.UpdateStatusWithMessage(DownloadEnd, types.READY_TO_UPDATE)
 		}
 	} else {
+		logger.Info("system is up to date")
 		r.UpdateStatusWithMessage(FetchUpdateEnd, types.UP_TO_DATE)
 	}
 

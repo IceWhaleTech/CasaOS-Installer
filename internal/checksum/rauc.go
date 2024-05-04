@@ -8,9 +8,11 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/IceWhaleTech/CasaOS-Common/utils/logger"
 	"github.com/IceWhaleTech/CasaOS-Installer/codegen"
 	"github.com/IceWhaleTech/CasaOS-Installer/internal"
 	"github.com/IceWhaleTech/CasaOS-Installer/internal/config"
+	"go.uber.org/zap"
 )
 
 func OnlineRAUCExist(release codegen.Release) (string, error) {
@@ -29,9 +31,9 @@ func OnlineRAUCExist(release codegen.Release) (string, error) {
 	packageFilePath := filepath.Join(releaseDir, packageFilename)
 
 	// to check file exist
-	fmt.Println("rauc verify release:", packageFilePath)
+	logger.Info("verify rauc file exist", zap.String("packageFilePath", packageFilePath))
 	if _, err := os.Stat(packageFilePath); os.IsNotExist(err) {
-		return "", fmt.Errorf("not found rauc release  package")
+		return "", fmt.Errorf("not found rauc release package")
 	}
 	return packageFilePath, nil
 }
@@ -78,7 +80,8 @@ func OnlineRaucChecksumExist(release codegen.Release) (string, error) {
 		return "", err
 	}
 	// to check file exist
-	fmt.Println("rauc verify checksum:", packageFilePath)
+	logger.Info("verify rauc checksum", zap.String("packageFilePath", packageFilePath))
+
 	if _, err := os.Stat(packageFilePath); os.IsNotExist(err) {
 		return "", fmt.Errorf("not found rauc release  package")
 	}
@@ -90,7 +93,8 @@ func OfflineTarExist(release codegen.Release) (string, error) {
 	packageFilePath := filepath.Join(config.SysRoot, config.RAUC_OFFLINE_PATH, config.RAUC_OFFLINE_RAUC_FILENAME)
 
 	// to check file exist
-	fmt.Println("rauc  offline verify in cache:", packageFilePath)
+	logger.Info("verify offline rauc file exist", zap.String("packageFilePath", packageFilePath))
+
 	if _, err := os.Stat(packageFilePath); os.IsNotExist(err) {
 		return "", fmt.Errorf("not found offline rauc release package")
 	}
