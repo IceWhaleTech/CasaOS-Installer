@@ -58,7 +58,7 @@ func (r *StatusService) InitEventTypeMapStatus() {
 		Status: codegen.Idle,
 	}
 	r.EventTypeMapStatus[DownloadError] = codegen.Status{
-		Status: codegen.DownloadError,
+		Status: codegen.Idle,
 	}
 
 	r.EventTypeMapStatus[FetchUpdateBegin] = codegen.Status{
@@ -68,7 +68,7 @@ func (r *StatusService) InitEventTypeMapStatus() {
 		Status: codegen.Idle,
 	}
 	r.EventTypeMapStatus[FetchUpdateError] = codegen.Status{
-		Status: codegen.FetchError,
+		Status: codegen.Idle,
 	}
 
 	r.EventTypeMapStatus[InstallBegin] = codegen.Status{
@@ -283,6 +283,11 @@ func (r *StatusService) Cronjob(ctx context.Context, sysRoot string) error {
 
 	r.UpdateStatusWithMessage(FetchUpdateBegin, types.FETCHING)
 	release, err := r.ImplementService.GetRelease(ctx, GetReleaseBranch(sysRoot))
+	if err != nil {
+		r.UpdateStatusWithMessage(FetchUpdateError, err.Error())
+		logger.Error("error when trying to get release", zap.Error(err))
+		return err
+	}
 	r.release = release
 
 	r.UpdateStatusWithMessage(DownloadBegin, types.DOWNLOADING)
@@ -306,7 +311,7 @@ func (r *StatusService) Cronjob(ctx context.Context, sysRoot string) error {
 		releaseFilePath, err := r.DownloadRelease(ctx, *release, true)
 		if err != nil {
 			logger.Error("error when trying to download release", zap.Error(err), zap.String("release file path", releaseFilePath))
-			r.UpdateStatusWithMessage(DownloadEnd, err.Error())
+			r.UpdateStatusWithMessage(DownloadError, err.Error())
 		} else {
 			r.UpdateStatusWithMessage(DownloadEnd, types.READY_TO_UPDATE)
 		}
