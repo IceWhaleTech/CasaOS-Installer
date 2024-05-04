@@ -2,12 +2,13 @@ package internal
 
 import (
 	"context"
-	"fmt"
 	"os"
 
+	"github.com/IceWhaleTech/CasaOS-Common/utils/logger"
 	"github.com/IceWhaleTech/CasaOS-Installer/codegen"
 	"github.com/IceWhaleTech/CasaOS-Installer/internal/config"
 	"github.com/hashicorp/go-getter"
+	"go.uber.org/zap"
 )
 
 func BackgroundPath(version codegen.Version) string {
@@ -34,6 +35,6 @@ func DownloadReleaseBackground(url string, version string) {
 	}
 	err := getClient.Get()
 	if err != nil {
-		fmt.Println("error when trying to download background", err)
+		logger.Error("error when trying to download background", zap.Error(err))
 	}
 }

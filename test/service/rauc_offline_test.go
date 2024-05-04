@@ -2,7 +2,6 @@ package service_test
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
@@ -53,7 +52,6 @@ func TestRAUCOfflineServer(t *testing.T) {
 	// 这个是一个假文件，只有2.6mb
 	releasePath, err := installerServer.DownloadRelease(ctx, *release, false)
 	parentDir := filepath.Dir(releasePath)
-	fmt.Println("下载目录:", releasePath)
 	assert.NoError(t, err)
 
 	_, err = installerServer.VerifyRelease(*release)

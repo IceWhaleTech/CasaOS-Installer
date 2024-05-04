@@ -23,44 +23,36 @@ func (a *api) GetBackground(ctx echo.Context, param codegen.GetBackgroundParams)
 }
 
 func (a *api) GetStatus(ctx echo.Context) error {
-	status, packageStatus := service.GetStatus()
+	status, packageStatus := service.InstallerService.GetStatus()
 	return ctx.JSON(http.StatusOK, &codegen.StatusOK{
 		Data:    &status,
 		Message: utils.Ptr(packageStatus),
 	})
 }
 
-func (a *api) GetRelease(ctx echo.Context, params codegen.GetReleaseParams) error {
+func (a *api) GetRelease(c echo.Context, params codegen.GetReleaseParams) error {
 	tag := service.GetReleaseBranch(config.SysRoot)
 	if params.Version != nil && *params.Version != "latest" {
 		tag = *params.Version
 	}
 
-	installCtx := context.WithValue(context.Background(), types.Trigger, types.HTTP_REQUEST)
-	release, err := service.InstallerService.GetRelease(installCtx, tag)
+	ctx := context.WithValue(context.Background(), types.Trigger, types.HTTP_REQUEST)
+	release, err := service.InstallerService.GetRelease(ctx, tag)
 
 	if err != nil {
 		message := err.Error()
 		if err == service.ErrReleaseNotFound {
-			return ctx.JSON(http.StatusNotFound, &codegen.ResponseNotFound{
+			return c.JSON(http.StatusNotFound, &codegen.ResponseNotFound{
 				Message: &message,
 			})
 		}
-		return ctx.JSON(http.StatusInternalServerError, &codegen.ResponseInternalServerError{
+		return c.JSON(http.StatusInternalServerError, &codegen.ResponseInternalServerError{
 			Message: &message,
 		})
 	}
 
-	go func() {
-		shouldUpgrade := service.InstallerService.ShouldUpgrade(*release, config.SysRoot)
-		if shouldUpgrade {
-			releaseFilePath, err := service.InstallerService.DownloadRelease(context.Background(), *release, true)
-			if err != nil {
-				logger.Error("error when trying to download release", zap.Error(err), zap.String("release file path", releaseFilePath))
-			}
-		}
-	}()
-
+	// TODO refactor this
+	// the code might be remove
 	if release.Background == nil {
 		logger.Error("release.Background is nil")
 	} else {
@@ -69,16 +61,16 @@ func (a *api) GetRelease(ctx echo.Context, params codegen.GetReleaseParams) erro
 
 	release.Background = utils.Ptr("/v2/installer/background?version=" + release.Version)
 
-	return ctx.JSON(http.StatusOK, &codegen.ReleaseOK{
+	return c.JSON(http.StatusOK, &codegen.ReleaseOK{
 		Data:       release,
 		Upgradable: nil,
 	})
 }
 
 func (a *api) InstallRelease(ctx echo.Context, params codegen.InstallReleaseParams) error {
-	status, _ := service.GetStatus()
+	status, _ := service.InstallerService.GetStatus()
 
-	service.UpdateStatusWithMessage(service.InstallBegin, types.FETCHING)
+	service.InstallerService.UpdateStatusWithMessage(service.InstallBegin, types.FETCHING)
 
 	if status.Status == codegen.Downloading {
 		message := "downloading"
@@ -105,12 +97,12 @@ func (a *api) InstallRelease(ctx echo.Context, params codegen.InstallReleasePara
 		release, err := service.InstallerService.GetRelease(ctx, tag)
 		if err != nil {
 			message := err.Error()
-			service.UpdateStatusWithMessage(service.InstallError, message)
+			service.InstallerService.UpdateStatusWithMessage(service.InstallError, message)
 			return
 		}
 
 		if release == nil {
-			service.UpdateStatusWithMessage(service.InstallError, "release is nil")
+			service.InstallerService.UpdateStatusWithMessage(service.InstallError, "release is nil")
 			return
 		}
 
@@ -118,7 +110,7 @@ func (a *api) InstallRelease(ctx echo.Context, params codegen.InstallReleasePara
 
 		releasePath, err := service.InstallerService.DownloadRelease(ctx, *release, false)
 		if err != nil {
-			service.UpdateStatusWithMessage(service.InstallError, err.Error())
+			service.InstallerService.UpdateStatusWithMessage(service.InstallError, err.Error())
 			logger.Error("error while downloading release: %s")
 			return
 		}

@@ -53,23 +53,24 @@ func InstallRAUC(release codegen.Release, sysRoot string, InstallRAUCHandler fun
 
 func InstallRAUCImp(raucFilePath string) error {
 	// install rauc
-	fmt.Println("rauc path: ", raucFilePath)
+	logger.Info("installing rauc", zap.String("rauc path", raucFilePath))
 
 	raucInstaller, err := rauc.InstallerNew()
 	if err != nil {
-		fmt.Sprintln("rauc.InstallerNew() failed: ", err.Error())
+		logger.Error("new rauc installer fail", zap.Error(err))
+		return nil
 	}
 
 	compatible, version, err := raucInstaller.Info(raucFilePath)
 	if err != nil {
-		log.Println("Info() failed", err.Error())
+		logger.Error("get rauc info fail", zap.Error(err))
 		return err
 	}
 	log.Printf("Info(): compatible=%s, version=%s", compatible, version)
 
 	err = raucInstaller.InstallBundle(raucFilePath, rauc.InstallBundleOptions{})
 	if err != nil {
-		log.Println("InstallBundle() failed: ", err.Error())
+		logger.Error("install rauc fail", zap.Error(err))
 		return err
 	}
 
@@ -87,14 +88,9 @@ func MockInstallRAUC(raucFilePath string) error {
 }
 
 func PostInstallRAUC(release codegen.Release, sysRoot string) error {
+	// the code is for user experience.
 	time.Sleep(5 * time.Second)
-
-	// write 1+1=2  to sysRoot + FlagUpgradeFile
-	// d1 := []byte("1+1=2")
-	// err := os.WriteFile(filepath.Join(sysRoot, FlagUpgradeFile), d1, 0644)
-
 	RebootSystem()
-	//return err
 	return nil
 }
 func OfflineRAUCFilePath() string {
@@ -119,7 +115,7 @@ func RAUCFilePath(release codegen.Release) (string, error) {
 
 	// packageFilePath = packageFilePath[:len(packageFilePath)-len(".tar")] + ".raucb"
 	// to check file exist
-	fmt.Println("rauc verify in cache:", packageFilePath)
+	logger.Info("verify rauc whether in cache", zap.String("rauc file path", packageFilePath))
 	if _, err := os.Stat(packageFilePath); os.IsNotExist(err) {
 		return "", fmt.Errorf("not found rauc install package")
 	}
@@ -186,7 +182,7 @@ func GetRAUCInfo(path string) (string, error) {
 	cmd.Stdout = &out
 	err := cmd.Run()
 	if err != nil {
-		logger.Error("rauc error", zap.Error(err))
+		logger.Error("get info from rauc fail", zap.Error(err))
 	}
 
 	return out.String(), err
