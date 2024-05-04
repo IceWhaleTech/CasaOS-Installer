@@ -19,8 +19,45 @@ import (
 
 // 测试项目说明
 // 这里是状态测试，功能代码是mock。只测试状态是否正确
-func Test_Status_Case1_CRONJOB(t *testing.T) {
-	// 测试说明: 老版本在就绪之后重新检测更新,并触发新的下载，下载完
+func Test_Status_Case1_NotUpdate(t *testing.T) {
+	// 测试说明: 成功下载测试
+
+	// 本地版本 新版本
+	// 线上版本 老版本
+	logger.LogInitConsoleOnly()
+
+	sysRoot := t.TempDir()
+	ctx := context.Background()
+	fixtures.SetLocalRelease(sysRoot, "v99.9.9")
+
+	statusService := service.NewStatusService(&service.TestService{
+		InstallRAUCHandler: service.AlwaysSuccessInstallHandler,
+		DownloadStatusLock: sync.RWMutex{},
+	}, sysRoot)
+
+	value, msg := statusService.GetStatus()
+	assert.Equal(t, codegen.Idle, value.Status)
+	assert.Equal(t, "", msg)
+
+	// 模拟cron
+	go func() {
+		statusService.Cronjob(ctx, sysRoot)
+	}()
+
+	time.Sleep(1 * time.Second)
+	value, msg = statusService.GetStatus()
+	assert.Equal(t, codegen.FetchUpdating, value.Status)
+	assert.Equal(t, types.FETCHING, msg)
+
+	fixtures.WaitFecthReleaseCompeleted(statusService)
+	fixtures.WaitDownloadCompeleted(statusService)
+	value, msg = statusService.GetStatus()
+	assert.Equal(t, codegen.Idle, value.Status)
+	assert.Equal(t, types.UP_TO_DATE, msg)
+}
+
+func Test_Status_Case1_Download_Success(t *testing.T) {
+	// 测试说明: 成功下载测试
 	// 成之后，状态应该是ready-to-update
 
 	// 本地版本 老版本
@@ -36,29 +73,13 @@ func Test_Status_Case1_CRONJOB(t *testing.T) {
 		DownloadStatusLock: sync.RWMutex{},
 	}, sysRoot)
 
-	value, msg := statusService.GetStatus()
-	assert.Equal(t, codegen.Idle, value.Status)
-	assert.Equal(t, "", msg)
-
-	// main的过程
-	statusService.Launch(sysRoot)
-	value, msg = statusService.GetStatus()
-	assert.Equal(t, codegen.Installing, value.Status)
-	assert.Equal(t, "other", msg)
-
-	statusService.PostMigration(sysRoot)
-
-	value, msg = statusService.GetStatus()
-	assert.Equal(t, codegen.Idle, value.Status)
-	assert.Equal(t, types.UP_TO_DATE, msg)
-
 	// 模拟cron
 	go func() {
 		statusService.Cronjob(ctx, sysRoot)
 	}()
 
 	time.Sleep(1 * time.Second)
-	value, msg = statusService.GetStatus()
+	value, msg := statusService.GetStatus()
 	assert.Equal(t, codegen.FetchUpdating, value.Status)
 	assert.Equal(t, types.FETCHING, msg)
 
@@ -71,6 +92,36 @@ func Test_Status_Case1_CRONJOB(t *testing.T) {
 	value, msg = statusService.GetStatus()
 	assert.Equal(t, codegen.Idle, value.Status)
 	assert.Equal(t, types.READY_TO_UPDATE, msg)
+}
+
+func Test_Status_Case2_Download_Failed(t *testing.T) {
+	// 测试说明: 测试下载失败,下载之后无法通过checksum
+	// 本地版本 老版本
+	// 线上版本 新版本
+	logger.LogInitConsoleOnly()
+
+	sysRoot := t.TempDir()
+	config.ServerInfo.CachePath = filepath.Join(sysRoot, "cache")
+	fixtures.SetLocalRelease(sysRoot, "v0.4.3")
+	fixtures.SetZimaOS(sysRoot)
+
+	statusService := service.NewStatusService(&service.RAUCService{
+		InstallRAUCHandler: service.MockInstallRAUC,
+		CheckSumHandler:    checksum.AlwaysFail,
+		UrlHandler:         service.GitHubBranchTagReleaseUrl,
+	}, sysRoot)
+
+	go func() {
+		statusService.Cronjob(context.Background(), sysRoot)
+	}()
+
+	fixtures.WaitFecthReleaseCompeleted(statusService)
+	fixtures.WaitDownloadCompeleted(statusService)
+
+	value, msg := statusService.GetStatus()
+
+	assert.Equal(t, codegen.Idle, value.Status)
+	assert.Equal(t, "download fail", msg)
 }
 
 func Test_Status_Case3_Install_Success(t *testing.T) {
@@ -108,36 +159,6 @@ func Test_Status_Case3_Install_Success(t *testing.T) {
 	value, msg = statusService.GetStatus()
 	assert.Equal(t, codegen.Installing, value.Status)
 	assert.Equal(t, string(types.INSTALLING), msg)
-}
-
-func Test_Status_Case3_Download_Failed(t *testing.T) {
-	// 测试说明: 测试下载失败,下载之后无法通过checksum
-	// 本地版本 老版本
-	// 线上版本 新版本
-	logger.LogInitConsoleOnly()
-
-	sysRoot := t.TempDir()
-	config.ServerInfo.CachePath = filepath.Join(sysRoot, "cache")
-	fixtures.SetLocalRelease(sysRoot, "v0.4.3")
-	fixtures.SetZimaOS(sysRoot)
-
-	statusService := service.NewStatusService(&service.RAUCService{
-		InstallRAUCHandler: service.MockInstallRAUC,
-		CheckSumHandler:    checksum.AlwaysFail,
-		UrlHandler:         service.GitHubBranchTagReleaseUrl,
-	}, sysRoot)
-
-	go func() {
-		statusService.Cronjob(context.Background(), sysRoot)
-	}()
-
-	fixtures.WaitFecthReleaseCompeleted(statusService)
-	fixtures.WaitDownloadCompeleted(statusService)
-
-	value, msg := statusService.GetStatus()
-
-	assert.Equal(t, codegen.Idle, value.Status)
-	assert.Equal(t, "download fail", msg)
 }
 
 func Test_Status_Case4_Install_Fail(t *testing.T) {

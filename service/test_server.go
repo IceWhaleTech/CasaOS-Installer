@@ -64,7 +64,7 @@ func (r *TestService) ExtractRelease(packageFilepath string, release codegen.Rel
 }
 
 func (r *TestService) ShouldUpgrade(release codegen.Release, sysRoot string) bool {
-	return true
+	return ShouldUpgrade(release, sysRoot)
 }
 
 func (r *TestService) IsUpgradable(release codegen.Release, sysRootPath string) bool {

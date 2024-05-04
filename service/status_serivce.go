@@ -236,15 +236,15 @@ func (r *StatusService) ShouldUpgrade(release codegen.Release, sysRoot string) b
 
 	su := r.ImplementService.ShouldUpgrade(release, sysRoot)
 
-	if !su {
-		r.UpdateStatusWithMessage(FetchUpdateEnd, "up-to-date")
-	} else {
-		if r.IsUpgradable(release, r.SysRoot) {
-			r.UpdateStatusWithMessage(FetchUpdateEnd, "ready-to-update")
-		} else {
-			r.UpdateStatusWithMessage(FetchUpdateEnd, "out-of-date")
-		}
-	}
+	// if !su {
+	// 	r.UpdateStatusWithMessage(FetchUpdateEnd, types.UP_TO_DATE)
+	// } else {
+	// 	if r.IsUpgradable(release, r.SysRoot) {
+	// 		r.UpdateStatusWithMessage(FetchUpdateEnd, "ready-to-update")
+	// 	} else {
+	// 		r.UpdateStatusWithMessage(FetchUpdateEnd, "out-of-date")
+	// 	}
+	// }
 	return su
 }
 
@@ -295,11 +295,6 @@ func (r *StatusService) Cronjob(ctx context.Context, sysRoot string) error {
 		logger.Error("release.Background is nil")
 	} else {
 		go internal.DownloadReleaseBackground(*release.Background, release.Version)
-	}
-
-	if err != nil {
-		logger.Error("error when trying to get release", zap.Error(err))
-		return nil
 	}
 
 	// cache release packages if not already cached
