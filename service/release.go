@@ -75,7 +75,6 @@ func BestByDelay(urls []string) string {
 
 func FetchRelease(ctx context.Context, tag string, constructReleaseFileUrlFunc ConstructReleaseFileUrlFunc) (*codegen.Release, error) {
 	url := config.ServerInfo.BestUrl
-	logger.Info("fetch release", zap.String("tag", tag), zap.String("url", url))
 	if len(config.ServerInfo.BestUrl) == 0 {
 		var releaseURL []string
 		for _, mirror := range config.ServerInfo.Mirrors {
@@ -84,6 +83,7 @@ func FetchRelease(ctx context.Context, tag string, constructReleaseFileUrlFunc C
 		var best BestURLFunc = BestByDelay // dependency inject
 		url = best(releaseURL)
 	}
+	logger.Info("fetching release", zap.String("tag", tag), zap.String("url", url))
 	var release *codegen.Release
 	release, err := internal.GetReleaseFrom(ctx, url)
 	if err != nil {
