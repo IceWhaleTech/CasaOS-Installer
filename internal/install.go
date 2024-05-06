@@ -62,7 +62,7 @@ func DownloadAs(ctx context.Context, filepath, url string) error {
 			getter.WithProgress(NewTracker(
 				func(downladed, totalSize int64) {
 					// TODO: send progress event to message bus if it exists
-					logger.Info("Downloading package", zap.String("url", url), zap.Int64("downloaded", downladed), zap.Int64("totalSize", totalSize))
+					// logger.Info("Downloading package", zap.String("url", url), zap.Int64("downloaded", downladed), zap.Int64("totalSize", totalSize))
 				},
 			)),
 		},
