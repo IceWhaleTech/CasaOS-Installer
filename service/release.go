@@ -75,6 +75,7 @@ func BestByDelay(urls []string) string {
 
 func FetchRelease(ctx context.Context, tag string, constructReleaseFileUrlFunc ConstructReleaseFileUrlFunc) (*codegen.Release, error) {
 	url := config.ServerInfo.BestUrl
+	logger.Info("fetch release", zap.String("tag", tag), zap.String("url", url))
 	if len(config.ServerInfo.BestUrl) == 0 {
 		var releaseURL []string
 		for _, mirror := range config.ServerInfo.Mirrors {
@@ -86,7 +87,7 @@ func FetchRelease(ctx context.Context, tag string, constructReleaseFileUrlFunc C
 	var release *codegen.Release
 	release, err := internal.GetReleaseFrom(ctx, url)
 	if err != nil {
-		logger.Info("trying to get release information from url", zap.String("url", url))
+		logger.Error("failed to get release information from url", zap.String("url", url), zap.Error(err))
 		return release, err
 	}
 	return release, nil
@@ -137,22 +138,23 @@ func DownloadRelease(ctx context.Context, release codegen.Release, force bool) (
 		{
 			packageURL, err := internal.GetPackageURLByCurrentArch(release, mirror)
 			if err != nil {
-				logger.Info("error while getting package url - skipping", zap.Error(err), zap.Any("release", release))
+				logger.Error("error while getting package url - skipping", zap.Error(err), zap.Any("release", release))
 				continue
 			}
 
 			packageFilePath, err = internal.Download(ctx, releaseDir, packageURL)
 			if err != nil {
-				logger.Info("error while downloading and extracting package - skipping", zap.Error(err), zap.String("package_url", packageURL))
+				logger.Error("error while downloading and extracting package - skipping", zap.Error(err), zap.String("package_url", packageURL))
 				continue
 			}
+			logger.Info("downloaded package success", zap.String("package_url", packageURL), zap.String("package_file_path", packageFilePath))
 		}
 
 		// download checksums.txt if it's missing
 		{
 			checksumsURL := internal.GetChecksumsURL(release, mirror)
 			if _, err := internal.Download(ctx, releaseDir, checksumsURL); err != nil {
-				logger.Info("error while downloading checksums - skipping", zap.Error(err), zap.String("checksums_url", checksumsURL))
+				logger.Error("error while downloading checksums - skipping", zap.Error(err), zap.String("checksums_url", checksumsURL))
 				continue
 			}
 		}

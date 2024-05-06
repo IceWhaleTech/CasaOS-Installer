@@ -36,5 +36,7 @@ func DownloadReleaseBackground(url string, version string) {
 	err := getClient.Get()
 	if err != nil {
 		logger.Error("error when trying to download background", zap.Error(err))
+	} else {
+		logger.Info("download background success", zap.String("url", url), zap.String("version", version))
 	}
 }

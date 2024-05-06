@@ -10,6 +10,7 @@ import (
 	"github.com/IceWhaleTech/CasaOS-Installer/codegen/message_bus"
 	"github.com/IceWhaleTech/CasaOS-Installer/common"
 	"github.com/IceWhaleTech/CasaOS-Installer/internal"
+	"github.com/IceWhaleTech/CasaOS-Installer/internal/config"
 	"github.com/IceWhaleTech/CasaOS-Installer/types"
 	"go.uber.org/zap"
 )
@@ -275,6 +276,8 @@ func (r *StatusService) Cronjob(ctx context.Context, sysRoot string) error {
 	}
 
 	r.UpdateStatusWithMessage(FetchUpdateBegin, types.FETCHING)
+	logger.Info("start to fetch online release ", zap.Any("array", config.ServerInfo.Mirrors))
+
 	release, err := r.ImplementService.GetRelease(ctx, GetReleaseBranch(sysRoot))
 	if err != nil {
 		r.UpdateStatusWithMessage(FetchUpdateError, err.Error())
