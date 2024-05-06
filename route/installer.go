@@ -38,7 +38,6 @@ func (a *api) GetRelease(c echo.Context, params codegen.GetReleaseParams) error 
 
 	ctx := context.WithValue(context.Background(), types.Trigger, types.HTTP_REQUEST)
 	release, err := service.InstallerService.GetRelease(ctx, tag)
-
 	if err != nil {
 		message := err.Error()
 		if err == service.ErrReleaseNotFound {
@@ -49,14 +48,6 @@ func (a *api) GetRelease(c echo.Context, params codegen.GetReleaseParams) error 
 		return c.JSON(http.StatusInternalServerError, &codegen.ResponseInternalServerError{
 			Message: &message,
 		})
-	}
-
-	// TODO refactor this
-	// the code might be remove
-	if release.Background == nil {
-		logger.Error("release.Background is nil")
-	} else {
-		go internal.DownloadReleaseBackground(*release.Background, release.Version)
 	}
 
 	release.Background = utils.Ptr("/v2/installer/background?version=" + release.Version)
@@ -154,7 +145,6 @@ func (a *api) GetInstall(ctx echo.Context) error {
 
 	installCtx := context.WithValue(context.Background(), types.Trigger, types.HTTP_REQUEST)
 	release, err := service.InstallerService.GetRelease(installCtx, tag)
-
 	if err != nil {
 		message := err.Error()
 		if err == service.ErrReleaseNotFound {

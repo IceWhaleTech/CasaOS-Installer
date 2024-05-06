@@ -48,7 +48,6 @@ var (
 )
 
 func init() {
-
 	configFlag := flag.String("c", "", "config file path")
 	versionFlag := flag.Bool("v", false, "version")
 
@@ -95,7 +94,6 @@ func init() {
 }
 
 func main() {
-
 	service.InstallerService = &service.StatusService{
 		ImplementService:                 service.NewInstallerService(sysRoot),
 		SysRoot:                          sysRoot,
@@ -148,7 +146,7 @@ func main() {
 
 		go cronjob(ctx) // run once immediately
 
-		if _, err := crontab.AddFunc("@every 60m", func() { cronjob(ctx) }); err != nil {
+		if _, err := crontab.AddFunc("@every 30m", func() { cronjob(ctx) }); err != nil {
 			logger.Error("error when trying to add cron job", zap.Error(err))
 		}
 
@@ -156,7 +154,10 @@ func main() {
 		defer crontab.Stop()
 	}
 
-	service.InstallerService.PostMigration(sysRoot)
+	err = service.InstallerService.PostMigration(sysRoot)
+	if err != nil {
+		logger.Error("error when trying to post migration", zap.Error(err))
+	}
 
 	s := &http.Server{
 		Handler:           mux,
@@ -168,15 +169,16 @@ func main() {
 		logger.Error("error when trying to serve", zap.Error(err))
 		panic(err)
 	}
-
 }
 
 func cronjob(ctx context.Context) {
-	service.InstallerService.Cronjob(ctx, sysRoot)
+	err := service.InstallerService.Cronjob(ctx, sysRoot)
+	if err != nil {
+		logger.Error("error when trying to cronjob", zap.Error(err))
+	}
 }
 
 func watchOfflineDir(watcher *fsnotify.Watcher) {
-
 	// Start listening for events.
 	go func() {
 		for {
@@ -207,6 +209,7 @@ func watchOfflineDir(watcher *fsnotify.Watcher) {
 		logger.Error("offline watch err", zap.Any("error info", err))
 	}
 }
+
 func registerMsg() {
 	var messageBus *message_bus.ClientWithResponses
 	var err error
