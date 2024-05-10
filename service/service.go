@@ -16,8 +16,10 @@ import (
 
 type EventType string
 
-var MyService Services
-var InstallerService *StatusService
+var (
+	MyService        Services
+	InstallerService *StatusService
+)
 
 type Services interface {
 	Gateway() (external.ManagementService, error)
@@ -38,7 +40,6 @@ func NewService(RuntimePath string) Services {
 }
 
 func NewInstallerService(sysRoot string) UpdaterServiceInterface {
-
 	CleanupOfflineRAUCTemp(sysRoot)
 
 	installMethod, err := GetInstallMethod(sysRoot)
@@ -52,7 +53,7 @@ func NewInstallerService(sysRoot string) UpdaterServiceInterface {
 			InstallRAUCHandler: InstallRAUCImp,
 			DownloadHandler:    nil,
 			CheckSumHandler:    checksum.OnlineRaucChecksumExist,
-			UrlHandler:         HyperFileTagReleaseUrl,
+			URLHandler:         HyperFileTagReleaseUrl,
 		}
 	}
 
@@ -78,7 +79,7 @@ func NewInstallerService(sysRoot string) UpdaterServiceInterface {
 		InstallRAUCHandler: InstallRAUCImp,
 		DownloadHandler:    nil,
 		CheckSumHandler:    checksum.OnlineRaucChecksumExist,
-		UrlHandler:         HyperFileTagReleaseUrl,
+		URLHandler:         HyperFileTagReleaseUrl,
 	}
 }
 

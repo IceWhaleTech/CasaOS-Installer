@@ -15,7 +15,6 @@ import (
 )
 
 func TestRAUCServer(t *testing.T) {
-
 	logger.LogInitConsoleOnly()
 
 	tmpDir, err := os.MkdirTemp("", "casaos-rauc-download-extract-test-*")
@@ -33,7 +32,7 @@ func TestRAUCServer(t *testing.T) {
 	installerServer := &service.RAUCService{
 		InstallRAUCHandler: service.MockInstallRAUC,
 		CheckSumHandler:    checksum.OnlineRAUCExist,
-		UrlHandler:         service.GitHubBranchTagReleaseUrl,
+		URLHandler:         service.GitHubBranchTagReleaseUrl,
 	}
 
 	release, err := installerServer.GetRelease(ctx, "unit-test-rauc-online-v2-0.5.0")

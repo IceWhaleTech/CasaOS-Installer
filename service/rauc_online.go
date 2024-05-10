@@ -7,7 +7,6 @@ import (
 
 	"github.com/IceWhaleTech/CasaOS-Common/utils/logger"
 	"github.com/IceWhaleTech/CasaOS-Installer/codegen"
-	"github.com/IceWhaleTech/CasaOS-Installer/internal"
 	"github.com/IceWhaleTech/CasaOS-Installer/internal/checksum"
 	"github.com/IceWhaleTech/CasaOS-Installer/internal/config"
 	"github.com/IceWhaleTech/CasaOS-Installer/service/out"
@@ -18,7 +17,7 @@ type RAUCService struct {
 	InstallRAUCHandler func(raucPath string) error
 	DownloadHandler    out.DownloadReleaseUseCase
 	CheckSumHandler    out.CheckSumReleaseUseCase
-	UrlHandler         ConstructReleaseFileUrlFunc
+	URLHandler         ConstructReleaseFileUrlFunc
 	hasChecked         bool
 	path               string
 }
@@ -36,22 +35,7 @@ func (r *RAUCService) InstallInfo(release codegen.Release, sysRootPath string) (
 }
 
 func (r *RAUCService) GetRelease(ctx context.Context, tag string) (*codegen.Release, error) {
-	release, err := internal.GetReleaseFromLocal(config.ServerInfo.ReleasePath)
-	if err == nil {
-		go func(context.Context, string, ConstructReleaseFileUrlFunc) {
-			release, err = FetchRelease(ctx, tag, r.UrlHandler)
-			if err == nil {
-				internal.WriteReleaseToLocal(release, config.ServerInfo.ReleasePath)
-			}
-		}(ctx, tag, r.UrlHandler)
-		return release, nil
-	}
-	release, err = FetchRelease(ctx, tag, r.UrlHandler)
-	if err == nil {
-		internal.WriteReleaseToLocal(release, config.ServerInfo.ReleasePath)
-	}
-
-	return release, err
+	return FetchRelease(ctx, tag, r.URLHandler)
 }
 
 func (r *RAUCService) VerifyRelease(release codegen.Release) (string, error) {

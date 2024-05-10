@@ -108,7 +108,7 @@ func Test_Status_Case2_Download_Failed(t *testing.T) {
 	statusService := service.NewStatusService(&service.RAUCService{
 		InstallRAUCHandler: service.MockInstallRAUC,
 		CheckSumHandler:    checksum.AlwaysFail,
-		UrlHandler:         service.GitHubBranchTagReleaseUrl,
+		URLHandler:         service.GitHubBranchTagReleaseUrl,
 	}, sysRoot)
 
 	go func() {
@@ -177,7 +177,7 @@ func Test_Status_Case4_Install_Fail(t *testing.T) {
 	}, sysRoot)
 	// 模仿安装时的状态
 
-	//TODO 重构这里用统一的就绪的fixtures
+	// TODO 重构这里用统一的就绪的fixtures
 	statusService.UpdateStatusWithMessage(service.DownloadEnd, types.READY_TO_UPDATE)
 	value, msg := statusService.GetStatus()
 	assert.Equal(t, codegen.Idle, value.Status)
