@@ -25,6 +25,8 @@ func main() {
 		PrivateTestChannel()
 	case "stable":
 		StableChannel()
+	case "test":
+		TestChannel()
 	default:
 		fmt.Println("unknow channel.")
 		os.Exit(1)
@@ -54,5 +56,11 @@ func PrivateTestChannel() {
 func StableChannel() {
 	fmt.Println("Stable Channel")
 	config.ServerInfo.Mirrors = []string{"https://casaos.oss-cn-shanghai.aliyuncs.com/IceWhaleTech/zimaos-rauc/"}
+	Save()
+}
+
+func TestChannel() {
+	fmt.Println("Test Verify Channel")
+	config.ServerInfo.Mirrors = []string{"https://casaos.oss-cn-shanghai.aliyuncs.com/IceWhaleTech/zimaos-rauc/test-verification-channel/"}
 	Save()
 }
