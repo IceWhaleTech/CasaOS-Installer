@@ -18,9 +18,8 @@ import (
 var ErrHaveOtherCron = fmt.Errorf("have other cron")
 
 type StatusService struct {
-	ImplementService                 UpdaterServiceInterface
-	SysRoot                          string
-	Have_other_get_release_flag_lock sync.RWMutex
+	ImplementService UpdaterServiceInterface
+	SysRoot          string
 
 	status  codegen.Status
 	message string
@@ -97,9 +96,8 @@ func (r *StatusService) InitEventTypeMapStatus() {
 
 func NewStatusService(implementService UpdaterServiceInterface, sysRoot string) *StatusService {
 	statusService := &StatusService{
-		ImplementService:                 implementService,
-		SysRoot:                          sysRoot,
-		Have_other_get_release_flag_lock: sync.RWMutex{},
+		ImplementService: implementService,
+		SysRoot:          sysRoot,
 	}
 	statusService.InitEventTypeMapStatus()
 	statusService.status = codegen.Status{
@@ -114,12 +112,9 @@ func (r *StatusService) GetStatus() (codegen.Status, string) {
 	return r.status, r.message
 }
 
-func (r *StatusService) UpdateStatusWithMessage(eventType EventType, newPackageStatus string) {
+func (r *StatusService) UpdateStatusWithMessage(eventType EventType, eventMessage string) {
 	r.lock.Lock()
 	defer r.lock.Unlock()
-	if (eventType != InstallEnd && eventType != InstallError && eventType != InstallBegin) && (r.status.Status == codegen.Installing) {
-		return
-	}
 
 	switch eventType {
 	case DownloadBegin:
@@ -142,15 +137,14 @@ func (r *StatusService) UpdateStatusWithMessage(eventType EventType, newPackageS
 		r.status = r.EventTypeMapStatus[InstallError]
 	}
 
-	r.message = newPackageStatus
+	r.message = eventMessage
 
 	ctx := context.Background()
 
-	// 这里怎么map一下?🤔
 	event := r.EventTypeMapMessageType[eventType]
 
 	go PublishEventWrapper(ctx, event, map[string]string{
-		common.PropertyTypeMessage.Name: newPackageStatus,
+		common.PropertyTypeMessage.Name: eventMessage,
 	})
 }
 
@@ -234,7 +228,6 @@ func (r *StatusService) PostInstall(release codegen.Release, sysRoot string) err
 }
 
 func (r *StatusService) ShouldUpgrade(release codegen.Release, sysRoot string) bool {
-
 	su := r.ImplementService.ShouldUpgrade(release, sysRoot)
 	return su
 }
@@ -261,7 +254,6 @@ func (r *StatusService) PostMigration(sysRoot string) error {
 }
 
 func (r *StatusService) Cronjob(ctx context.Context, sysRoot string) error {
-
 	logger.Info("start a check update job")
 
 	ctx = context.WithValue(ctx, types.Trigger, types.CRON_JOB)

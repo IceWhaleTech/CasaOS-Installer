@@ -12,7 +12,6 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"sync"
 	"time"
 
 	"github.com/IceWhaleTech/CasaOS-Common/model"
@@ -95,9 +94,8 @@ func init() {
 
 func main() {
 	service.InstallerService = &service.StatusService{
-		ImplementService:                 service.NewInstallerService(sysRoot),
-		SysRoot:                          sysRoot,
-		Have_other_get_release_flag_lock: sync.RWMutex{},
+		ImplementService: service.NewInstallerService(sysRoot),
+		SysRoot:          sysRoot,
 	}
 
 	service.InstallerService.Launch(sysRoot)
@@ -189,9 +187,8 @@ func watchOfflineDir(watcher *fsnotify.Watcher) {
 				}
 				if event.Has(fsnotify.Remove) || event.Has(fsnotify.Create) {
 					service.InstallerService = &service.StatusService{
-						ImplementService:                 service.NewInstallerService(sysRoot),
-						SysRoot:                          sysRoot,
-						Have_other_get_release_flag_lock: sync.RWMutex{},
+						ImplementService: service.NewInstallerService(sysRoot),
+						SysRoot:          sysRoot,
 					}
 				}
 
