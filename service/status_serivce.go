@@ -92,6 +92,8 @@ func (r *StatusService) InitEventTypeMapStatus() {
 	r.EventTypeMapMessageType[InstallBegin] = common.EventTypeInstallUpdateBegin
 	r.EventTypeMapMessageType[InstallEnd] = common.EventTypeInstallUpdateEnd
 	r.EventTypeMapMessageType[InstallError] = common.EventTypeInstallUpdateError
+
+	logger.Info("status init success")
 }
 
 func NewStatusService(implementService UpdaterServiceInterface, sysRoot string) *StatusService {
@@ -115,7 +117,7 @@ func (r *StatusService) GetStatus() (codegen.Status, string) {
 func (r *StatusService) UpdateStatusWithMessage(eventType EventType, eventMessage string) {
 	r.lock.Lock()
 	defer r.lock.Unlock()
-
+	fmt.Println(r.EventTypeMapStatus)
 	switch eventType {
 	case DownloadBegin:
 		r.status = r.EventTypeMapStatus[DownloadBegin]
@@ -135,6 +137,11 @@ func (r *StatusService) UpdateStatusWithMessage(eventType EventType, eventMessag
 		r.status = r.EventTypeMapStatus[InstallEnd]
 	case InstallError:
 		r.status = r.EventTypeMapStatus[InstallError]
+	default:
+		r.status = codegen.Status{
+			Status: codegen.Idle,
+		}
+		fmt.Println("找不到")
 	}
 
 	r.message = eventMessage
