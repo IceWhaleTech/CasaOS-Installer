@@ -49,7 +49,7 @@ func Test_Status_Case1_NotUpdate(t *testing.T) {
 	assert.Equal(t, codegen.FetchUpdating, value.Status)
 	assert.Equal(t, types.FETCHING, msg)
 
-	fixtures.WaitFecthReleaseCompeleted(statusService)
+	fixtures.WaitFetchReleaseCompeleted(statusService)
 	fixtures.WaitDownloadCompeleted(statusService)
 	value, msg = statusService.GetStatus()
 	assert.Equal(t, codegen.Idle, value.Status)
@@ -83,7 +83,7 @@ func Test_Status_Case1_Download_Success(t *testing.T) {
 	assert.Equal(t, codegen.FetchUpdating, value.Status)
 	assert.Equal(t, types.FETCHING, msg)
 
-	fixtures.WaitFecthReleaseCompeleted(statusService)
+	fixtures.WaitFetchReleaseCompeleted(statusService)
 	value, msg = statusService.GetStatus()
 	assert.Equal(t, codegen.Downloading, value.Status)
 	assert.Equal(t, types.DOWNLOADING, msg)
@@ -115,7 +115,7 @@ func Test_Status_Case2_Download_Failed(t *testing.T) {
 		statusService.Cronjob(context.Background(), sysRoot)
 	}()
 
-	fixtures.WaitFecthReleaseCompeleted(statusService)
+	fixtures.WaitFetchReleaseCompeleted(statusService)
 	fixtures.WaitDownloadCompeleted(statusService)
 
 	value, msg := statusService.GetStatus()
@@ -145,7 +145,7 @@ func Test_Status_Case3_Install_Success(t *testing.T) {
 		statusService.Cronjob(ctx, sysRoot)
 	}()
 
-	fixtures.WaitFecthReleaseCompeleted(statusService)
+	fixtures.WaitFetchReleaseCompeleted(statusService)
 	fixtures.WaitDownloadCompeleted(statusService)
 	value, msg := statusService.GetStatus()
 	assert.Equal(t, codegen.Idle, value.Status)

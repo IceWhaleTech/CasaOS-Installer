@@ -12,7 +12,6 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"sync"
 	"time"
 
 	"github.com/IceWhaleTech/CasaOS-Common/model"
@@ -94,13 +93,12 @@ func init() {
 }
 
 func main() {
-	service.InstallerService = &service.StatusService{
-		ImplementService:                 service.NewInstallerService(sysRoot),
-		SysRoot:                          sysRoot,
-		Have_other_get_release_flag_lock: sync.RWMutex{},
-	}
+	service.InstallerService = service.NewStatusService(service.NewInstallerService(sysRoot), sysRoot)
 
-	service.InstallerService.Launch(sysRoot)
+	err := service.InstallerService.Launch(sysRoot)
+	if err != nil {
+		logger.Error("error when trying to launch", zap.Error(err))
+	}
 
 	// watch rauc offline
 	os.MkdirAll(config.RAUC_OFFLINE_PATH, os.ModePerm)
@@ -188,11 +186,7 @@ func watchOfflineDir(watcher *fsnotify.Watcher) {
 					return
 				}
 				if event.Has(fsnotify.Remove) || event.Has(fsnotify.Create) {
-					service.InstallerService = &service.StatusService{
-						ImplementService:                 service.NewInstallerService(sysRoot),
-						SysRoot:                          sysRoot,
-						Have_other_get_release_flag_lock: sync.RWMutex{},
-					}
+					service.InstallerService = service.NewStatusService(service.NewInstallerService(sysRoot), sysRoot)
 				}
 
 			case err, ok := <-watcher.Errors:
