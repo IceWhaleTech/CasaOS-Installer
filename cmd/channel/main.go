@@ -53,9 +53,6 @@ func PrivateTestChannel() {
 
 func StableChannel() {
 	fmt.Println("Stable Channel")
-	config.ServerInfo.Mirrors = []string{
-		"https://casaos.oss-cn-shanghai.aliyuncs.com/IceWhaleTech/zimaos-rauc/",
-		"https://raw.githubusercontent.com/IceWhaleTech/zimaos-rauc/main/",
-	}
+	config.ServerInfo.Mirrors = []string{"https://casaos.oss-cn-shanghai.aliyuncs.com/IceWhaleTech/zimaos-rauc/"}
 	Save()
 }
