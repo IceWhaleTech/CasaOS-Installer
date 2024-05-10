@@ -8,4 +8,4 @@ LogFileExt = log
 
 [server]
 CachePath = /var/lib/casaos_data/rauc
-mirrors = https://zimaos.icewhale.io/zimaos-rauc/,https://casaos.oss-cn-shanghai.aliyuncs.com/IceWhaleTech/zimaos-rauc/
+mirrors = https://casaos.oss-cn-shanghai.aliyuncs.com/IceWhaleTech/zimaos-rauc/
