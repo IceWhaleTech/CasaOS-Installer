@@ -60,7 +60,7 @@ func StableChannel() {
 }
 
 func TestChannel() {
-	fmt.Println("Stable Channel")
+	fmt.Println("Test Verify Channel")
 	config.ServerInfo.Mirrors = []string{"https://casaos.oss-cn-shanghai.aliyuncs.com/IceWhaleTech/zimaos-rauc/test-verification-channel/"}
 	Save()
 }
