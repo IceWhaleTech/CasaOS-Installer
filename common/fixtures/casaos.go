@@ -12,7 +12,7 @@ import (
 
 func createFolderIfNotExist(path string) {
 	if _, err := os.Stat(path); os.IsNotExist(err) {
-		os.MkdirAll(path, 0755)
+		os.MkdirAll(path, 0o755)
 	}
 }
 
@@ -51,28 +51,28 @@ func SetCasaOS043(sysRoot string, module string) {
 	casaos043VersionScript := "#! /usr/bin/python3\nprint(\"v0.4.3\")"
 	createFolderIfNotExist(filepath.Join(sysRoot, "/usr", "bin"))
 	casaosPath := filepath.Join(sysRoot, "/usr", "bin", module)
-	os.WriteFile(casaosPath, []byte(casaos043VersionScript), 0755)
+	os.WriteFile(casaosPath, []byte(casaos043VersionScript), 0o755)
 }
 
 func SetCasaOS035(sysRoot string, module string) {
 	casaos043VersionScript := "#! /usr/bin/python3\nprint(\"v0.3.5\")"
 	createFolderIfNotExist(filepath.Join(sysRoot, "/usr", "bin"))
 	casaosPath := filepath.Join(sysRoot, "/usr", "bin", module)
-	os.WriteFile(casaosPath, []byte(casaos043VersionScript), 0755)
+	os.WriteFile(casaosPath, []byte(casaos043VersionScript), 0o755)
 }
 
 func SetCasaOSVersion(sysRoot string, module string, versionTag string) {
 	casaos043VersionScript := "#! /usr/bin/python3\nprint(\"" + versionTag + "\")"
 	createFolderIfNotExist(filepath.Join(sysRoot, "/usr", "bin"))
 	casaosPath := filepath.Join(sysRoot, "/usr", "bin", module)
-	os.WriteFile(casaosPath, []byte(casaos043VersionScript), 0755)
+	os.WriteFile(casaosPath, []byte(casaos043VersionScript), 0o755)
 }
 
 func SetLocalRelease(sysRoot string, versionTag string) {
 	releaseContent := getReleaseYamlContent(versionTag)
 
 	createFolderIfNotExist(filepath.Join(sysRoot, "etc", "casaos"))
-	os.WriteFile(filepath.Join(sysRoot, service.CurrentReleaseLocalPath), []byte(releaseContent), 0755)
+	os.WriteFile(filepath.Join(sysRoot, service.CurrentReleaseLocalPath), []byte(releaseContent), 0o755)
 }
 
 func SetZimaOS(sysRoot string) error {
@@ -91,15 +91,13 @@ BUG_REPORT_URL="https://bugs.launchpad.net/ubuntu/"
 PRIVACY_POLICY_URL="https://www.ubuntu.com/legal/terms-and-policies/privacy-policy"
 UBUNTU_CODENAME=jammy`
 	filePath := filepath.Join(sysRoot, "etc", "os-release")
-	fmt.Println(filePath)
 	os.MkdirAll(filepath.Join(sysRoot, "etc"), 0o755)
 
-	err := os.WriteFile(filePath, []byte(osReleaseContent), 0755)
+	err := os.WriteFile(filePath, []byte(osReleaseContent), 0o755)
 	return err
 }
 
 func SetCasaOS(sysRoot string) {
-
 }
 
 func SetOfflineRAUC(sysRoot string, RAUCOfflinePath string, RAUCOfflineRAUCFile string) {
