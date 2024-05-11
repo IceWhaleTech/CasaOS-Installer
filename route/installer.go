@@ -13,6 +13,7 @@ import (
 	"github.com/IceWhaleTech/CasaOS-Installer/service"
 	"github.com/IceWhaleTech/CasaOS-Installer/types"
 	"github.com/labstack/echo/v4"
+	"github.com/samber/lo"
 	"go.uber.org/zap"
 )
 
@@ -38,6 +39,12 @@ func (a *api) GetRelease(c echo.Context, params codegen.GetReleaseParams) error 
 
 	ctx := context.WithValue(context.Background(), types.Trigger, types.HTTP_REQUEST)
 	release, err := service.InstallerService.GetRelease(ctx, tag)
+	if release == nil {
+		return c.JSON(http.StatusInternalServerError, &codegen.ResponseInternalServerError{
+			Message: lo.ToPtr("release is fetching"),
+		})
+	}
+
 	if err != nil {
 		message := err.Error()
 		if err == service.ErrReleaseNotFound {

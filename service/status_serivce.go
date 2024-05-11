@@ -18,17 +18,14 @@ import (
 var ErrHaveOtherCron = fmt.Errorf("have other cron")
 
 type StatusService struct {
-	ImplementService UpdaterServiceInterface
-	SysRoot          string
-
-	status  codegen.Status
-	message string
-	lock    sync.RWMutex
-
+	ImplementService        UpdaterServiceInterface
 	EventTypeMapStatus      map[EventType]codegen.Status
 	EventTypeMapMessageType map[EventType]message_bus.EventType
-
-	release *codegen.Release
+	release                 *codegen.Release
+	SysRoot                 string
+	status                  codegen.Status
+	message                 string
+	lock                    sync.RWMutex
 }
 
 const (
@@ -117,7 +114,6 @@ func (r *StatusService) GetStatus() (codegen.Status, string) {
 func (r *StatusService) UpdateStatusWithMessage(eventType EventType, eventMessage string) {
 	r.lock.Lock()
 	defer r.lock.Unlock()
-	fmt.Println(r.EventTypeMapStatus)
 	switch eventType {
 	case DownloadBegin:
 		r.status = r.EventTypeMapStatus[DownloadBegin]
@@ -141,7 +137,6 @@ func (r *StatusService) UpdateStatusWithMessage(eventType EventType, eventMessag
 		r.status = codegen.Status{
 			Status: codegen.Idle,
 		}
-		fmt.Println("找不到")
 	}
 
 	r.message = eventMessage
