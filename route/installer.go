@@ -164,10 +164,16 @@ func (a *api) GetInstall(ctx echo.Context) error {
 		})
 	}
 
+	if release == nil {
+		return ctx.JSON(http.StatusInternalServerError, &codegen.ResponseInternalServerError{
+			Message: lo.ToPtr("release is not ready"),
+		})
+	}
+
 	path, err := service.InstallerService.InstallInfo(*release, config.SysRoot)
 	if err != nil {
 		return ctx.JSON(http.StatusInternalServerError, &codegen.ResponseInternalServerError{
-			Message: utils.Ptr(err.Error()),
+			Message: lo.ToPtr(err.Error()),
 		})
 	}
 	return ctx.JSON(http.StatusOK, &codegen.InstallInfoOk{

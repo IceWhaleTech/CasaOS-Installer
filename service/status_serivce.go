@@ -162,6 +162,7 @@ func (r *StatusService) Install(release codegen.Release, sysRoot string) error {
 }
 
 func (r *StatusService) GetRelease(ctx context.Context, tag string) (*codegen.Release, error) {
+	// TODO: cache release in disk
 	return r.release, nil
 }
 
