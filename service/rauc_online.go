@@ -17,7 +17,7 @@ type RAUCService struct {
 	InstallRAUCHandler func(raucPath string) error
 	DownloadHandler    out.DownloadReleaseUseCase
 	CheckSumHandler    out.CheckSumReleaseUseCase
-	URLHandler         ConstructReleaseFileUrlFunc
+	URLHandler         ConstructReleaseFileURLFunc
 	hasChecked         bool
 	path               string
 }

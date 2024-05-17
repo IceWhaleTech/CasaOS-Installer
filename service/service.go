@@ -53,7 +53,7 @@ func NewInstallerService(sysRoot string) UpdaterServiceInterface {
 			InstallRAUCHandler: InstallRAUCImp,
 			DownloadHandler:    nil,
 			CheckSumHandler:    checksum.OnlineRaucChecksumExist,
-			URLHandler:         HyperFileTagReleaseUrl,
+			URLHandler:         HyperFileTagReleaseURL,
 		}
 	}
 
@@ -79,7 +79,7 @@ func NewInstallerService(sysRoot string) UpdaterServiceInterface {
 		InstallRAUCHandler: InstallRAUCImp,
 		DownloadHandler:    nil,
 		CheckSumHandler:    checksum.OnlineRaucChecksumExist,
-		URLHandler:         HyperFileTagReleaseUrl,
+		URLHandler:         HyperFileTagReleaseURL,
 	}
 }
 

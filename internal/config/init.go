@@ -24,7 +24,7 @@ type APPModel struct {
 type ServerModel struct {
 	Mirrors     []string `ini:"mirrors,,allowshadow"`
 	CachePath   string
-	BestUrl     string
+	BestURL     string
 	ReleasePath string
 }
 

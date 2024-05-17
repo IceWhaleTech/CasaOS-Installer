@@ -32,7 +32,7 @@ func TestRAUCServer(t *testing.T) {
 	installerServer := &service.RAUCService{
 		InstallRAUCHandler: service.MockInstallRAUC,
 		CheckSumHandler:    checksum.OnlineRAUCExist,
-		URLHandler:         service.GitHubBranchTagReleaseUrl,
+		URLHandler:         service.GitHubBranchTagReleaseURL,
 	}
 
 	release, err := installerServer.GetRelease(ctx, "unit-test-rauc-online-v2-0.5.0")
