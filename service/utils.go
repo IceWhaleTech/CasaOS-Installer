@@ -41,11 +41,11 @@ func NormalizeVersion(version string) string {
 	return strings.Join([]string{versionNumbers[0], versionNumbers[1], versionNumbers[2]}, ".")
 }
 
-func CurrentReleaseVersion(sysrootPath string) (*semver.Version, error) {
+func CurrentReleaseVersion(sysRootPath string) (*semver.Version, error) {
 	// get version from local release file, if not exist, get version from local casaos
-	currentRelease, err := internal.GetReleaseFromLocal(filepath.Join(sysrootPath, CurrentReleaseLocalPath))
+	currentRelease, err := internal.GetReleaseFromLocal(filepath.Join(sysRootPath, CurrentReleaseLocalPath))
 	if err != nil {
-		return CurrentModuleVersion("zimaos", sysrootPath)
+		return CurrentModuleVersion("zimaos", sysRootPath)
 	} else {
 		return semver.NewVersion(NormalizationVersion(currentRelease.Version))
 	}

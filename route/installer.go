@@ -151,6 +151,8 @@ func (a *api) GetInstall(ctx echo.Context) error {
 	tag := service.GetReleaseBranch(config.SysRoot)
 
 	installCtx := context.WithValue(context.Background(), types.Trigger, types.HTTP_REQUEST)
+
+	// get current release info not latest.
 	release, err := service.InstallerService.GetRelease(installCtx, tag)
 	if err != nil {
 		message := err.Error()

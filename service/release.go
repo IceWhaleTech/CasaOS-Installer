@@ -37,15 +37,15 @@ const (
 	TAR         InstallerType = "tar"
 )
 
-type ConstructReleaseFileUrlFunc func(tag string, mirror string) string
+type ConstructReleaseFileURLFunc func(tag string, mirror string) string
 
-func GitHubBranchTagReleaseUrl(tag string, _ string) string {
+func GitHubBranchTagReleaseURL(tag string, _ string) string {
 	// 这个不走新的mirror，自己用的旧的，回头迁移完，这个函数就删了。
 	mirror := "https://raw.githubusercontent.com/IceWhaleTech"
 	return fmt.Sprintf("%s/get/%s/casaos-release", strings.TrimSuffix(mirror, "/"), tag)
 }
 
-func HyperFileTagReleaseUrl(tag string, mirror string) string {
+func HyperFileTagReleaseURL(tag string, mirror string) string {
 	// https://raw.githubusercontent.com/IceWhaleTech/zimaos-rauc/main/rauc
 	// https://casaos.oss-cn-shanghai.aliyuncs.com/IceWhaleTech/zimaos-rauc/rauc
 	return mirror + tag + ".txt"
@@ -69,16 +69,16 @@ func BestByDelay(urls []string) string {
 	}
 
 	first := <-ch
-	config.ServerInfo.BestUrl = first
+	config.ServerInfo.BestURL = first
 	return first
 }
 
-func FetchRelease(ctx context.Context, tag string, constructReleaseFileUrlFunc ConstructReleaseFileUrlFunc) (*codegen.Release, error) {
-	url := config.ServerInfo.BestUrl
-	if len(config.ServerInfo.BestUrl) == 0 {
+func FetchRelease(ctx context.Context, tag string, constructReleaseFileURLFunc ConstructReleaseFileURLFunc) (*codegen.Release, error) {
+	url := config.ServerInfo.BestURL
+	if len(config.ServerInfo.BestURL) == 0 {
 		var releaseURL []string
 		for _, mirror := range config.ServerInfo.Mirrors {
-			releaseURL = append(releaseURL, constructReleaseFileUrlFunc(tag, mirror))
+			releaseURL = append(releaseURL, constructReleaseFileURLFunc(tag, mirror))
 		}
 		var best BestURLFunc = BestByDelay // dependency inject
 		url = best(releaseURL)
@@ -97,7 +97,7 @@ func GetRelease(ctx context.Context, tag string) (*codegen.Release, error) {
 	var release *codegen.Release
 	var mirror string
 
-	releaseURL := GitHubBranchTagReleaseUrl(tag, mirror)
+	releaseURL := GitHubBranchTagReleaseURL(tag, mirror)
 
 	logger.Info("trying to get release information from url", zap.String("url", releaseURL))
 

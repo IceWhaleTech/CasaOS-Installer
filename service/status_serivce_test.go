@@ -108,7 +108,7 @@ func Test_Status_Case2_Download_Failed(t *testing.T) {
 	statusService := service.NewStatusService(&service.RAUCService{
 		InstallRAUCHandler: service.MockInstallRAUC,
 		CheckSumHandler:    checksum.AlwaysFail,
-		URLHandler:         service.GitHubBranchTagReleaseUrl,
+		URLHandler:         service.GitHubBranchTagReleaseURL,
 	}, sysRoot)
 
 	go func() {
@@ -191,4 +191,25 @@ func Test_Status_Case4_Install_Fail(t *testing.T) {
 	value, msg = statusService.GetStatus()
 	assert.Equal(t, codegen.InstallError, value.Status)
 	assert.Equal(t, "rauc is not compatible", msg)
+}
+
+func Test_GetRelease_When_Without_Cron(t *testing.T) {
+	// 测试说明: 测试下载成功、安装时失败
+
+	logger.LogInitConsoleOnly()
+
+	sysRoot := t.TempDir()
+	fixtures.SetLocalRelease(sysRoot, "v0.4.3")
+
+	statusService := service.NewStatusService(&service.RAUCService{
+		InstallRAUCHandler: service.MockInstallRAUC,
+		CheckSumHandler:    checksum.AlwaysFail,
+		URLHandler:         service.GitHubBranchTagReleaseURL,
+	}, sysRoot)
+
+	ctx := context.Background()
+
+	release, err := statusService.GetRelease(ctx, "latest")
+	assert.Nil(t, err)
+	assert.NotNil(t, release)
 }

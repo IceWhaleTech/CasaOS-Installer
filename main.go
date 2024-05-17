@@ -85,7 +85,7 @@ func init() {
 	go func() {
 		var releaseURL []string
 		for _, mirror := range config.ServerInfo.Mirrors {
-			releaseURL = append(releaseURL, service.HyperFileTagReleaseUrl(service.GetReleaseBranch(sysRoot), mirror))
+			releaseURL = append(releaseURL, service.HyperFileTagReleaseURL(service.GetReleaseBranch(sysRoot), mirror))
 		}
 		var best service.BestURLFunc = service.BestByDelay // dependency inject
 		best(releaseURL)

@@ -163,6 +163,13 @@ func (r *StatusService) Install(release codegen.Release, sysRoot string) error {
 
 func (r *StatusService) GetRelease(ctx context.Context, tag string) (*codegen.Release, error) {
 	// TODO: cache release in disk
+	if r.release == nil {
+		release, err := r.ImplementService.GetRelease(ctx, tag)
+		if err != nil {
+			return nil, err
+		}
+		r.release = release
+	}
 	return r.release, nil
 }
 
@@ -180,11 +187,11 @@ func (r *StatusService) VerifyRelease(release codegen.Release) (string, error) {
 func (r *StatusService) DownloadRelease(ctx context.Context, release codegen.Release, force bool) (string, error) {
 	err := error(nil)
 
-	local_status, _ := r.GetStatus()
-	if local_status.Status == codegen.Downloading {
+	localStatus, _ := r.GetStatus()
+	if localStatus.Status == codegen.Downloading {
 		return "", fmt.Errorf("downloading")
 	}
-	if local_status.Status == codegen.Installing && ctx.Value(types.Trigger) != types.INSTALL {
+	if localStatus.Status == codegen.Installing && ctx.Value(types.Trigger) != types.INSTALL {
 		return "", fmt.Errorf("installing")
 	}
 
