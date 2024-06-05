@@ -27,6 +27,8 @@ func main() {
 		StableChannel()
 	case "test":
 		TestChannel()
+	case "disable":
+		DisableChannel()
 	default:
 		fmt.Println("unknow channel.")
 		os.Exit(1)
@@ -62,5 +64,11 @@ func StableChannel() {
 func TestChannel() {
 	fmt.Println("Test Verify Channel")
 	config.ServerInfo.Mirrors = []string{"https://casaos.oss-cn-shanghai.aliyuncs.com/IceWhaleTech/zimaos-rauc/test-verification-channel/"}
+	Save()
+}
+
+func DisableChannel() {
+	fmt.Println("Disable Channel")
+	config.ServerInfo.Mirrors = []string{"https://localhost/IceWhaleTech/zimaos-rauc/"}
 	Save()
 }
