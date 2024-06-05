@@ -27,6 +27,8 @@ func main() {
 		StableChannel()
 	case "test":
 		TestChannel()
+	case "disable":
+		DisableChannel()
 	default:
 		fmt.Println("unknow channel.")
 		os.Exit(1)
