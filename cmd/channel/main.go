@@ -64,3 +64,9 @@ func TestChannel() {
 	config.ServerInfo.Mirrors = []string{"https://casaos.oss-cn-shanghai.aliyuncs.com/IceWhaleTech/zimaos-rauc/test-verification-channel/"}
 	Save()
 }
+
+func DisableChannel() {
+	fmt.Println("Disable Channel")
+	config.ServerInfo.Mirrors = []string{"https://localhost/IceWhaleTech/zimaos-rauc/"}
+	Save()
+}
