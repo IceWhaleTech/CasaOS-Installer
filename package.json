@@ -3,9 +3,9 @@
     "version": "0.0.1",
     "scripts": {
         "build": "rm -rf dist && tsc && rm -rf generate",
-        "generate:local": "openapi-generator-cli generate -g typescript-axios -i ./api/openapi.yaml -o ./generate",
-        "generate:npx": "npx @openapitools/openapi-generator-cli generate -g typescript-axios -i ./api/openapi.yaml -o ./generate",
-        "generate:ts": "npx openapi-typescript-codegen --input ./api/openapi.yaml --output ./generate",
+        "generate:local": "openapi-generator-cli generate -g typescript-axios -i ./api/installer/openapi.yaml -o ./generate",
+        "generate:npx": "npx @openapitools/openapi-generator-cli generate -g typescript-axios -i ./api/installer/openapi.yaml -o ./generate",
+        "generate:ts": "npx openapi-typescript-codegen --input ./api/installer/openapi.yaml --output ./generate",
         "publish:public": "npm publish --access public",
         "start": "yarn generate:local && yarn build"
     },
