@@ -48,6 +48,8 @@ paths:
     get:
       summary: Get the information about the latest release of CasaOS
       operationId: getRelease
+      tags:
+        - Web methods
       parameters:
         - $ref: "#/components/parameters/Version"
       responses:
@@ -61,6 +63,8 @@ paths:
     post:
       summary: Install a release of CasaOS
       operationId: installRelease
+      tags:
+        - Common methods
       parameters:
         - $ref: "#/components/parameters/Version"
       responses:
@@ -75,6 +79,8 @@ paths:
     get:
       summary: Get the Info of the installation. such as install package path
       operationId: getInstall
+      tags:
+        - Common methods
       responses:
         "200":
           $ref: "#/components/responses/InstallInfoOk"
@@ -85,6 +91,8 @@ paths:
     get:
       deprecated: true
       summary: Get the status of the OTA program.
+      tags:
+        - Common methods
       operationId: getStatus
       responses:
         "200":
@@ -97,6 +105,8 @@ paths:
       deprecated: true
       summary: Change error status to idle
       operationId: resetStatus
+      tags:
+        - Web methods
       responses:
         "200":
           $ref: "#/components/responses/ResponseOK"
