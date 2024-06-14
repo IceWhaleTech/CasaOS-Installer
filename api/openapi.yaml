@@ -248,9 +248,9 @@ components:
         status:
           type: string
           enum:
-            - "no-notice"
-            - "red-dot-notice"
-            - "important-notice"
+            - "no-update"
+            - "normal-update"
+            - "important-update"
 
     Release:
       readOnly: true

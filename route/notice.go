@@ -32,19 +32,19 @@ func (a *api) GetNoticeStatus(c echo.Context) error {
 		if release.Important != nil && *release.Important {
 			return c.JSON(http.StatusOK, &codegen.NoticeStatusOK{
 				Data: &codegen.NoticeStatus{
-					Status: codegen.ImportantNotice,
+					Status: codegen.ImportantUpdate,
 				},
 			})
 		}
 		return c.JSON(http.StatusOK, &codegen.NoticeStatusOK{
 			Data: &codegen.NoticeStatus{
-				Status: codegen.RedDotNotice,
+				Status: codegen.NormalUpdate,
 			},
 		})
 	default:
 		return c.JSON(http.StatusOK, &codegen.NoticeStatusOK{
 			Data: &codegen.NoticeStatus{
-				Status: codegen.NoNotice,
+				Status: codegen.NoUpdate,
 			},
 		})
 	}
