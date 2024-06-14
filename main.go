@@ -38,7 +38,7 @@ var (
 	//go:embed api/index.html
 	_docHTML string
 
-	//go:embed api/openapi.yaml
+	//go:embed api/installer/openapi.yaml
 	_docYAML string
 	sysRoot  = "/"
 
