@@ -11,7 +11,7 @@ import (
 	"github.com/samber/lo"
 )
 
-func (a *api) GetNoticeStatus(c echo.Context) error {
+func (a *api) GetNoticeInfo(c echo.Context) error {
 	ctx := c.Request().Context()
 	tag := service.GetReleaseBranch(config.SysRoot)
 	release, err := service.InstallerService.GetRelease(ctx, tag)
@@ -30,22 +30,16 @@ func (a *api) GetNoticeStatus(c echo.Context) error {
 	switch packageStatus {
 	case types.READY_TO_UPDATE:
 		if release.Important != nil && *release.Important {
-			return c.JSON(http.StatusOK, &codegen.NoticeStatusOK{
-				Data: &codegen.NoticeStatus{
-					Status: codegen.ImportantUpdate,
-				},
+			return c.JSON(http.StatusOK, &codegen.NoticeInfoOK{
+				Data: lo.ToPtr(codegen.ImportantUpdate),
 			})
 		}
-		return c.JSON(http.StatusOK, &codegen.NoticeStatusOK{
-			Data: &codegen.NoticeStatus{
-				Status: codegen.NormalUpdate,
-			},
+		return c.JSON(http.StatusOK, &codegen.NoticeInfoOK{
+			Data: lo.ToPtr(codegen.NormalUpdate),
 		})
 	default:
-		return c.JSON(http.StatusOK, &codegen.NoticeStatusOK{
-			Data: &codegen.NoticeStatus{
-				Status: codegen.NoUpdate,
-			},
+		return c.JSON(http.StatusOK, &codegen.NoticeInfoOK{
+			Data: lo.ToPtr(codegen.NoUpdate),
 		})
 	}
 }

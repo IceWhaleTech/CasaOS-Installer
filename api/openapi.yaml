@@ -105,15 +105,15 @@ paths:
         "500":
           $ref: "#/components/responses/ResponseInternalServerError"
 
-  /web/notice/status:
+  /web/notice:
     get:
-      summary: Get the status of Update Info
-      operationId: getNoticeStatus
+      summary: Get the notice info of Update Info
+      operationId: getNoticeInfo
       tags:
         - Web methods
       responses:
         "200":
-          $ref: "#/components/responses/NoticeStatusOK"
+          $ref: "#/components/responses/NoticeInfoOK"
         "500":
           $ref: "#/components/responses/ResponseInternalServerError"      
     
@@ -205,7 +205,7 @@ components:
                   data:
                     $ref: "#/components/schemas/Status"
 
-    NoticeStatusOK:
+    NoticeInfoOK:
       description: OK
       content:
         application/json:
@@ -214,8 +214,7 @@ components:
               - $ref: "#/components/schemas/BaseResponse"
               - properties:
                   data:
-                    $ref: "#/components/schemas/NoticeStatus"
-
+                    $ref: "#/components/schemas/NoticeInfoOKData"
   schemas:
     BaseResponse:
       properties:
@@ -240,17 +239,12 @@ components:
             - "installing"
             - "installError"
 
-    NoticeStatus:
-      readOnly: true
-      required:
-        - status
-      properties:
-        status:
-          type: string
-          enum:
-            - "no-update"
-            - "normal-update"
-            - "important-update"
+    NoticeInfoOKData:
+      type: string
+      enum:
+        - "no-update"
+        - "normal-update"
+        - "important-update"
 
     Release:
       readOnly: true
