@@ -8,6 +8,17 @@ info:
 servers:
   - url: /v2/installer
 
+tags:
+  - name: Common methods
+    description: |-
+      methods for common usage
+
+x-tagGroups:
+  - name: Methods
+    tags:
+      - Common methods
+      - Web methods
+
 security:
   - access_token: []
 
@@ -18,6 +29,8 @@ paths:
       operationId: getBackground
       parameters:
         - $ref: "#/components/parameters/Version"
+      tags:
+        - Web methods
       responses:
         "200":
           description: OK
@@ -30,10 +43,13 @@ paths:
           $ref: "#/components/responses/ResponseNotFound"
         "500":
           $ref: "#/components/responses/ResponseInternalServerError"
+
   /release:
     get:
       summary: Get the information about the latest release of CasaOS
       operationId: getRelease
+      tags:
+        - Common methods
       parameters:
         - $ref: "#/components/parameters/Version"
       responses:
@@ -69,7 +85,8 @@ paths:
 
   /status:
     get:
-      summary: Get the status of the installation
+      deprecated: true
+      summary: Get the status of the OTA program.
       operationId: getStatus
       responses:
         "200":
@@ -79,6 +96,7 @@ paths:
     
   /reset:
     put:
+      deprecated: true
       summary: Change error status to idle
       operationId: resetStatus
       responses:
@@ -86,7 +104,19 @@ paths:
           $ref: "#/components/responses/ResponseOK"
         "500":
           $ref: "#/components/responses/ResponseInternalServerError"
-          
+
+  /web/notice:
+    get:
+      summary: Get the notice info of Update Info
+      operationId: getNoticeInfo
+      tags:
+        - Web methods
+      responses:
+        "200":
+          $ref: "#/components/responses/NoticeInfoOK"
+        "500":
+          $ref: "#/components/responses/ResponseInternalServerError"      
+    
 components:
   securitySchemes:
     access_token:
@@ -175,6 +205,16 @@ components:
                   data:
                     $ref: "#/components/schemas/Status"
 
+    NoticeInfoOK:
+      description: OK
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: "#/components/schemas/BaseResponse"
+              - properties:
+                  data:
+                    $ref: "#/components/schemas/NoticeInfoOKData"
   schemas:
     BaseResponse:
       properties:
@@ -198,6 +238,13 @@ components:
             - "downloadError"
             - "installing"
             - "installError"
+
+    NoticeInfoOKData:
+      type: string
+      enum:
+        - "no-update"
+        - "normal-update"
+        - "important-update"
 
     Release:
       readOnly: true
@@ -225,6 +272,10 @@ components:
         background:
           type: string
           example: https://ubuntu/get/releases/download/v0.4.4-alpha2/background.png
+        # important means the update is very important. zimaos should show a dialog to ask user to update
+        important:
+          type: boolean
+          example: true
         mirrors:
           type: array
           minItems: 1
