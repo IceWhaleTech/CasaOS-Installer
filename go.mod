@@ -5,12 +5,11 @@ go 1.20
 require (
 	github.com/IceWhaleTech/CasaOS-Common v0.4.8-alpha3
 	github.com/Masterminds/semver/v3 v3.2.1
-	github.com/bluele/gcache v0.0.2
 	github.com/coreos/go-systemd v0.0.0-20191104093116-d3cd4ed1dbcf
 	github.com/deepmap/oapi-codegen v1.12.4
 	github.com/fsnotify/fsnotify v1.6.0
 	github.com/getkin/kin-openapi v0.117.0
-	github.com/hashicorp/go-getter v1.7.1
+	github.com/hashicorp/go-getter v1.7.4
 	github.com/labstack/echo/v4 v4.10.2
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/samber/lo v1.38.1
@@ -113,7 +112,7 @@ require (
 	google.golang.org/api v0.114.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto v0.0.0-20230410155749-daa745c078e1 // indirect
-	google.golang.org/grpc v1.56.2 // indirect
-	google.golang.org/protobuf v1.30.0 // indirect
+	google.golang.org/grpc v1.56.3 // indirect
+	google.golang.org/protobuf v1.33.0 // indirect
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1 // indirect
 )
