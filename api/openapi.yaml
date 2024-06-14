@@ -48,8 +48,6 @@ paths:
     get:
       summary: Get the information about the latest release of CasaOS
       operationId: getRelease
-      tags:
-        - Common methods
       parameters:
         - $ref: "#/components/parameters/Version"
       responses:
@@ -245,6 +243,8 @@ components:
         - "no-update"
         - "normal-update"
         - "important-update"
+        # the field is not used right now. but it is reserved for future use
+        - "force-update"
 
     Release:
       readOnly: true
