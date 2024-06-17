@@ -15,8 +15,9 @@ import (
 	"go.uber.org/zap"
 )
 
-var ErrHaveOtherCron = fmt.Errorf("have other cron")
-
+// TODO: 考虑重构这里。当前前端页面设计的时候是需要后端的具体的状态的，比如正在抓取、正在下载。
+// 后面一个状态需要同步给前端和Message Bus，然后一个语法是ing、一个是done。我加了一个中间层来兼容两边。
+// 但是现在业务发生了变化，考虑是不需要重构这里减少复杂性。
 type StatusService struct {
 	ImplementService        UpdaterServiceInterface
 	EventTypeMapStatus      map[EventType]codegen.Status
