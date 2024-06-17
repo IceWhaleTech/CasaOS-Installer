@@ -140,6 +140,12 @@ func main() {
 	go registerMsg()
 
 	{
+		// TODO 考虑重构程序的架构
+		// 在最早，程序是 Event-Drive 的(不是我写的)。所有的数据请求都是在前端请求之后进行立刻获取的
+		// 因为那时候的业务是一个安装器没有性能需求。
+		// 但是ET说要改成一个OTA工具，所以我来接受这个项目
+		// 所以导致了及时获取有一个性能上的延时，所以加入 Cron 来把数据提前缓存好。
+		// 但是也有一个问题，缓存没有好的时候就访问 OTA 相关的接口会导致数据丢失。
 		crontab := cron.New(cron.WithSeconds())
 
 		go cronjob(ctx) // run once immediately
