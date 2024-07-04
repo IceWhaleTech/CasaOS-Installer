@@ -173,8 +173,13 @@ func DownloadRelease(ctx context.Context, release codegen.Release, force bool) (
 	}
 
 	releaseFilePath := filepath.Join(releaseDir, common.ReleaseYAMLFileName)
+	releaseFilePathTemp := releaseFilePath + ".temp"
 
-	return releaseFilePath, os.WriteFile(releaseFilePath, buf, 0o600)
+	if err = os.WriteFile(releaseFilePathTemp, buf, 0o600); err != nil {
+		return "", err
+	}
+
+	return releaseFilePath, os.Rename(releaseFilePathTemp, releaseFilePath)
 }
 
 func IsZimaOS(sysRoot string) bool {
