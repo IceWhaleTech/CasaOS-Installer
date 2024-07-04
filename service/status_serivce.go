@@ -19,14 +19,12 @@ import (
 // 后面一个状态需要同步给前端和Message Bus，然后一个语法是ing、一个是done。我加了一个中间层来兼容两边。
 // 但是现在业务发生了变化，考虑是不需要重构这里减少复杂性。
 type StatusService struct {
-	ImplementService        UpdaterServiceInterface
-	EventTypeMapStatus      map[EventType]codegen.Status
-	EventTypeMapMessageType map[EventType]message_bus.EventType
-	release                 *codegen.Release
-	SysRoot                 string
-	status                  codegen.Status
-	message                 string
-	lock                    sync.RWMutex
+	ImplementService UpdaterServiceInterface
+	release          *codegen.Release
+	SysRoot          string
+	status           codegen.Status
+	message          string
+	lock             sync.RWMutex
 }
 
 const (
@@ -43,55 +41,32 @@ const (
 	InstallError EventType = "installError"
 )
 
-func (r *StatusService) InitEventTypeMapStatus() {
-	r.lock.Lock()
-	defer r.lock.Unlock()
-	r.EventTypeMapStatus = make(map[EventType]codegen.Status)
-	r.EventTypeMapMessageType = make(map[EventType]message_bus.EventType)
+var EventTypeMapStatus = map[EventType]codegen.Status{
+	DownloadBegin: {Status: codegen.Downloading},
+	DownloadEnd:   {Status: codegen.Idle},
+	DownloadError: {Status: codegen.Idle},
 
-	r.EventTypeMapStatus[DownloadBegin] = codegen.Status{
-		Status: codegen.Downloading,
-	}
-	r.EventTypeMapStatus[DownloadEnd] = codegen.Status{
-		Status: codegen.Idle,
-	}
-	r.EventTypeMapStatus[DownloadError] = codegen.Status{
-		Status: codegen.Idle,
-	}
+	FetchUpdateBegin: {Status: codegen.FetchUpdating},
+	FetchUpdateEnd:   {Status: codegen.Idle},
+	FetchUpdateError: {Status: codegen.Idle},
 
-	r.EventTypeMapStatus[FetchUpdateBegin] = codegen.Status{
-		Status: codegen.FetchUpdating,
-	}
-	r.EventTypeMapStatus[FetchUpdateEnd] = codegen.Status{
-		Status: codegen.Idle,
-	}
-	r.EventTypeMapStatus[FetchUpdateError] = codegen.Status{
-		Status: codegen.Idle,
-	}
+	InstallBegin: {Status: codegen.Installing},
+	InstallEnd:   {Status: codegen.Idle},
+	InstallError: {Status: codegen.InstallError},
+}
 
-	r.EventTypeMapStatus[InstallBegin] = codegen.Status{
-		Status: codegen.Installing,
-	}
-	r.EventTypeMapStatus[InstallEnd] = codegen.Status{
-		Status: codegen.Idle,
-	}
-	r.EventTypeMapStatus[InstallError] = codegen.Status{
-		Status: codegen.InstallError,
-	}
+var EventTypeMapMessageType = map[EventType]message_bus.EventType{
+	FetchUpdateBegin: common.EventTypeCheckUpdateBegin,
+	FetchUpdateEnd:   common.EventTypeCheckUpdateEnd,
+	FetchUpdateError: common.EventTypeCheckUpdateError,
 
-	r.EventTypeMapMessageType[FetchUpdateBegin] = common.EventTypeCheckUpdateBegin
-	r.EventTypeMapMessageType[FetchUpdateEnd] = common.EventTypeCheckUpdateEnd
-	r.EventTypeMapMessageType[FetchUpdateError] = common.EventTypeCheckUpdateError
+	DownloadBegin: common.EventTypeDownloadUpdateBegin,
+	DownloadEnd:   common.EventTypeDownloadUpdateEnd,
+	DownloadError: common.EventTypeDownloadUpdateError,
 
-	r.EventTypeMapMessageType[DownloadBegin] = common.EventTypeDownloadUpdateBegin
-	r.EventTypeMapMessageType[DownloadEnd] = common.EventTypeDownloadUpdateEnd
-	r.EventTypeMapMessageType[DownloadError] = common.EventTypeDownloadUpdateError
-
-	r.EventTypeMapMessageType[InstallBegin] = common.EventTypeInstallUpdateBegin
-	r.EventTypeMapMessageType[InstallEnd] = common.EventTypeInstallUpdateEnd
-	r.EventTypeMapMessageType[InstallError] = common.EventTypeInstallUpdateError
-
-	logger.Info("status init success")
+	InstallBegin: common.EventTypeInstallUpdateBegin,
+	InstallEnd:   common.EventTypeInstallUpdateEnd,
+	InstallError: common.EventTypeInstallUpdateError,
 }
 
 func NewStatusService(implementService UpdaterServiceInterface, sysRoot string) *StatusService {
@@ -99,7 +74,6 @@ func NewStatusService(implementService UpdaterServiceInterface, sysRoot string) 
 		ImplementService: implementService,
 		SysRoot:          sysRoot,
 	}
-	statusService.InitEventTypeMapStatus()
 	statusService.status = codegen.Status{
 		Status: codegen.Idle,
 	}
@@ -117,23 +91,23 @@ func (r *StatusService) UpdateStatusWithMessage(eventType EventType, eventMessag
 	defer r.lock.Unlock()
 	switch eventType {
 	case DownloadBegin:
-		r.status = r.EventTypeMapStatus[DownloadBegin]
+		r.status = EventTypeMapStatus[DownloadBegin]
 	case DownloadEnd:
-		r.status = r.EventTypeMapStatus[DownloadEnd]
+		r.status = EventTypeMapStatus[DownloadEnd]
 	case DownloadError:
-		r.status = r.EventTypeMapStatus[DownloadError]
+		r.status = EventTypeMapStatus[DownloadError]
 	case FetchUpdateBegin:
-		r.status = r.EventTypeMapStatus[FetchUpdateBegin]
+		r.status = EventTypeMapStatus[FetchUpdateBegin]
 	case FetchUpdateEnd:
-		r.status = r.EventTypeMapStatus[FetchUpdateEnd]
+		r.status = EventTypeMapStatus[FetchUpdateEnd]
 	case FetchUpdateError:
-		r.status = r.EventTypeMapStatus[FetchUpdateError]
+		r.status = EventTypeMapStatus[FetchUpdateError]
 	case InstallBegin:
-		r.status = r.EventTypeMapStatus[InstallBegin]
+		r.status = EventTypeMapStatus[InstallBegin]
 	case InstallEnd:
-		r.status = r.EventTypeMapStatus[InstallEnd]
+		r.status = EventTypeMapStatus[InstallEnd]
 	case InstallError:
-		r.status = r.EventTypeMapStatus[InstallError]
+		r.status = EventTypeMapStatus[InstallError]
 	default:
 		r.status = codegen.Status{
 			Status: codegen.Idle,
@@ -144,7 +118,7 @@ func (r *StatusService) UpdateStatusWithMessage(eventType EventType, eventMessag
 
 	ctx := context.Background()
 
-	event := r.EventTypeMapMessageType[eventType]
+	event := EventTypeMapMessageType[eventType]
 
 	go PublishEventWrapper(ctx, event, map[string]string{
 		common.PropertyTypeMessage.Name: eventMessage,
