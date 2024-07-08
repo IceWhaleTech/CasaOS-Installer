@@ -70,9 +70,8 @@ func (r *RAUCOfflineService) GetRelease(ctx context.Context, tag string) (*codeg
 	if os.IsNotExist(err) {
 		release, err := r.LoadReleaseFromRAUC(r.SysRoot)
 		return release, err
-	} else {
-		return internal.GetReleaseFromLocal(cachePath)
 	}
+	return internal.GetReleaseFromLocal(cachePath)
 }
 
 func (r *RAUCOfflineService) Launch(sysRoot string) error {
@@ -111,8 +110,8 @@ func (r *RAUCOfflineService) PostInstall(release codegen.Release, sysRoot string
 func (r *RAUCOfflineService) ShouldUpgrade(release codegen.Release, sysRoot string) bool {
 	return ShouldUpgrade(release, sysRoot)
 }
-func (r *RAUCOfflineService) IsUpgradable(release codegen.Release, sysRootPath string) bool {
 
+func (r *RAUCOfflineService) IsUpgradable(release codegen.Release, sysRootPath string) bool {
 	if !r.ShouldUpgrade(release, sysRootPath) {
 		return false
 	}

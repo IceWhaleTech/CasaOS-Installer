@@ -150,8 +150,8 @@ func (r *StatusService) GetRelease(ctx context.Context, tag string) (*codegen.Re
 
 func (r *StatusService) Launch(sysRoot string) error {
 	// 事实上已经没有migration了，但是为了兼容性， 先留着
-	r.UpdateStatusWithMessage(InstallBegin, "migration")
-	defer r.UpdateStatusWithMessage(InstallBegin, "other")
+	r.UpdateStatusWithMessage(InstallBegin, types.MIGRATION)
+	defer r.UpdateStatusWithMessage(InstallBegin, types.OTHER)
 	return nil
 }
 

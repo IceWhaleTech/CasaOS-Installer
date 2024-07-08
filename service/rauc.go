@@ -93,6 +93,7 @@ func PostInstallRAUC(release codegen.Release, sysRoot string) error {
 	RebootSystem()
 	return nil
 }
+
 func OfflineRAUCFilePath() string {
 	return filepath.Join(config.SysRoot, config.RAUC_OFFLINE_PATH, config.RAUC_OFFLINE_RAUC_FILENAME)
 }

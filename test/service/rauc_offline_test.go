@@ -39,7 +39,7 @@ func TestRAUCOfflineServer(t *testing.T) {
 
 	config.RAUC_OFFLINE_RAUC_FILENAME = "rauc.raucb"
 
-	os.MkdirAll(filepath.Join(tmpDir, config.RAUC_OFFLINE_PATH), 0755)
+	os.MkdirAll(filepath.Join(tmpDir, config.RAUC_OFFLINE_PATH), 0o755)
 	fixtures.SetOfflineRAUC(tmpDir, config.RAUC_OFFLINE_PATH, config.RAUC_OFFLINE_RAUC_FILENAME)
 	fixtures.SetOfflineRAUCMock_0504(tmpDir)
 
@@ -98,7 +98,7 @@ func TestRAUCOfflineServerLoadReleaseFromCache(t *testing.T) {
 
 	config.RAUC_OFFLINE_RAUC_FILENAME = "rauc.raucb"
 
-	os.MkdirAll(filepath.Join(tmpDir, config.RAUC_OFFLINE_PATH), 0755)
+	os.MkdirAll(filepath.Join(tmpDir, config.RAUC_OFFLINE_PATH), 0o755)
 	fixtures.SetOfflineRAUC(tmpDir, config.RAUC_OFFLINE_PATH, config.RAUC_OFFLINE_RAUC_FILENAME)
 	fixtures.SetOfflineRAUCMock_0504(tmpDir)
 	fixtures.SetOfflineRAUCRelease_050(tmpDir)
@@ -136,7 +136,7 @@ func TestRAUCOfflineServerGetReleaseFail(t *testing.T) {
 
 	config.RAUC_OFFLINE_RAUC_FILENAME = "rauc.raucb"
 
-	os.MkdirAll(filepath.Join(tmpDir, config.RAUC_OFFLINE_PATH), 0755)
+	os.MkdirAll(filepath.Join(tmpDir, config.RAUC_OFFLINE_PATH), 0o755)
 	fixtures.SetOfflineRAUC(tmpDir, config.RAUC_OFFLINE_PATH, config.RAUC_OFFLINE_RAUC_FILENAME)
 	fixtures.SetOfflineRAUCMock_049(tmpDir)
 

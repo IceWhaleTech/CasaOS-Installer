@@ -39,12 +39,6 @@ func (a *api) GetRelease(c echo.Context, params codegen.GetReleaseParams) error 
 
 	ctx := context.WithValue(context.Background(), types.Trigger, types.HTTP_REQUEST)
 	release, err := service.InstallerService.GetRelease(ctx, tag)
-	if release == nil {
-		return c.JSON(http.StatusInternalServerError, &codegen.ResponseInternalServerError{
-			Message: lo.ToPtr("release is fetching"),
-		})
-	}
-
 	if err != nil {
 		message := err.Error()
 		if err == service.ErrReleaseNotFound {
@@ -54,6 +48,12 @@ func (a *api) GetRelease(c echo.Context, params codegen.GetReleaseParams) error 
 		}
 		return c.JSON(http.StatusInternalServerError, &codegen.ResponseInternalServerError{
 			Message: &message,
+		})
+	}
+
+	if release == nil {
+		return c.JSON(http.StatusInternalServerError, &codegen.ResponseInternalServerError{
+			Message: lo.ToPtr("release is fetching"),
 		})
 	}
 

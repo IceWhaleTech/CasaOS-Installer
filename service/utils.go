@@ -46,9 +46,8 @@ func CurrentReleaseVersion(sysRootPath string) (*semver.Version, error) {
 	currentRelease, err := internal.GetReleaseFromLocal(filepath.Join(sysRootPath, CurrentReleaseLocalPath))
 	if err != nil {
 		return CurrentModuleVersion("zimaos", sysRootPath)
-	} else {
-		return semver.NewVersion(NormalizationVersion(currentRelease.Version))
 	}
+	return semver.NewVersion(NormalizationVersion(currentRelease.Version))
 }
 
 func NormalizationVersion(version string) string {
