@@ -63,15 +63,15 @@ func (r *RAUCOfflineService) LoadReleaseFromRAUC(sysRoot string) (*codegen.Relea
 	return release, err
 }
 
-func (r *RAUCOfflineService) GetRelease(ctx context.Context, tag string) (*codegen.Release, error) {
-	cachePath := filepath.Join(r.SysRoot, config.OFFLINE_RAUC_TEMP_PATH, config.RAUC_OFFLINE_RELEASE_FILENAME)
-	_, err := os.Stat(cachePath)
-
-	if os.IsNotExist(err) {
-		release, err := r.LoadReleaseFromRAUC(r.SysRoot)
-		return release, err
+func (r *RAUCOfflineService) GetRelease(ctx context.Context, tag string, useCache bool) (*codegen.Release, error) {
+	if useCache {
+		cachePath := filepath.Join(r.SysRoot, config.OFFLINE_RAUC_TEMP_PATH, config.RAUC_OFFLINE_RELEASE_FILENAME)
+		if release, err := internal.GetReleaseFromLocal(cachePath); err == nil {
+			return release, nil
+		}
 	}
-	return internal.GetReleaseFromLocal(cachePath)
+	release, err := r.LoadReleaseFromRAUC(r.SysRoot)
+	return release, err
 }
 
 func (r *RAUCOfflineService) Launch(sysRoot string) error {

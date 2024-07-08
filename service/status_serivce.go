@@ -3,6 +3,8 @@ package service
 import (
 	"context"
 	"fmt"
+	"os"
+	"path/filepath"
 	"sync"
 
 	"github.com/IceWhaleTech/CasaOS-Common/utils/logger"
@@ -77,6 +79,7 @@ func NewStatusService(implementService UpdaterServiceInterface, sysRoot string) 
 	statusService.status = codegen.Status{
 		Status: codegen.Idle,
 	}
+	statusService.release, _ = implementService.GetRelease(context.Background(), GetReleaseBranch(sysRoot), true)
 	return statusService
 }
 
@@ -136,10 +139,9 @@ func (r *StatusService) Install(release codegen.Release, sysRoot string) error {
 	return err
 }
 
-func (r *StatusService) GetRelease(ctx context.Context, tag string) (*codegen.Release, error) {
-	// TODO: cache release in disk
+func (r *StatusService) GetRelease(ctx context.Context, tag string, useCache bool) (*codegen.Release, error) {
 	if r.release == nil {
-		release, err := r.ImplementService.GetRelease(ctx, tag)
+		release, err := r.ImplementService.GetRelease(ctx, tag, true)
 		if err != nil {
 			return nil, err
 		}
@@ -245,17 +247,19 @@ func (r *StatusService) Cronjob(ctx context.Context, sysRoot string) error {
 
 	status, _ := r.GetStatus()
 	if status.Status == codegen.Downloading {
+		logger.Info("downloading, skip")
 		return nil
 	}
 
 	if status.Status == codegen.Installing {
+		logger.Info("installing, skip")
 		return nil
 	}
 
 	r.UpdateStatusWithMessage(FetchUpdateBegin, types.FETCHING)
 	logger.Info("start to fetch online release ", zap.Any("array", config.ServerInfo.Mirrors))
 
-	release, err := r.ImplementService.GetRelease(ctx, GetReleaseBranch(sysRoot))
+	release, err := r.ImplementService.GetRelease(ctx, GetReleaseBranch(sysRoot), false)
 	if err != nil {
 		r.UpdateStatusWithMessage(FetchUpdateError, err.Error())
 		logger.Error("error when trying to get release", zap.Error(err))
@@ -275,10 +279,12 @@ func (r *StatusService) Cronjob(ctx context.Context, sysRoot string) error {
 	// cache release packages if not already cached
 	shouldUpgrade := r.ShouldUpgrade(*release, sysRoot)
 
+	releaseFilePath := ""
+
 	if shouldUpgrade {
 		r.UpdateStatusWithMessage(FetchUpdateEnd, types.OUT_OF_DATE)
 
-		releaseFilePath, err := r.DownloadRelease(ctx, *release, true)
+		releaseFilePath, err = r.DownloadRelease(ctx, *release, true)
 		logger.Info("download release rauc update package success")
 
 		if err != nil {
@@ -289,9 +295,22 @@ func (r *StatusService) Cronjob(ctx context.Context, sysRoot string) error {
 			r.UpdateStatusWithMessage(DownloadEnd, types.READY_TO_UPDATE)
 		}
 	} else {
+		releaseFilePath, err = r.InstallInfo(*release, sysRoot)
+		if err != nil {
+			logger.Error("error when trying to get install info", zap.Error(err))
+		}
+
 		logger.Info("system is up to date")
 		r.UpdateStatusWithMessage(FetchUpdateEnd, types.UP_TO_DATE)
 	}
 
+	// set symbol link
+	releaseDir := filepath.Dir(releaseFilePath)
+	latestReleaseDir := filepath.Join(filepath.Dir(releaseDir), "latest")
+
+	os.Remove(latestReleaseDir)
+	err = os.Symlink(releaseDir, latestReleaseDir)
+
+	logger.Info("create latest symlink ok", zap.Error(err), zap.Any("releaseDir", releaseDir), zap.Any("latestReleaseDir", latestReleaseDir))
 	return nil
 }

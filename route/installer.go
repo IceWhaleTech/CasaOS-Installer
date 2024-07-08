@@ -38,7 +38,7 @@ func (a *api) GetRelease(c echo.Context, params codegen.GetReleaseParams) error 
 	}
 
 	ctx := context.WithValue(context.Background(), types.Trigger, types.HTTP_REQUEST)
-	release, err := service.InstallerService.GetRelease(ctx, tag)
+	release, err := service.InstallerService.GetRelease(ctx, tag, true)
 	if err != nil {
 		message := err.Error()
 		if err == service.ErrReleaseNotFound {
@@ -92,7 +92,7 @@ func (a *api) InstallRelease(ctx echo.Context, params codegen.InstallReleasePara
 		}
 
 		ctx := context.WithValue(context.Background(), types.Trigger, types.INSTALL)
-		release, err := service.InstallerService.GetRelease(ctx, tag)
+		release, err := service.InstallerService.GetRelease(ctx, tag, true)
 		if err != nil {
 			message := err.Error()
 			service.InstallerService.UpdateStatusWithMessage(service.InstallError, message)
@@ -143,7 +143,7 @@ func (a *api) InstallRelease(ctx echo.Context, params codegen.InstallReleasePara
 // 这里是重置状态，但是没有用到，因为改成在上面getRelease也能重置状态。但是后续也可能会用到
 func (a *api) ResetStatus(ctx echo.Context) error {
 	installCtx := context.WithValue(ctx.Request().Context(), types.Trigger, types.HTTP_REQUEST)
-	service.InstallerService.GetRelease(installCtx, "latest")
+	service.InstallerService.GetRelease(installCtx, "latest", true)
 	return ctx.JSON(http.StatusOK, &codegen.ResponseOK{})
 }
 
@@ -153,7 +153,7 @@ func (a *api) GetInstall(ctx echo.Context) error {
 	installCtx := context.WithValue(context.Background(), types.Trigger, types.HTTP_REQUEST)
 
 	// get current release info not latest.
-	release, err := service.InstallerService.GetRelease(installCtx, tag)
+	release, err := service.InstallerService.GetRelease(installCtx, tag, true)
 	if err != nil {
 		message := err.Error()
 		if err == service.ErrReleaseNotFound {

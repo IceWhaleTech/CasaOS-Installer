@@ -7,6 +7,8 @@ import (
 
 	"github.com/IceWhaleTech/CasaOS-Common/utils/logger"
 	"github.com/IceWhaleTech/CasaOS-Installer/codegen"
+	"github.com/IceWhaleTech/CasaOS-Installer/common"
+	"github.com/IceWhaleTech/CasaOS-Installer/internal"
 	"github.com/IceWhaleTech/CasaOS-Installer/internal/checksum"
 	"github.com/IceWhaleTech/CasaOS-Installer/internal/config"
 	"github.com/IceWhaleTech/CasaOS-Installer/service/out"
@@ -34,7 +36,15 @@ func (r *RAUCService) InstallInfo(release codegen.Release, sysRootPath string) (
 	return RAUCFilePath(release)
 }
 
-func (r *RAUCService) GetRelease(ctx context.Context, tag string) (*codegen.Release, error) {
+func (r *RAUCService) GetRelease(ctx context.Context, tag string, useCache bool) (*codegen.Release, error) {
+	if useCache {
+		releaseDir, _ := config.ReleaseDir(codegen.Release{Version: "latest"})
+		releaseYamlFileName := filepath.Join(releaseDir, common.ReleaseYAMLFileName)
+		if release, err := internal.GetReleaseFromLocal(releaseYamlFileName); err == nil {
+			logger.Info("get release from local", zap.String("tag", tag), zap.String("path", releaseYamlFileName))
+			return release, nil
+		}
+	}
 	return FetchRelease(ctx, tag, r.URLHandler)
 }
 

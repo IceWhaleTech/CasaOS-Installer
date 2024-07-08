@@ -7,7 +7,7 @@ import (
 )
 
 type UpdaterServiceInterface interface {
-	GetRelease(ctx context.Context, tag string) (*codegen.Release, error)
+	GetRelease(ctx context.Context, tag string, useCache bool) (*codegen.Release, error)
 	VerifyRelease(release codegen.Release) (string, error)
 	DownloadRelease(ctx context.Context, release codegen.Release, force bool) (string, error)
 	ExtractRelease(packageFilepath string, release codegen.Release) error

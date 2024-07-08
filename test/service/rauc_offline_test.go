@@ -47,7 +47,7 @@ func TestRAUCOfflineServer(t *testing.T) {
 	// 构建假文件放到目录
 	fixtures.SetOfflineRAUCMock_0504(tmpDir)
 
-	release, err := installerServer.GetRelease(ctx, "any thing")
+	release, err := installerServer.GetRelease(ctx, "any thing", false)
 	assert.NoError(t, err)
 
 	assert.Equal(t, "v0.5.0.4", release.Version)
@@ -84,7 +84,7 @@ func TestRAUCOfflineServerLoadReleaseFromCache(t *testing.T) {
 	fixtures.SetOfflineRAUCRelease_050(tmpDir)
 	assert.FileExists(t, filepath.Join(tmpDir, config.RAUC_OFFLINE_PATH, config.RAUC_OFFLINE_RAUC_FILENAME))
 
-	release, err := installerServer.GetRelease(ctx, "any thing")
+	release, err := installerServer.GetRelease(ctx, "any thing", false)
 	assert.NoError(t, err)
 
 	assert.Equal(t, "v0.5.0", release.Version)
@@ -96,6 +96,6 @@ func TestRAUCOfflineServerGetReleaseFail(t *testing.T) {
 
 	fixtures.SetOfflineRAUCMock_049(tmpDir)
 
-	_, err := installerServer.GetRelease(ctx, "any thing")
+	_, err := installerServer.GetRelease(ctx, "any thing", false)
 	assert.ErrorContains(t, err, "illegal base64 data")
 }

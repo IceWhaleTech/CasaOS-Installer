@@ -35,7 +35,7 @@ func TestRAUCServer(t *testing.T) {
 		URLHandler:         service.GitHubBranchTagReleaseURL,
 	}
 
-	release, err := installerServer.GetRelease(ctx, "unit-test-rauc-online-v2-0.5.0")
+	release, err := installerServer.GetRelease(ctx, "unit-test-rauc-online-v2-0.5.0", false)
 	assert.NoError(t, err)
 	assert.Equal(t, "v0.5.0", release.Version)
 	fmt.Println(release)
