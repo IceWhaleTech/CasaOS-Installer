@@ -52,7 +52,6 @@ type BestURLFunc func(urls []string) string
 
 func BestByDelay(urls []string) string {
 	ch := make(chan string)
-	defer close(ch)
 
 	for _, url := range urls {
 		go func(url string) {

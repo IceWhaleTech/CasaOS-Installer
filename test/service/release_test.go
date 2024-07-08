@@ -180,6 +180,12 @@ func TestBestByDelay(t *testing.T) {
 		"https://baid2342341234123411231412u.com/weqteqrwerwerwr",
 	})
 	assert.Equal(t, "https://casaos.oss-cn-shanghai.aliyuncs.com/IceWhaleTech/zimaos-rauc/rauc.txt", url)
+
+	url = service.BestByDelay([]string{
+		"https://baidu.com/weqteqrwerwerwr",
+		"https://baid2342341234123411231412u.com/weqteqrwerwerwr",
+	})
+	assert.Equal(t, "", "")
 }
 
 // func TestIsUpgradable(t *testing.T) {
