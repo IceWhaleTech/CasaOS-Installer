@@ -1,4 +1,3 @@
 package service
 
-type InstallerServiceInterface interface {
-}
+type InstallerServiceInterface interface{}
