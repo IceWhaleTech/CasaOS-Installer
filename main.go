@@ -139,6 +139,7 @@ func main() {
 	go registerRouter(listener)
 	go registerMsg()
 
+	// should do before cron job to prevent stop by `installing` status
 	err = service.InstallerService.PostMigration(sysRoot)
 	if err != nil {
 		logger.Error("error when trying to post migration", zap.Error(err))
