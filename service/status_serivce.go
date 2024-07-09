@@ -228,11 +228,11 @@ func (r *StatusService) InstallInfo(release codegen.Release, sysRootPath string)
 }
 
 func (r *StatusService) PostMigration(sysRoot string) error {
-	r.UpdateStatusWithMessage(InstallBegin, "other")
+	r.UpdateStatusWithMessage(InstallBegin, types.OTHER)
 	err := r.ImplementService.PostMigration(sysRoot)
 	defer func() {
 		if err == nil {
-			r.UpdateStatusWithMessage(InstallEnd, "up-to-date")
+			r.UpdateStatusWithMessage(InstallEnd, types.UP_TO_DATE)
 		} else {
 			r.UpdateStatusWithMessage(InstallError, err.Error())
 		}
