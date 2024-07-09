@@ -14,22 +14,21 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func initEnv(t *testing.T) (string, context.Context, *service.RAUCOfflineService) {
-	logger.LogInitConsoleOnly()
-
-	tmpDir, err := os.MkdirTemp("", "casaos-rauc-offline-extract-test-*")
-	assert.NoError(t, err)
-
-	ctx := context.Background()
-	assert.NoError(t, err)
-	config.ServerInfo.CachePath = filepath.Join(tmpDir, "cache")
-
-	installerServer := &service.RAUCOfflineService{
+var (
+	tmpDir, _       = os.MkdirTemp("", "casaos-rauc-offline-extract-test-*")
+	installerServer = &service.RAUCOfflineService{
 		SysRoot:            tmpDir,
 		InstallRAUCHandler: service.MockInstallRAUC,
 		CheckSumHandler:    checksum.OfflineTarExistV2,
 		GetRAUCInfo:        service.MockRAUCInfo,
 	}
+	ctx = context.Background()
+)
+
+func setUp(t *testing.T) {
+	logger.LogInitConsoleOnly()
+
+	config.ServerInfo.CachePath = filepath.Join(tmpDir, "cache")
 
 	config.ServerInfo.CachePath = filepath.Join(tmpDir, "cache")
 	config.SysRoot = tmpDir
@@ -38,11 +37,11 @@ func initEnv(t *testing.T) (string, context.Context, *service.RAUCOfflineService
 
 	os.MkdirAll(filepath.Join(tmpDir, config.RAUC_OFFLINE_PATH), 0o755)
 	fixtures.SetOfflineRAUC(tmpDir, config.RAUC_OFFLINE_PATH, config.RAUC_OFFLINE_RAUC_FILENAME)
-	return tmpDir, ctx, installerServer
 }
 
 func TestRAUCOfflineServer(t *testing.T) {
-	tmpDir, ctx, installerServer := initEnv(t)
+	setUp(t)
+
 	// defer os.RemoveAll(tmpDir)
 	// 构建假文件放到目录
 	fixtures.SetOfflineRAUCMock_0504(tmpDir)
@@ -78,7 +77,7 @@ func TestRAUCOfflineServer(t *testing.T) {
 }
 
 func TestRAUCOfflineServerLoadReleaseFromCache(t *testing.T) {
-	tmpDir, ctx, installerServer := initEnv(t)
+	setUp(t)
 
 	fixtures.SetOfflineRAUCMock_0504(tmpDir)
 	fixtures.SetOfflineRAUCRelease_050(tmpDir)
@@ -92,7 +91,7 @@ func TestRAUCOfflineServerLoadReleaseFromCache(t *testing.T) {
 }
 
 func TestRAUCOfflineServerGetReleaseFail(t *testing.T) {
-	tmpDir, ctx, installerServer := initEnv(t)
+	setUp(t)
 
 	fixtures.SetOfflineRAUCMock_049(tmpDir)
 
