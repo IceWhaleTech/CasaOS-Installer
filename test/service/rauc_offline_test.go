@@ -14,33 +14,33 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var (
-	tmpDir, _       = os.MkdirTemp("", "casaos-rauc-offline-extract-test-*")
-	installerServer = &service.RAUCOfflineService{
-		SysRoot:            tmpDir,
-		InstallRAUCHandler: service.MockInstallRAUC,
-		CheckSumHandler:    checksum.OfflineTarExistV2,
-		GetRAUCInfo:        service.MockRAUCInfo,
-	}
-	ctx = context.Background()
-)
+var ctx = context.Background()
 
-func setUp(t *testing.T) {
+func setUp(t *testing.T) string {
 	logger.LogInitConsoleOnly()
 
-	config.ServerInfo.CachePath = filepath.Join(tmpDir, "cache")
+	tmpDir, _ := os.MkdirTemp("", "casaos-rauc-offline-extract-test-*")
 
 	config.ServerInfo.CachePath = filepath.Join(tmpDir, "cache")
+
 	config.SysRoot = tmpDir
 
 	config.RAUC_OFFLINE_RAUC_FILENAME = "rauc.raucb"
 
 	os.MkdirAll(filepath.Join(tmpDir, config.RAUC_OFFLINE_PATH), 0o755)
 	fixtures.SetOfflineRAUC(tmpDir, config.RAUC_OFFLINE_PATH, config.RAUC_OFFLINE_RAUC_FILENAME)
+	return tmpDir
 }
 
 func TestRAUCOfflineServer(t *testing.T) {
-	setUp(t)
+	tmpDir := setUp(t)
+
+	installerServer := &service.RAUCOfflineService{
+		SysRoot:            tmpDir,
+		InstallRAUCHandler: service.MockInstallRAUC,
+		CheckSumHandler:    checksum.OfflineTarExistV2,
+		GetRAUCInfo:        service.MockRAUCInfo,
+	}
 
 	// defer os.RemoveAll(tmpDir)
 	// 构建假文件放到目录
@@ -77,7 +77,14 @@ func TestRAUCOfflineServer(t *testing.T) {
 }
 
 func TestRAUCOfflineServerLoadReleaseFromCache(t *testing.T) {
-	setUp(t)
+	tmpDir := setUp(t)
+
+	installerServer := &service.RAUCOfflineService{
+		SysRoot:            tmpDir,
+		InstallRAUCHandler: service.MockInstallRAUC,
+		CheckSumHandler:    checksum.OfflineTarExistV2,
+		GetRAUCInfo:        service.MockRAUCInfo,
+	}
 
 	fixtures.SetOfflineRAUCMock_0504(tmpDir)
 	fixtures.SetOfflineRAUCRelease_050(tmpDir)
@@ -91,7 +98,14 @@ func TestRAUCOfflineServerLoadReleaseFromCache(t *testing.T) {
 }
 
 func TestRAUCOfflineServerGetReleaseFail(t *testing.T) {
-	setUp(t)
+	tmpDir := setUp(t)
+
+	installerServer := &service.RAUCOfflineService{
+		SysRoot:            tmpDir,
+		InstallRAUCHandler: service.MockInstallRAUC,
+		CheckSumHandler:    checksum.OfflineTarExistV2,
+		GetRAUCInfo:        service.MockRAUCInfo,
+	}
 
 	fixtures.SetOfflineRAUCMock_049(tmpDir)
 
