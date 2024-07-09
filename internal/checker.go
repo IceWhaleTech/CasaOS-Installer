@@ -31,7 +31,7 @@ func WriteReleaseToLocal(release *codegen.Release, releasePath string) error {
 	if release == localRelease {
 		return nil
 	}
-	os.MkdirAll(filepath.Dir(releasePath), 0755)
+	os.MkdirAll(filepath.Dir(releasePath), 0o755)
 	f, err := os.Create(releasePath)
 	if err != nil {
 		return err
@@ -50,6 +50,7 @@ func WriteReleaseToLocal(release *codegen.Release, releasePath string) error {
 	f.Write([]byte(releaseContent))
 	return nil
 }
+
 func GetReleaseFromLocal(releasePath string) (*codegen.Release, error) {
 	// open the yaml file
 	f, err := os.Open(releasePath)
@@ -90,7 +91,6 @@ func GetReleaseFrom(ctx context.Context, releaseURL string) (*codegen.Release, e
 
 	// parse release
 	var release codegen.Release
-
 	if err := yaml.Unmarshal(response.Body(), &release); err != nil {
 		return nil, err
 	}

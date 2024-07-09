@@ -14,15 +14,15 @@ import (
 func (a *api) GetNoticeInfo(c echo.Context) error {
 	ctx := c.Request().Context()
 	tag := service.GetReleaseBranch(config.SysRoot)
-	release, err := service.InstallerService.GetRelease(ctx, tag)
-	if release == nil {
-		return c.JSON(http.StatusInternalServerError, &codegen.ResponseInternalServerError{
-			Message: lo.ToPtr("release is fetching"),
-		})
-	}
+	release, err := service.InstallerService.GetRelease(ctx, tag, true)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, &codegen.ResponseInternalServerError{
 			Message: lo.ToPtr(err.Error()),
+		})
+	}
+	if release == nil {
+		return c.JSON(http.StatusInternalServerError, &codegen.ResponseInternalServerError{
+			Message: lo.ToPtr("release is fetching"),
 		})
 	}
 	_, packageStatus := service.InstallerService.GetStatus()

@@ -65,7 +65,6 @@ func TestGetNewRelease(t *testing.T) {
 	assert.Equal(t, "Super Man", *release.Code)
 	assert.NotNil(t, release.Background)
 	assert.Equal(t, "https://upload.wikimedia.org/wikipedia/commons/thumb/0/09/Central_Californian_Coastline%2C_Big_Sur_-_May_2013.jpg/1200px-Central_Californian_Coastline%2C_Big_Sur_-_May_2013.jpg", *release.Background)
-
 }
 
 func TestDownloadRauc(t *testing.T) {
@@ -181,6 +180,12 @@ func TestBestByDelay(t *testing.T) {
 		"https://baid2342341234123411231412u.com/weqteqrwerwerwr",
 	})
 	assert.Equal(t, "https://casaos.oss-cn-shanghai.aliyuncs.com/IceWhaleTech/zimaos-rauc/rauc.txt", url)
+
+	url = service.BestByDelay([]string{
+		"https://baidu.com/weqteqrwerwerwr",
+		"https://baid2342341234123411231412u.com/weqteqrwerwerwr",
+	})
+	assert.Equal(t, "", "")
 }
 
 // func TestIsUpgradable(t *testing.T) {

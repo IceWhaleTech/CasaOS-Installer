@@ -3,6 +3,8 @@ package service
 import (
 	"context"
 	"fmt"
+	"os"
+	"path/filepath"
 	"sync"
 
 	"github.com/IceWhaleTech/CasaOS-Common/utils/logger"
@@ -19,14 +21,12 @@ import (
 // 后面一个状态需要同步给前端和Message Bus，然后一个语法是ing、一个是done。我加了一个中间层来兼容两边。
 // 但是现在业务发生了变化，考虑是不需要重构这里减少复杂性。
 type StatusService struct {
-	ImplementService        UpdaterServiceInterface
-	EventTypeMapStatus      map[EventType]codegen.Status
-	EventTypeMapMessageType map[EventType]message_bus.EventType
-	release                 *codegen.Release
-	SysRoot                 string
-	status                  codegen.Status
-	message                 string
-	lock                    sync.RWMutex
+	ImplementService UpdaterServiceInterface
+	release          *codegen.Release
+	SysRoot          string
+	status           codegen.Status
+	message          string
+	lock             sync.RWMutex
 }
 
 const (
@@ -43,55 +43,32 @@ const (
 	InstallError EventType = "installError"
 )
 
-func (r *StatusService) InitEventTypeMapStatus() {
-	r.lock.Lock()
-	defer r.lock.Unlock()
-	r.EventTypeMapStatus = make(map[EventType]codegen.Status)
-	r.EventTypeMapMessageType = make(map[EventType]message_bus.EventType)
+var EventTypeMapStatus = map[EventType]codegen.Status{
+	DownloadBegin: {Status: codegen.Downloading},
+	DownloadEnd:   {Status: codegen.Idle},
+	DownloadError: {Status: codegen.Idle},
 
-	r.EventTypeMapStatus[DownloadBegin] = codegen.Status{
-		Status: codegen.Downloading,
-	}
-	r.EventTypeMapStatus[DownloadEnd] = codegen.Status{
-		Status: codegen.Idle,
-	}
-	r.EventTypeMapStatus[DownloadError] = codegen.Status{
-		Status: codegen.Idle,
-	}
+	FetchUpdateBegin: {Status: codegen.FetchUpdating},
+	FetchUpdateEnd:   {Status: codegen.Idle},
+	FetchUpdateError: {Status: codegen.Idle},
 
-	r.EventTypeMapStatus[FetchUpdateBegin] = codegen.Status{
-		Status: codegen.FetchUpdating,
-	}
-	r.EventTypeMapStatus[FetchUpdateEnd] = codegen.Status{
-		Status: codegen.Idle,
-	}
-	r.EventTypeMapStatus[FetchUpdateError] = codegen.Status{
-		Status: codegen.Idle,
-	}
+	InstallBegin: {Status: codegen.Installing},
+	InstallEnd:   {Status: codegen.Idle},
+	InstallError: {Status: codegen.InstallError},
+}
 
-	r.EventTypeMapStatus[InstallBegin] = codegen.Status{
-		Status: codegen.Installing,
-	}
-	r.EventTypeMapStatus[InstallEnd] = codegen.Status{
-		Status: codegen.Idle,
-	}
-	r.EventTypeMapStatus[InstallError] = codegen.Status{
-		Status: codegen.InstallError,
-	}
+var EventTypeMapMessageType = map[EventType]message_bus.EventType{
+	FetchUpdateBegin: common.EventTypeCheckUpdateBegin,
+	FetchUpdateEnd:   common.EventTypeCheckUpdateEnd,
+	FetchUpdateError: common.EventTypeCheckUpdateError,
 
-	r.EventTypeMapMessageType[FetchUpdateBegin] = common.EventTypeCheckUpdateBegin
-	r.EventTypeMapMessageType[FetchUpdateEnd] = common.EventTypeCheckUpdateEnd
-	r.EventTypeMapMessageType[FetchUpdateError] = common.EventTypeCheckUpdateError
+	DownloadBegin: common.EventTypeDownloadUpdateBegin,
+	DownloadEnd:   common.EventTypeDownloadUpdateEnd,
+	DownloadError: common.EventTypeDownloadUpdateError,
 
-	r.EventTypeMapMessageType[DownloadBegin] = common.EventTypeDownloadUpdateBegin
-	r.EventTypeMapMessageType[DownloadEnd] = common.EventTypeDownloadUpdateEnd
-	r.EventTypeMapMessageType[DownloadError] = common.EventTypeDownloadUpdateError
-
-	r.EventTypeMapMessageType[InstallBegin] = common.EventTypeInstallUpdateBegin
-	r.EventTypeMapMessageType[InstallEnd] = common.EventTypeInstallUpdateEnd
-	r.EventTypeMapMessageType[InstallError] = common.EventTypeInstallUpdateError
-
-	logger.Info("status init success")
+	InstallBegin: common.EventTypeInstallUpdateBegin,
+	InstallEnd:   common.EventTypeInstallUpdateEnd,
+	InstallError: common.EventTypeInstallUpdateError,
 }
 
 func NewStatusService(implementService UpdaterServiceInterface, sysRoot string) *StatusService {
@@ -99,10 +76,10 @@ func NewStatusService(implementService UpdaterServiceInterface, sysRoot string) 
 		ImplementService: implementService,
 		SysRoot:          sysRoot,
 	}
-	statusService.InitEventTypeMapStatus()
 	statusService.status = codegen.Status{
 		Status: codegen.Idle,
 	}
+	statusService.release, _ = implementService.GetRelease(context.Background(), GetReleaseBranch(sysRoot), true)
 	return statusService
 }
 
@@ -117,23 +94,23 @@ func (r *StatusService) UpdateStatusWithMessage(eventType EventType, eventMessag
 	defer r.lock.Unlock()
 	switch eventType {
 	case DownloadBegin:
-		r.status = r.EventTypeMapStatus[DownloadBegin]
+		r.status = EventTypeMapStatus[DownloadBegin]
 	case DownloadEnd:
-		r.status = r.EventTypeMapStatus[DownloadEnd]
+		r.status = EventTypeMapStatus[DownloadEnd]
 	case DownloadError:
-		r.status = r.EventTypeMapStatus[DownloadError]
+		r.status = EventTypeMapStatus[DownloadError]
 	case FetchUpdateBegin:
-		r.status = r.EventTypeMapStatus[FetchUpdateBegin]
+		r.status = EventTypeMapStatus[FetchUpdateBegin]
 	case FetchUpdateEnd:
-		r.status = r.EventTypeMapStatus[FetchUpdateEnd]
+		r.status = EventTypeMapStatus[FetchUpdateEnd]
 	case FetchUpdateError:
-		r.status = r.EventTypeMapStatus[FetchUpdateError]
+		r.status = EventTypeMapStatus[FetchUpdateError]
 	case InstallBegin:
-		r.status = r.EventTypeMapStatus[InstallBegin]
+		r.status = EventTypeMapStatus[InstallBegin]
 	case InstallEnd:
-		r.status = r.EventTypeMapStatus[InstallEnd]
+		r.status = EventTypeMapStatus[InstallEnd]
 	case InstallError:
-		r.status = r.EventTypeMapStatus[InstallError]
+		r.status = EventTypeMapStatus[InstallError]
 	default:
 		r.status = codegen.Status{
 			Status: codegen.Idle,
@@ -144,7 +121,7 @@ func (r *StatusService) UpdateStatusWithMessage(eventType EventType, eventMessag
 
 	ctx := context.Background()
 
-	event := r.EventTypeMapMessageType[eventType]
+	event := EventTypeMapMessageType[eventType]
 
 	go PublishEventWrapper(ctx, event, map[string]string{
 		common.PropertyTypeMessage.Name: eventMessage,
@@ -162,10 +139,9 @@ func (r *StatusService) Install(release codegen.Release, sysRoot string) error {
 	return err
 }
 
-func (r *StatusService) GetRelease(ctx context.Context, tag string) (*codegen.Release, error) {
-	// TODO: cache release in disk
+func (r *StatusService) GetRelease(ctx context.Context, tag string, useCache bool) (*codegen.Release, error) {
 	if r.release == nil {
-		release, err := r.ImplementService.GetRelease(ctx, tag)
+		release, err := r.ImplementService.GetRelease(ctx, tag, true)
 		if err != nil {
 			return nil, err
 		}
@@ -176,8 +152,8 @@ func (r *StatusService) GetRelease(ctx context.Context, tag string) (*codegen.Re
 
 func (r *StatusService) Launch(sysRoot string) error {
 	// 事实上已经没有migration了，但是为了兼容性， 先留着
-	r.UpdateStatusWithMessage(InstallBegin, "migration")
-	defer r.UpdateStatusWithMessage(InstallBegin, "other")
+	r.UpdateStatusWithMessage(InstallBegin, types.MIGRATION)
+	defer r.UpdateStatusWithMessage(InstallBegin, types.OTHER)
 	return nil
 }
 
@@ -252,11 +228,11 @@ func (r *StatusService) InstallInfo(release codegen.Release, sysRootPath string)
 }
 
 func (r *StatusService) PostMigration(sysRoot string) error {
-	r.UpdateStatusWithMessage(InstallBegin, "other")
+	r.UpdateStatusWithMessage(InstallBegin, types.OTHER)
 	err := r.ImplementService.PostMigration(sysRoot)
 	defer func() {
 		if err == nil {
-			r.UpdateStatusWithMessage(InstallEnd, "up-to-date")
+			r.UpdateStatusWithMessage(InstallEnd, types.UP_TO_DATE)
 		} else {
 			r.UpdateStatusWithMessage(InstallError, err.Error())
 		}
@@ -271,17 +247,19 @@ func (r *StatusService) Cronjob(ctx context.Context, sysRoot string) error {
 
 	status, _ := r.GetStatus()
 	if status.Status == codegen.Downloading {
+		logger.Info("downloading, skip")
 		return nil
 	}
 
 	if status.Status == codegen.Installing {
+		logger.Info("installing, skip")
 		return nil
 	}
 
 	r.UpdateStatusWithMessage(FetchUpdateBegin, types.FETCHING)
 	logger.Info("start to fetch online release ", zap.Any("array", config.ServerInfo.Mirrors))
 
-	release, err := r.ImplementService.GetRelease(ctx, GetReleaseBranch(sysRoot))
+	release, err := r.ImplementService.GetRelease(ctx, GetReleaseBranch(sysRoot), false)
 	if err != nil {
 		r.UpdateStatusWithMessage(FetchUpdateError, err.Error())
 		logger.Error("error when trying to get release", zap.Error(err))
@@ -301,10 +279,12 @@ func (r *StatusService) Cronjob(ctx context.Context, sysRoot string) error {
 	// cache release packages if not already cached
 	shouldUpgrade := r.ShouldUpgrade(*release, sysRoot)
 
+	releaseFilePath := ""
+
 	if shouldUpgrade {
 		r.UpdateStatusWithMessage(FetchUpdateEnd, types.OUT_OF_DATE)
 
-		releaseFilePath, err := r.DownloadRelease(ctx, *release, true)
+		releaseFilePath, err = r.DownloadRelease(ctx, *release, true)
 		logger.Info("download release rauc update package success")
 
 		if err != nil {
@@ -315,9 +295,22 @@ func (r *StatusService) Cronjob(ctx context.Context, sysRoot string) error {
 			r.UpdateStatusWithMessage(DownloadEnd, types.READY_TO_UPDATE)
 		}
 	} else {
+		releaseFilePath, err = r.InstallInfo(*release, sysRoot)
+		if err != nil {
+			logger.Error("error when trying to get install info", zap.Error(err))
+		}
+
 		logger.Info("system is up to date")
 		r.UpdateStatusWithMessage(FetchUpdateEnd, types.UP_TO_DATE)
 	}
 
+	// set symbol link
+	releaseDir := filepath.Dir(releaseFilePath)
+	latestReleaseDir := filepath.Join(filepath.Dir(releaseDir), "latest")
+
+	os.Remove(latestReleaseDir)
+	err = os.Symlink(releaseDir, latestReleaseDir)
+
+	logger.Info("create latest symlink ok", zap.Error(err), zap.Any("releaseDir", releaseDir), zap.Any("latestReleaseDir", latestReleaseDir))
 	return nil
 }

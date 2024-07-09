@@ -14,16 +14,26 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestRAUCOfflineServer(t *testing.T) {
+var ctx = context.Background()
+
+func setUp(t *testing.T) string {
 	logger.LogInitConsoleOnly()
 
-	tmpDir, err := os.MkdirTemp("", "casaos-rauc-offline-extract-test-*")
-	assert.NoError(t, err)
-	// defer os.RemoveAll(tmpDir)
+	tmpDir, _ := os.MkdirTemp("", "casaos-rauc-offline-extract-test-*")
 
-	ctx := context.Background()
-	assert.NoError(t, err)
 	config.ServerInfo.CachePath = filepath.Join(tmpDir, "cache")
+
+	config.SysRoot = tmpDir
+
+	config.RAUC_OFFLINE_RAUC_FILENAME = "rauc.raucb"
+
+	os.MkdirAll(filepath.Join(tmpDir, config.RAUC_OFFLINE_PATH), 0o755)
+	fixtures.SetOfflineRAUC(tmpDir, config.RAUC_OFFLINE_PATH, config.RAUC_OFFLINE_RAUC_FILENAME)
+	return tmpDir
+}
+
+func TestRAUCOfflineServer(t *testing.T) {
+	tmpDir := setUp(t)
 
 	installerServer := &service.RAUCOfflineService{
 		SysRoot:            tmpDir,
@@ -32,18 +42,11 @@ func TestRAUCOfflineServer(t *testing.T) {
 		GetRAUCInfo:        service.MockRAUCInfo,
 	}
 
-	config.ServerInfo.CachePath = filepath.Join(tmpDir, "cache")
-	config.SysRoot = tmpDir
-
+	// defer os.RemoveAll(tmpDir)
 	// 构建假文件放到目录
-
-	config.RAUC_OFFLINE_RAUC_FILENAME = "rauc.raucb"
-
-	os.MkdirAll(filepath.Join(tmpDir, config.RAUC_OFFLINE_PATH), 0755)
-	fixtures.SetOfflineRAUC(tmpDir, config.RAUC_OFFLINE_PATH, config.RAUC_OFFLINE_RAUC_FILENAME)
 	fixtures.SetOfflineRAUCMock_0504(tmpDir)
 
-	release, err := installerServer.GetRelease(ctx, "any thing")
+	release, err := installerServer.GetRelease(ctx, "any thing", true)
 	assert.NoError(t, err)
 
 	assert.Equal(t, "v0.5.0.4", release.Version)
@@ -74,15 +77,7 @@ func TestRAUCOfflineServer(t *testing.T) {
 }
 
 func TestRAUCOfflineServerLoadReleaseFromCache(t *testing.T) {
-	logger.LogInitConsoleOnly()
-
-	tmpDir, err := os.MkdirTemp("", "casaos-rauc-offline-extract-test-*")
-	assert.NoError(t, err)
-	// defer os.RemoveAll(tmpDir)
-
-	ctx := context.Background()
-	assert.NoError(t, err)
-	config.ServerInfo.CachePath = filepath.Join(tmpDir, "cache")
+	tmpDir := setUp(t)
 
 	installerServer := &service.RAUCOfflineService{
 		SysRoot:            tmpDir,
@@ -91,20 +86,11 @@ func TestRAUCOfflineServerLoadReleaseFromCache(t *testing.T) {
 		GetRAUCInfo:        service.MockRAUCInfo,
 	}
 
-	config.ServerInfo.CachePath = filepath.Join(tmpDir, "cache")
-	config.SysRoot = tmpDir
-
-	// 构建假文件放到目录
-
-	config.RAUC_OFFLINE_RAUC_FILENAME = "rauc.raucb"
-
-	os.MkdirAll(filepath.Join(tmpDir, config.RAUC_OFFLINE_PATH), 0755)
-	fixtures.SetOfflineRAUC(tmpDir, config.RAUC_OFFLINE_PATH, config.RAUC_OFFLINE_RAUC_FILENAME)
 	fixtures.SetOfflineRAUCMock_0504(tmpDir)
 	fixtures.SetOfflineRAUCRelease_050(tmpDir)
 	assert.FileExists(t, filepath.Join(tmpDir, config.RAUC_OFFLINE_PATH, config.RAUC_OFFLINE_RAUC_FILENAME))
 
-	release, err := installerServer.GetRelease(ctx, "any thing")
+	release, err := installerServer.GetRelease(ctx, "any thing", true)
 	assert.NoError(t, err)
 
 	assert.Equal(t, "v0.5.0", release.Version)
@@ -112,15 +98,7 @@ func TestRAUCOfflineServerLoadReleaseFromCache(t *testing.T) {
 }
 
 func TestRAUCOfflineServerGetReleaseFail(t *testing.T) {
-	logger.LogInitConsoleOnly()
-
-	tmpDir, err := os.MkdirTemp("", "casaos-rauc-offline-extract-test-*")
-	assert.NoError(t, err)
-	// defer os.RemoveAll(tmpDir)
-
-	ctx := context.Background()
-	assert.NoError(t, err)
-	config.ServerInfo.CachePath = filepath.Join(tmpDir, "cache")
+	tmpDir := setUp(t)
 
 	installerServer := &service.RAUCOfflineService{
 		SysRoot:            tmpDir,
@@ -129,17 +107,8 @@ func TestRAUCOfflineServerGetReleaseFail(t *testing.T) {
 		GetRAUCInfo:        service.MockRAUCInfo,
 	}
 
-	config.ServerInfo.CachePath = filepath.Join(tmpDir, "cache")
-	config.SysRoot = tmpDir
-
-	// 构建假文件放到目录
-
-	config.RAUC_OFFLINE_RAUC_FILENAME = "rauc.raucb"
-
-	os.MkdirAll(filepath.Join(tmpDir, config.RAUC_OFFLINE_PATH), 0755)
-	fixtures.SetOfflineRAUC(tmpDir, config.RAUC_OFFLINE_PATH, config.RAUC_OFFLINE_RAUC_FILENAME)
 	fixtures.SetOfflineRAUCMock_049(tmpDir)
 
-	_, err = installerServer.GetRelease(ctx, "any thing")
+	_, err := installerServer.GetRelease(ctx, "any thing", true)
 	assert.ErrorContains(t, err, "illegal base64 data")
 }

@@ -22,10 +22,7 @@ import (
 	"github.com/samber/lo"
 )
 
-var (
-	lastRelease        *codegen.Release
-	ErrReleaseNotFound = fmt.Errorf("release not found")
-)
+var ErrReleaseNotFound = fmt.Errorf("release not found")
 
 var CurrentReleaseLocalPath = "/etc/release.yaml"
 
@@ -55,6 +52,7 @@ type BestURLFunc func(urls []string) string
 
 func BestByDelay(urls []string) string {
 	ch := make(chan string)
+
 	for _, url := range urls {
 		go func(url string) {
 			client := &http.Client{
@@ -62,15 +60,22 @@ func BestByDelay(urls []string) string {
 			}
 			resp, err := client.Head(url)
 			if err != nil || resp.StatusCode != http.StatusOK {
+				ch <- "" // Send an empty string to indicate failure
 				return
 			}
 			ch <- url
 		}(url)
 	}
 
-	first := <-ch
-	config.ServerInfo.BestURL = first
-	return first
+	// Wait for the first successful response or all goroutines to finish
+	for range urls {
+		if ret := <-ch; ret != "" {
+			config.ServerInfo.BestURL = ret
+			return ret
+		}
+	}
+
+	return "" // Return an empty string if no successful response is received
 }
 
 func FetchRelease(ctx context.Context, tag string, constructReleaseFileURLFunc ConstructReleaseFileURLFunc) (*codegen.Release, error) {
@@ -84,7 +89,6 @@ func FetchRelease(ctx context.Context, tag string, constructReleaseFileURLFunc C
 		url = best(releaseURL)
 	}
 	logger.Info("fetching release", zap.String("tag", tag), zap.String("url", url))
-	var release *codegen.Release
 	release, err := internal.GetReleaseFrom(ctx, url)
 	if err != nil {
 		logger.Error("failed to get release information from url", zap.String("url", url), zap.Error(err))
@@ -94,22 +98,16 @@ func FetchRelease(ctx context.Context, tag string, constructReleaseFileURLFunc C
 }
 
 func GetRelease(ctx context.Context, tag string) (*codegen.Release, error) {
-	var release *codegen.Release
 	var mirror string
 
 	releaseURL := GitHubBranchTagReleaseURL(tag, mirror)
 
 	logger.Info("trying to get release information from url", zap.String("url", releaseURL))
 
-	_release, err := internal.GetReleaseFrom(ctx, releaseURL)
+	release, err := internal.GetReleaseFrom(ctx, releaseURL)
 	if err != nil {
 		logger.Info("error while getting release information - skipping", zap.Error(err), zap.String("url", releaseURL))
-	}
-
-	release = _release
-
-	if release == nil {
-		release = lastRelease
+		return nil, err
 	}
 
 	if release == nil {
@@ -173,7 +171,6 @@ func DownloadRelease(ctx context.Context, release codegen.Release, force bool) (
 	}
 
 	releaseFilePath := filepath.Join(releaseDir, common.ReleaseYAMLFileName)
-
 	return releaseFilePath, os.WriteFile(releaseFilePath, buf, 0o600)
 }
 
@@ -220,21 +217,19 @@ func CheckOfflineRAUCExist(sysRoot string) bool {
 	files := internal.GetAllFile(filepath.Join(sysRoot, config.RAUC_OFFLINE_PATH))
 
 	// only allow one tar file
-	raucb_files := lo.FilterMap(files, func(filename string, _ int) (string, bool) {
+	raucbFiles := lo.FilterMap(files, func(filename string, _ int) (string, bool) {
 		if strings.HasSuffix(filename, ".raucb") {
 			return filename, true
 		}
 		return "", false
 	})
 
-	if len(raucb_files) >= 1 {
-		file_name := raucb_files[0]
-		if strings.HasSuffix(file_name, ".raucb") {
-			config.RAUC_OFFLINE_RAUC_FILENAME = file_name
+	if len(raucbFiles) >= 1 {
+		fileName := raucbFiles[0]
+		if strings.HasSuffix(fileName, ".raucb") {
+			config.RAUC_OFFLINE_RAUC_FILENAME = fileName
 			return true
 		}
-	} else {
-		return false
 	}
 	return false
 }
@@ -249,9 +244,8 @@ func GetInstallMethod(sysRoot string) (InstallerType, error) {
 		// to check file exist
 		if !CheckOfflineRAUCExist(sysRoot) {
 			return RAUC, nil
-		} else {
-			return RAUCOFFLINE, nil
 		}
+		return RAUCOFFLINE, nil
 	}
 	if IsCasaOS(sysRoot) {
 		return TAR, nil

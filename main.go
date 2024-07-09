@@ -139,6 +139,12 @@ func main() {
 	go registerRouter(listener)
 	go registerMsg()
 
+	// should do before cron job to prevent stop by `installing` status
+	err = service.InstallerService.PostMigration(sysRoot)
+	if err != nil {
+		logger.Error("error when trying to post migration", zap.Error(err))
+	}
+
 	{
 		// TODO 考虑重构程序的架构
 		// 在最早，程序是 Event-Drive 的(不是我写的)。所有的数据请求都是在前端请求之后进行立刻获取的
@@ -156,11 +162,6 @@ func main() {
 
 		crontab.Start()
 		defer crontab.Stop()
-	}
-
-	err = service.InstallerService.PostMigration(sysRoot)
-	if err != nil {
-		logger.Error("error when trying to post migration", zap.Error(err))
 	}
 
 	s := &http.Server{

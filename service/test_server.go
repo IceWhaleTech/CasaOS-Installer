@@ -9,8 +9,10 @@ import (
 	"github.com/IceWhaleTech/CasaOS-Installer/codegen"
 )
 
-var Test_server_count_lock sync.RWMutex = sync.RWMutex{}
-var ShouldUpgradeCount int = 0
+var (
+	Test_server_count_lock sync.RWMutex = sync.RWMutex{}
+	ShouldUpgradeCount     int          = 0
+)
 
 const (
 	DownloadCostTime   = 2 * time.Second
@@ -35,7 +37,7 @@ func (r *TestService) Install(release codegen.Release, sysRoot string) error {
 	return r.InstallRAUCHandler("")
 }
 
-func (r *TestService) GetRelease(ctx context.Context, tag string) (*codegen.Release, error) {
+func (r *TestService) GetRelease(ctx context.Context, tag string, useCache bool) (*codegen.Release, error) {
 	time.Sleep(GetReleaseCostTime)
 	r.DownloadStatusLock.Lock()
 	r.downloaded = false

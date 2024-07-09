@@ -151,7 +151,7 @@ func Test_Status_Case3_Install_Success(t *testing.T) {
 	assert.Equal(t, codegen.Idle, value.Status)
 	assert.Equal(t, types.READY_TO_UPDATE, msg)
 
-	release, err := statusService.GetRelease(ctx, "latest")
+	release, err := statusService.GetRelease(ctx, "latest", false)
 	assert.NoError(t, err)
 	go statusService.Install(*release, sysRoot)
 
@@ -209,7 +209,7 @@ func Test_GetRelease_When_Without_Cron(t *testing.T) {
 
 	ctx := context.Background()
 
-	release, err := statusService.GetRelease(ctx, "latest")
+	release, err := statusService.GetRelease(ctx, "latest", false)
 	assert.Nil(t, err)
 	assert.NotNil(t, release)
 }

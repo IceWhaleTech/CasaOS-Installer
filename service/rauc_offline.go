@@ -63,16 +63,15 @@ func (r *RAUCOfflineService) LoadReleaseFromRAUC(sysRoot string) (*codegen.Relea
 	return release, err
 }
 
-func (r *RAUCOfflineService) GetRelease(ctx context.Context, tag string) (*codegen.Release, error) {
-	cachePath := filepath.Join(r.SysRoot, config.OFFLINE_RAUC_TEMP_PATH, config.RAUC_OFFLINE_RELEASE_FILENAME)
-	_, err := os.Stat(cachePath)
-
-	if os.IsNotExist(err) {
-		release, err := r.LoadReleaseFromRAUC(r.SysRoot)
-		return release, err
-	} else {
-		return internal.GetReleaseFromLocal(cachePath)
+func (r *RAUCOfflineService) GetRelease(ctx context.Context, tag string, useCache bool) (*codegen.Release, error) {
+	if useCache {
+		cachePath := filepath.Join(r.SysRoot, config.OFFLINE_RAUC_TEMP_PATH, config.RAUC_OFFLINE_RELEASE_FILENAME)
+		if release, err := internal.GetReleaseFromLocal(cachePath); err == nil {
+			return release, nil
+		}
 	}
+	release, err := r.LoadReleaseFromRAUC(r.SysRoot)
+	return release, err
 }
 
 func (r *RAUCOfflineService) Launch(sysRoot string) error {
@@ -111,8 +110,8 @@ func (r *RAUCOfflineService) PostInstall(release codegen.Release, sysRoot string
 func (r *RAUCOfflineService) ShouldUpgrade(release codegen.Release, sysRoot string) bool {
 	return ShouldUpgrade(release, sysRoot)
 }
-func (r *RAUCOfflineService) IsUpgradable(release codegen.Release, sysRootPath string) bool {
 
+func (r *RAUCOfflineService) IsUpgradable(release codegen.Release, sysRootPath string) bool {
 	if !r.ShouldUpgrade(release, sysRootPath) {
 		return false
 	}
