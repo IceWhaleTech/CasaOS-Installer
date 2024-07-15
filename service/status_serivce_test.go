@@ -20,6 +20,7 @@ import (
 // 测试项目说明
 // 这里是状态测试，功能代码是mock。只测试状态是否正确
 func Test_Status_Case1_NotUpdate(t *testing.T) {
+	t.Parallel()
 	// 测试说明: 成功下载测试
 
 	// 本地版本 新版本
@@ -57,6 +58,8 @@ func Test_Status_Case1_NotUpdate(t *testing.T) {
 }
 
 func Test_Status_Case1_Download_Success(t *testing.T) {
+	t.Parallel()
+
 	// 测试说明: 成功下载测试
 	// 成之后，状态应该是ready-to-update
 
@@ -95,6 +98,8 @@ func Test_Status_Case1_Download_Success(t *testing.T) {
 }
 
 func Test_Status_Case2_Download_Failed(t *testing.T) {
+	t.Parallel()
+
 	// 测试说明: 测试下载失败,下载之后无法通过checksum
 	// 本地版本 老版本
 	// 线上版本 新版本
@@ -125,6 +130,8 @@ func Test_Status_Case2_Download_Failed(t *testing.T) {
 }
 
 func Test_Status_Case3_Install_Success(t *testing.T) {
+	t.Parallel()
+
 	// 测试说明: 测试在下载成功后，安装成功
 	// 本地版本 老版本
 	// 线上版本 新版本
@@ -162,6 +169,8 @@ func Test_Status_Case3_Install_Success(t *testing.T) {
 }
 
 func Test_Status_Case4_Install_Fail(t *testing.T) {
+	t.Parallel()
+
 	// 测试说明: 测试下载成功、安装时失败
 	// 本地版本 老版本
 	// 线上版本 新版本
@@ -194,6 +203,8 @@ func Test_Status_Case4_Install_Fail(t *testing.T) {
 }
 
 func Test_GetRelease_When_Without_Cron(t *testing.T) {
+	t.Parallel()
+
 	// 测试说明: 测试下载成功、安装时失败
 
 	logger.LogInitConsoleOnly()

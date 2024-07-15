@@ -15,6 +15,8 @@ import (
 )
 
 func TestNormalizationVersion(t *testing.T) {
+	t.Parallel()
+
 	assert.Equal(t, "v0.4.2-1", service.NormalizeVersion("v0.4.2-1"))
 	assert.Equal(t, "v0.4.2-1", service.NormalizeVersion("v0.4.2.1"))
 	assert.Equal(t, "v0.4.2", service.NormalizeVersion("v0.4.2"))
@@ -22,10 +24,10 @@ func TestNormalizationVersion(t *testing.T) {
 	assert.Equal(t, "v0.4.2-1", service.NormalizationVersion("v0.4.2-1"))
 	assert.Equal(t, "v0.4.2-1", service.NormalizationVersion("v0.4.2.1"))
 	assert.Equal(t, "v0.4.2", service.NormalizationVersion("v0.4.2"))
-
 }
 
 func TestIsUpgradableInSpecifyVersion(t *testing.T) {
+	t.Parallel()
 
 	logger.LogInitConsoleOnly()
 

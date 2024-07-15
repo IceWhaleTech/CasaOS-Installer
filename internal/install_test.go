@@ -17,6 +17,8 @@ import (
 )
 
 func TestGetPackageURLByCurrentArch(t *testing.T) {
+	t.Parallel()
+
 	defer goleak.VerifyNone(t, goleak.IgnoreTopFunction("go.opencensus.io/stats/view.(*worker).start")) // https://github.com/census-instrumentation/opencensus-go/issues/1191
 
 	var release codegen.Release
@@ -32,6 +34,8 @@ func TestGetPackageURLByCurrentArch(t *testing.T) {
 }
 
 func TestDownload(t *testing.T) {
+	t.Parallel()
+
 	defer goleak.VerifyNone(t, goleak.IgnoreTopFunction("go.opencensus.io/stats/view.(*worker).start")) //
 
 	logger.LogInitConsoleOnly()
@@ -83,6 +87,8 @@ func TestDownload(t *testing.T) {
 // }
 
 func TestInstallRelease(t *testing.T) {
+	t.Parallel()
+
 	defer goleak.VerifyNone(t, goleak.IgnoreTopFunction("go.opencensus.io/stats/view.(*worker).start"))
 
 	logger.LogInitConsoleOnly()
@@ -126,6 +132,8 @@ func TestInstallRelease(t *testing.T) {
 
 // NOTE: the test require sudo permission
 func TestInstallDocker(t *testing.T) {
+	t.Parallel()
+
 	// if environment have non-root permission, skip test
 	if os.Geteuid() != 0 {
 		t.Skip("skipping test in no-root environment")

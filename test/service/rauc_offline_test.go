@@ -17,6 +17,8 @@ import (
 var ctx = context.Background()
 
 func setUp(t *testing.T) string {
+	t.Parallel()
+
 	logger.LogInitConsoleOnly()
 
 	tmpDir, _ := os.MkdirTemp("", "casaos-rauc-offline-extract-test-*")

@@ -15,6 +15,8 @@ import (
 )
 
 func TestRAUCServer(t *testing.T) {
+	t.Parallel()
+
 	logger.LogInitConsoleOnly()
 
 	tmpDir, err := os.MkdirTemp("", "casaos-rauc-download-extract-test-*")

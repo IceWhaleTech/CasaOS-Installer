@@ -13,6 +13,8 @@ import (
 )
 
 func TestNormalizeVersion(t *testing.T) {
+	t.Parallel()
+
 	version := service.NormalizeVersion(common.LegacyWithoutVersion)
 	assert.Equal(t, "v0.0.0-legacy-without-version", version)
 	_, err := semver.NewVersion(version)
@@ -54,6 +56,8 @@ func TestNormalizeVersion(t *testing.T) {
 }
 
 func TestVerifyChecksum(t *testing.T) {
+	t.Parallel()
+
 	// Create a temp file
 	tmpfile, err := os.CreateTemp("", "example")
 	if err != nil {

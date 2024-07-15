@@ -9,6 +9,8 @@ import (
 )
 
 func TestReleaseCompare(t *testing.T) {
+	t.Parallel()
+
 	target, err := semver.NewVersion(service.NormalizeVersion("0.4.8"))
 	assert.NoError(t, err)
 	assert.Equal(t, "0.4.8", target.String())

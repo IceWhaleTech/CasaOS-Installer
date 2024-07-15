@@ -9,6 +9,8 @@ import (
 )
 
 func TestGetChecksum(t *testing.T) {
+	t.Parallel()
+
 	// Create a temporary file.
 	tmpfile, err := os.CreateTemp("", "example")
 	if err != nil {

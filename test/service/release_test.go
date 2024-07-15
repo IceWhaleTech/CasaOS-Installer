@@ -14,6 +14,8 @@ import (
 )
 
 func TestGetOldRelease(t *testing.T) {
+	t.Parallel()
+
 	logger.LogInitConsoleOnly()
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -40,6 +42,8 @@ func TestGetOldRelease(t *testing.T) {
 }
 
 func TestGetNewRelease(t *testing.T) {
+	t.Parallel()
+
 	logger.LogInitConsoleOnly()
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -68,6 +72,8 @@ func TestGetNewRelease(t *testing.T) {
 }
 
 func TestDownloadRauc(t *testing.T) {
+	t.Parallel()
+
 	logger.LogInitConsoleOnly()
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -156,6 +162,8 @@ func TestDownloadRauc(t *testing.T) {
 // }
 
 func TestDownloadRelease(t *testing.T) {
+	t.Parallel()
+
 	logger.LogInitConsoleOnly()
 
 	tmpDir, err := os.MkdirTemp("", "casaos-download-test-*")
@@ -173,6 +181,8 @@ func TestDownloadRelease(t *testing.T) {
 }
 
 func TestBestByDelay(t *testing.T) {
+	t.Parallel()
+
 	url := service.BestByDelay([]string{
 		"https://casaos.oss-cn-shanghai.aliyuncs.com/IceWhaleTech/zimaos-rauc/rauc.txt",
 		"https://raw.githubusercontent.com/IceWhaleTech/zimaos-rauc/main/rau242342c",
@@ -246,6 +256,8 @@ func TestBestByDelay(t *testing.T) {
 // }
 
 func TestDeviceModelDiscover(t *testing.T) {
+	t.Parallel()
+
 	logger.LogInitConsoleOnly()
 
 	tmpDir, err := os.MkdirTemp("", "casaos-device-test-*")
