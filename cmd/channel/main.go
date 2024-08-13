@@ -14,8 +14,9 @@ func main() {
 	args := os.Args
 
 	if len(args) < 2 {
-		fmt.Println("Please provide a command.")
-		os.Exit(1)
+		fmt.Println("unknow options")
+		Help()
+		os.Exit(0)
 	}
 
 	switch args[1] {
@@ -29,10 +30,20 @@ func main() {
 		TestChannel()
 	case "disable":
 		DisableChannel()
+	case "-h":
+		Help()
 	default:
-		fmt.Println("unknow channel.")
-		os.Exit(1)
+		fmt.Println("unknow options")
+		Help()
 	}
+}
+
+func Help() {
+	fmt.Println("Usage: channel <command>")
+	fmt.Println("Commands:")
+	fmt.Println("  public     Set channel to public test")
+	fmt.Println("  stable     Set channel to stable")
+	fmt.Println("  -h         Show help")
 }
 
 func Save() {
