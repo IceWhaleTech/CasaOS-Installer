@@ -213,3 +213,7 @@ func Test_GetRelease_When_Without_Cron(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, release)
 }
+
+func TestCleanUpOldRelease(t *testing.T) {
+	logger.LogInitConsoleOnly()
+}

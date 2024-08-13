@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"sync"
 
 	"github.com/IceWhaleTech/CasaOS-Common/utils/logger"
@@ -70,6 +71,8 @@ var EventTypeMapMessageType = map[EventType]message_bus.EventType{
 	InstallEnd:   common.EventTypeInstallUpdateEnd,
 	InstallError: common.EventTypeInstallUpdateError,
 }
+
+var versionRegexp = regexp.MustCompile(`^v(\d)+\.(\d)+.(\d)+(-(alpha|beta)(\d))?$`)
 
 func NewStatusService(implementService UpdaterServiceInterface, sysRoot string) *StatusService {
 	statusService := &StatusService{
@@ -240,6 +243,52 @@ func (r *StatusService) PostMigration(sysRoot string) error {
 	return err
 }
 
+func (r *StatusService) CleanUpOldRelease(sysRoot, releaseDir string) error {
+	currentVersion, err := CurrentReleaseVersion(sysRoot)
+	if err != nil {
+		logger.Error("error when trying to get current release version", zap.Error(err))
+		return err
+	}
+	logger.Info("current version", zap.String("currentVersion", currentVersion.String()))
+
+	dirs, err := filepath.Glob(filepath.Join(releaseDir, "*"))
+	if err != nil {
+		logger.Error("error when trying to get all dirs in release", zap.Error(err))
+		return err
+	}
+	if len(dirs) < 2 {
+		logger.Info("no old release to clean up")
+		return nil
+	}
+
+	for _, dir := range dirs {
+		logger.Info("check dir", zap.String("dir", dir))
+		if versionRegexp.MatchString(filepath.Base(dir)) {
+			whiteList := []string{
+				"zimaos_zimacube-" + dir + ".raucb",
+				"checksums.txt",
+				"release.yaml",
+			}
+
+			if filepath.Base(dir) == currentVersion.String() {
+				if r.ShouldUpgrade(*r.release, sysRoot) {
+					continue
+				}
+
+				if err := internal.CleanDirWithWhiteList(dir, whiteList); err != nil {
+					logger.Error("error when trying to clean dir with white list", zap.Error(err))
+				}
+			} else {
+				if err := internal.CleanDirWithWhiteList(dir, whiteList); err != nil {
+					logger.Error("error when trying to clean dir with white list", zap.Error(err))
+				}
+			}
+		}
+	}
+
+	return nil
+}
+
 func (r *StatusService) Cronjob(ctx context.Context, sysRoot string) error {
 	logger.Info("start a check update job")
 
@@ -312,5 +361,10 @@ func (r *StatusService) Cronjob(ctx context.Context, sysRoot string) error {
 	err = os.Symlink(releaseDir, latestReleaseDir)
 
 	logger.Info("create latest symlink ok", zap.Error(err), zap.Any("releaseDir", releaseDir), zap.Any("latestReleaseDir", latestReleaseDir))
+
+	if err = r.CleanUpOldRelease(sysRoot, releaseDir); err != nil {
+		logger.Error("error when trying to clean up old release", zap.Error(err))
+	}
+
 	return nil
 }
