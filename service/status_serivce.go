@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"strings"
 	"sync"
 
 	"github.com/IceWhaleTech/CasaOS-Common/utils/logger"
@@ -243,15 +244,15 @@ func (r *StatusService) PostMigration(sysRoot string) error {
 	return err
 }
 
-func (r *StatusService) CleanUpOldRelease(sysRoot, releaseDir string) error {
+func (r *StatusService) CleanUpOldRelease(sysRoot string) error {
 	currentVersion, err := CurrentReleaseVersion(sysRoot)
 	if err != nil {
 		logger.Error("error when trying to get current release version", zap.Error(err))
 		return err
 	}
-	logger.Info("current version", zap.String("currentVersion", currentVersion.String()))
+	logger.Info("current version", zap.String("currentVersion", currentVersion.Original()))
 
-	dirs, err := filepath.Glob(filepath.Join(releaseDir, "*"))
+	dirs, err := filepath.Glob(filepath.Join(sysRoot, "DATA", "rauc", "releases", "*"))
 	if err != nil {
 		logger.Error("error when trying to get all dirs in release", zap.Error(err))
 		return err
@@ -262,25 +263,41 @@ func (r *StatusService) CleanUpOldRelease(sysRoot, releaseDir string) error {
 	}
 
 	for _, dir := range dirs {
-		logger.Info("check dir", zap.String("dir", dir))
-		if versionRegexp.MatchString(filepath.Base(dir)) {
-			whiteList := []string{
-				"zimaos_zimacube-" + dir + ".raucb",
-				"checksums.txt",
-				"release.yaml",
+		baseDir := filepath.Base(dir)
+		logger.Info("baseDir", zap.String("baseDir", baseDir))
+
+		if versionRegexp.MatchString(baseDir) {
+			version := strings.TrimPrefix(baseDir, "v")
+			logger.Info("version", zap.String("version", version))
+
+			isCurrentVersion := (currentVersion.Original() == baseDir)
+
+			if r.IsUpgradable(*r.release, sysRoot) {
+				continue
 			}
 
-			if filepath.Base(dir) == currentVersion.String() {
-				if r.ShouldUpgrade(*r.release, sysRoot) {
-					continue
-				}
+			if !r.ShouldUpgrade(*r.release, sysRoot) && !isCurrentVersion {
+				logger.Info("no need to upgrade, clean up old release", zap.String("dir", dir))
+				whiteList := []string{"zimaos_zimacube-" + version + ".raucb", "checksum.txt", "release.yaml"}
 
-				if err := internal.CleanDirWithWhiteList(dir, whiteList); err != nil {
-					logger.Error("error when trying to clean dir with white list", zap.Error(err))
+				if err := internal.CleanWithWhiteList(dir, whiteList, true); err != nil {
+					logger.Error("error when trying to clean up old release", zap.Error(err))
 				}
-			} else {
-				if err := internal.CleanDirWithWhiteList(dir, whiteList); err != nil {
-					logger.Error("error when trying to clean dir with white list", zap.Error(err))
+			} else if !r.ShouldUpgrade(*r.release, sysRoot) && isCurrentVersion {
+				logger.Info("no need to upgrade, skip current release", zap.String("dir", dir))
+				whiteList := []string{"zimaos_zimacube-" + version + ".raucb", "checksum.txt"}
+
+				if err := internal.CleanWithWhiteList(dir, whiteList, false); err != nil {
+					logger.Error("error when trying to clean up old release", zap.Error(err))
+				}
+			}
+
+			if isCurrentVersion {
+				logger.Info("clean up current release", zap.String("dir", dir))
+				whiteList := []string{"zimaos_zimacube-" + version + ".raucb"}
+
+				if err := internal.CleanWithWhiteList(dir, whiteList, false); err != nil {
+					logger.Error("error when trying to clean up old release", zap.Error(err))
 				}
 			}
 		}
@@ -353,17 +370,20 @@ func (r *StatusService) Cronjob(ctx context.Context, sysRoot string) error {
 		r.UpdateStatusWithMessage(FetchUpdateEnd, types.UP_TO_DATE)
 	}
 
-	// set symbol link
-	releaseDir := filepath.Dir(releaseFilePath)
-	latestReleaseDir := filepath.Join(filepath.Dir(releaseDir), "latest")
+	if releaseFilePath == "" {
+		logger.Error("release file path is empty")
+	} else {
+		releaseDir := filepath.Dir(releaseFilePath)
+		latestReleaseDir := filepath.Join(filepath.Dir(releaseDir), "latest")
 
-	os.Remove(latestReleaseDir)
-	err = os.Symlink(releaseDir, latestReleaseDir)
+		os.Remove(latestReleaseDir)
+		err = os.Symlink(releaseDir, latestReleaseDir)
 
-	logger.Info("create latest symlink ok", zap.Error(err), zap.Any("releaseDir", releaseDir), zap.Any("latestReleaseDir", latestReleaseDir))
+		logger.Info("create latest symlink ok", zap.Error(err), zap.Any("releaseDir", releaseDir), zap.Any("latestReleaseDir", latestReleaseDir))
 
-	if err = r.CleanUpOldRelease(sysRoot, releaseDir); err != nil {
-		logger.Error("error when trying to clean up old release", zap.Error(err))
+		if err = r.CleanUpOldRelease(sysRoot); err != nil {
+			logger.Error("error when trying to clean up old release", zap.Error(err))
+		}
 	}
 
 	return nil
