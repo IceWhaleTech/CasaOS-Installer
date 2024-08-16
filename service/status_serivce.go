@@ -256,12 +256,6 @@ func (r *StatusService) CleanUpOldRelease(sysRoot string) error {
 		logger.Error("error when trying to get all dirs in release", zap.Error(err))
 		return err
 	}
-	if len(dirs) < 2 {
-		logger.Info("no old release to clean up")
-		return nil
-	}
-
-	var whiteList []string
 
 	for _, dir := range dirs {
 		baseDir := filepath.Base(dir)
@@ -271,6 +265,7 @@ func (r *StatusService) CleanUpOldRelease(sysRoot string) error {
 
 		version := strings.TrimPrefix(baseDir, "v")
 		isCurrentVersion := (currentVersion.String() == version)
+		var whiteList []string
 
 		if IsNewerVersionString(currentVersion.String(), version) {
 			logger.Info("newer version found, skip clean up", zap.String("dir", dir))
