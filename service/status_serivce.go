@@ -261,40 +261,46 @@ func (r *StatusService) CleanUpOldRelease(sysRoot string) error {
 		return nil
 	}
 
+	var whiteList []string
+
 	for _, dir := range dirs {
 		baseDir := filepath.Base(dir)
-		if versionRegexp.MatchString(baseDir) {
-			version := strings.TrimPrefix(baseDir, "v")
-			isCurrentVersion := (currentVersion.String() == version)
+		if !versionRegexp.MatchString(baseDir) {
+			continue
+		}
 
-			if IsNewerVersionString(currentVersion.String(), version) {
-				logger.Info("newer version found, skip clean up", zap.String("dir", dir))
-				continue
-			}
+		version := strings.TrimPrefix(baseDir, "v")
+		isCurrentVersion := (currentVersion.String() == version)
 
-			if !IsNewerVersionString(currentVersion.String(), version) && !isCurrentVersion {
-				logger.Info("no need to upgrade, clean up old release", zap.String("dir", dir))
-				whiteList := []string{"zimaos_zimacube-" + version + ".raucb", "checksum.txt", "release.yaml"}
+		if IsNewerVersionString(currentVersion.String(), version) {
+			logger.Info("newer version found, skip clean up", zap.String("dir", dir))
+			continue
+		}
 
-				if err := internal.CleanWithWhiteList(dir, whiteList, true); err != nil {
-					logger.Error("error when trying to clean up old release", zap.Error(err))
-				}
-			} else if !IsNewerVersionString(currentVersion.String(), version) && isCurrentVersion {
+		if !IsNewerVersionString(currentVersion.String(), version) {
+			if isCurrentVersion {
 				logger.Info("no need to upgrade, clean up current release", zap.String("dir", dir))
-				whiteList := []string{"zimaos_zimacube-" + version + ".raucb", "checksum.txt"}
-
-				if err := internal.CleanWithWhiteList(dir, whiteList, false); err != nil {
-					logger.Error("error when trying to clean up current release", zap.Error(err))
-				}
+			} else {
+				logger.Info("no need to upgrade, clean up old release", zap.String("dir", dir))
 			}
 
 			if isCurrentVersion {
-				logger.Info("cleanning up current release", zap.String("dir", dir))
-				whiteList := []string{"zimaos_zimacube-" + version + ".raucb"}
+				whiteList = []string{"zimaos_zimacube-" + version + ".raucb", "checksum.txt"}
+			} else {
+				whiteList = []string{"zimaos_zimacube-" + version + ".raucb", "checksum.txt", "release.yaml"}
+			}
 
-				if err := internal.CleanWithWhiteList(dir, whiteList, false); err != nil {
-					logger.Error("error when trying to clean up current release", zap.Error(err))
-				}
+			if err := internal.CleanWithWhiteList(dir, whiteList, !isCurrentVersion); err != nil {
+				logger.Error("error when trying to clean up release", zap.Error(err))
+			}
+		}
+
+		if isCurrentVersion {
+			logger.Info("cleanning up current release", zap.String("dir", dir))
+			whiteList = []string{"zimaos_zimacube-" + version + ".raucb"}
+
+			if err := internal.CleanWithWhiteList(dir, whiteList, false); err != nil {
+				logger.Error("error when trying to clean up current release", zap.Error(err))
 			}
 		}
 	}
