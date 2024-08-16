@@ -1,7 +1,6 @@
 package internal
 
 import (
-	"errors"
 	"os"
 	"path/filepath"
 
@@ -35,15 +34,14 @@ func CleanWithWhiteList(dir string, whiteList []string, cleanDir bool) error {
 		logger.Error("error when trying to check if dir is empty", zap.Error(err))
 	}
 
-	if isEmpty {
-		if err := os.Remove(dir); err != nil {
+	if isEmpty && cleanDir {
+		if err = os.Remove(dir); err != nil {
 			logger.Error("error when trying to remove dir", zap.Error(err))
 		}
-	}
 
-	if IsDirExist(dir) {
-		logger.Error("error when trying to remove dir", zap.String("dir", dir))
-		return errors.New("error when trying to remove dir")
+		if IsDirExist(dir) {
+			logger.Error("error when trying to remove dir", zap.Error(err))
+		}
 	}
 
 	return nil

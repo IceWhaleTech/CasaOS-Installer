@@ -250,7 +250,6 @@ func (r *StatusService) CleanUpOldRelease(sysRoot string) error {
 		logger.Error("error when trying to get current release version", zap.Error(err))
 		return err
 	}
-	logger.Info("current version", zap.String("currentVersion", currentVersion.Original()))
 
 	dirs, err := filepath.Glob(filepath.Join(sysRoot, "DATA", "rauc", "releases", "*"))
 	if err != nil {
@@ -264,40 +263,37 @@ func (r *StatusService) CleanUpOldRelease(sysRoot string) error {
 
 	for _, dir := range dirs {
 		baseDir := filepath.Base(dir)
-		logger.Info("baseDir", zap.String("baseDir", baseDir))
-
 		if versionRegexp.MatchString(baseDir) {
 			version := strings.TrimPrefix(baseDir, "v")
-			logger.Info("version", zap.String("version", version))
+			isCurrentVersion := (currentVersion.String() == version)
 
-			isCurrentVersion := (currentVersion.Original() == baseDir)
-
-			if r.IsUpgradable(*r.release, sysRoot) {
+			if IsNewerVersionString(currentVersion.String(), version) {
+				logger.Info("newer version found, skip clean up", zap.String("dir", dir))
 				continue
 			}
 
-			if !r.ShouldUpgrade(*r.release, sysRoot) && !isCurrentVersion {
+			if !IsNewerVersionString(currentVersion.String(), version) && !isCurrentVersion {
 				logger.Info("no need to upgrade, clean up old release", zap.String("dir", dir))
 				whiteList := []string{"zimaos_zimacube-" + version + ".raucb", "checksum.txt", "release.yaml"}
 
 				if err := internal.CleanWithWhiteList(dir, whiteList, true); err != nil {
 					logger.Error("error when trying to clean up old release", zap.Error(err))
 				}
-			} else if !r.ShouldUpgrade(*r.release, sysRoot) && isCurrentVersion {
-				logger.Info("no need to upgrade, skip current release", zap.String("dir", dir))
+			} else if !IsNewerVersionString(currentVersion.String(), version) && isCurrentVersion {
+				logger.Info("no need to upgrade, clean up current release", zap.String("dir", dir))
 				whiteList := []string{"zimaos_zimacube-" + version + ".raucb", "checksum.txt"}
 
 				if err := internal.CleanWithWhiteList(dir, whiteList, false); err != nil {
-					logger.Error("error when trying to clean up old release", zap.Error(err))
+					logger.Error("error when trying to clean up current release", zap.Error(err))
 				}
 			}
 
 			if isCurrentVersion {
-				logger.Info("clean up current release", zap.String("dir", dir))
+				logger.Info("cleanning up current release", zap.String("dir", dir))
 				whiteList := []string{"zimaos_zimacube-" + version + ".raucb"}
 
 				if err := internal.CleanWithWhiteList(dir, whiteList, false); err != nil {
-					logger.Error("error when trying to clean up old release", zap.Error(err))
+					logger.Error("error when trying to clean up current release", zap.Error(err))
 				}
 			}
 		}
@@ -382,7 +378,7 @@ func (r *StatusService) Cronjob(ctx context.Context, sysRoot string) error {
 		logger.Info("create latest symlink ok", zap.Error(err), zap.Any("releaseDir", releaseDir), zap.Any("latestReleaseDir", latestReleaseDir))
 
 		if err = r.CleanUpOldRelease(sysRoot); err != nil {
-			logger.Error("error when trying to clean up old release", zap.Error(err))
+			logger.Error("error when trying to clean up", zap.Error(err))
 		}
 	}
 
