@@ -275,9 +275,7 @@ func (r *StatusService) CleanUpOldRelease(sysRoot string) error {
 		if IsNewerVersionString(currentVersion.String(), version) {
 			logger.Info("newer version found, skip clean up", zap.String("dir", dir))
 			continue
-		}
-
-		if !IsNewerVersionString(currentVersion.String(), version) {
+		} else {
 			logger.Info("cleanning up", zap.String("dir", dir))
 			whiteList = []string{"zimaos_zimacube-" + version + ".raucb", "checksum.txt"}
 
