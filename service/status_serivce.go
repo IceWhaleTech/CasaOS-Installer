@@ -264,7 +264,6 @@ func (r *StatusService) CleanUpOldRelease(sysRoot string) error {
 		}
 
 		version := strings.TrimPrefix(baseDir, "v")
-		isCurrentVersion := (currentVersion.String() == version)
 		var whiteList []string
 
 		if IsNewerVersionString(currentVersion.String(), version) {
@@ -274,21 +273,12 @@ func (r *StatusService) CleanUpOldRelease(sysRoot string) error {
 			logger.Info("cleanning up", zap.String("dir", dir))
 			whiteList = []string{"zimaos_zimacube-" + version + ".raucb", "checksum.txt"}
 
-			if !isCurrentVersion {
+			if !(currentVersion.String() == version) {
 				whiteList = append(whiteList, "release.yaml")
 			}
 
 			if err := internal.CleanWithWhiteList(dir, whiteList); err != nil {
 				logger.Error("error when trying to clean up release", zap.Error(err))
-			}
-		}
-
-		if isCurrentVersion {
-			logger.Info("cleanning up", zap.String("dir", dir))
-			whiteList = []string{"zimaos_zimacube-" + version + ".raucb"}
-
-			if err := internal.CleanWithWhiteList(dir, whiteList); err != nil {
-				logger.Error("error when trying to clean up current release", zap.Error(err))
 			}
 		}
 	}
