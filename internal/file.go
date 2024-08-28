@@ -4,9 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/IceWhaleTech/CasaOS-Common/utils/logger"
 	"github.com/shirou/gopsutil/v4/disk"
-	"go.uber.org/zap"
 )
 
 func GetAllFile(path string) []string {
@@ -28,8 +26,6 @@ func GetRemainingSpace(path string) (uint64, error) {
 	if err != nil {
 		return 0, err
 	}
-
-	logger.Info("Disk: ", zap.Any("Disk", us))
 
 	return us.Free, nil
 }

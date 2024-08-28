@@ -142,7 +142,6 @@ func DownloadRelease(ctx context.Context, release codegen.Release, force bool) (
 			continue
 		}
 
-		// head request to get the file size
 		resp, err := httpUtils.Do(func(ctx context.Context) (*http.Request, error) {
 			return http.NewRequestWithContext(ctx, http.MethodHead, packageURL, nil)
 		}, time.Duration(5))
@@ -150,7 +149,6 @@ func DownloadRelease(ctx context.Context, release codegen.Release, force bool) (
 			logger.Error("error while getting package size - skipping", zap.Error(err), zap.String("package_url", packageURL))
 		}
 
-		// get the file size
 		fileSize, _ := strconv.Atoi(resp.Header.Get("Content-Length"))
 		if uint64(fileSize) > remainingSpace {
 			logger.Error("not enough space to download package - skipping", zap.String("package_url", packageURL), zap.Int("file_size", fileSize), zap.Any("remaining_space", remainingSpace))
