@@ -132,6 +132,7 @@ func DownloadRelease(ctx context.Context, release codegen.Release, force bool) (
 	var mirror string
 
 	remainingSpace, _ := internal.GetRemainingSpace(releaseDir)
+	notEnoughSpace := false
 	packageURL := ""
 
 	for _, mirror = range release.Mirrors {
@@ -149,10 +150,15 @@ func DownloadRelease(ctx context.Context, release codegen.Release, force bool) (
 
 		fileSize, err := strconv.Atoi(resp.Header.Get("Content-Length"))
 		if err != nil || uint64(fileSize) > remainingSpace {
+			notEnoughSpace = true
 			logger.Error("not enough space to download package - skipping", zap.String("package_url", packageURL), zap.Int("file_size", fileSize), zap.Any("remaining_space", remainingSpace))
 		}
 
 		break
+	}
+
+	if notEnoughSpace {
+		return "", fmt.Errorf("download fail")
 	}
 
 	packageFilePath, err = internal.Download(ctx, releaseDir, packageURL)
