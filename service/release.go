@@ -132,7 +132,6 @@ func DownloadRelease(ctx context.Context, release codegen.Release, force bool) (
 	var mirror string
 
 	remainingSpace, _ := internal.GetRemainingSpace(releaseDir)
-	notEnoughSpace := false
 	packageURL := ""
 
 	for _, mirror = range release.Mirrors {
@@ -143,27 +142,19 @@ func DownloadRelease(ctx context.Context, release codegen.Release, force bool) (
 			continue
 		}
 
-		resp, err := http.Head(packageURL)
-		if err != nil {
-			logger.Error("error while getting package size - skipping", zap.Error(err), zap.String("package_url", packageURL))
-		}
-
+		resp, _ := http.Head(packageURL)
 		fileSize, err := strconv.Atoi(resp.Header.Get("Content-Length"))
 		if err != nil || uint64(fileSize) > remainingSpace {
-			notEnoughSpace = true
 			logger.Error("not enough space to download package - skipping", zap.String("package_url", packageURL), zap.Int("file_size", fileSize), zap.Any("remaining_space", remainingSpace))
 		}
 
 		break
 	}
 
-	if notEnoughSpace {
-		return "", fmt.Errorf("download fail")
-	}
-
 	packageFilePath, err = internal.Download(ctx, releaseDir, packageURL)
 	if err != nil {
 		logger.Error("error while downloading and extracting package", zap.Error(err), zap.String("package_url", packageURL))
+		return "", err
 	}
 	logger.Info("downloaded package success", zap.String("package_url", packageURL), zap.String("package_file_path", packageFilePath))
 
@@ -171,6 +162,7 @@ func DownloadRelease(ctx context.Context, release codegen.Release, force bool) (
 	checksumsURL := internal.GetChecksumsURL(release, mirror)
 	if _, err = internal.Download(ctx, releaseDir, checksumsURL); err != nil {
 		logger.Error("error while downloading checksums", zap.Error(err), zap.String("checksums_url", checksumsURL))
+		return "", err
 	}
 
 	if packageFilePath == "" {
