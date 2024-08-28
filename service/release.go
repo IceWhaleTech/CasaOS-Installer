@@ -146,6 +146,7 @@ func DownloadRelease(ctx context.Context, release codegen.Release, force bool) (
 		fileSize, err := strconv.Atoi(resp.Header.Get("Content-Length"))
 		if err != nil || uint64(fileSize) > remainingSpace {
 			logger.Error("not enough space to download package - skipping", zap.String("package_url", packageURL), zap.Int("file_size", fileSize), zap.Any("remaining_space", remainingSpace))
+			continue
 		}
 
 		break
