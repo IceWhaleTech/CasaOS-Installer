@@ -131,31 +131,38 @@ func DownloadRelease(ctx context.Context, release codegen.Release, force bool) (
 	var packageFilePath string
 	var mirror string
 
+	remainingSpace, _ := internal.GetRemainingSpace(releaseDir)
+	packageURL := ""
+
 	for _, mirror = range release.Mirrors {
 		// download packages if any of them is missing
-		{
-			packageURL, err := internal.GetPackageURLByCurrentArch(release, mirror)
-			if err != nil {
-				logger.Error("error while getting package url - skipping", zap.Error(err), zap.Any("release", release))
-				continue
-			}
-
-			packageFilePath, err = internal.Download(ctx, releaseDir, packageURL)
-			if err != nil {
-				logger.Error("error while downloading and extracting package - skipping", zap.Error(err), zap.String("package_url", packageURL))
-				continue
-			}
-			logger.Info("downloaded package success", zap.String("package_url", packageURL), zap.String("package_file_path", packageFilePath))
+		packageURL, err = internal.GetPackageURLByCurrentArch(release, mirror)
+		if err != nil {
+			logger.Error("error while getting package url - skipping", zap.Error(err), zap.Any("release", release))
+			continue
 		}
+
+		resp, _ := http.Head(packageURL)
+		fileSize, _ := strconv.Atoi(resp.Header.Get("Content-Length"))
+		if uint64(fileSize) > remainingSpace {
+			logger.Error("not enough space to download package - skipping", zap.String("package_url", packageURL), zap.Int("file_size", fileSize), zap.Any("remaining_space", remainingSpace))
+			continue
+		}
+
+		packageFilePath, err = internal.Download(ctx, releaseDir, packageURL)
+		if err != nil {
+			logger.Error("error while downloading and extracting package", zap.Error(err), zap.String("package_url", packageURL))
+			continue
+		}
+		logger.Info("downloaded package success", zap.String("package_url", packageURL), zap.String("package_file_path", packageFilePath))
 
 		// download checksums.txt if it's missing
-		{
-			checksumsURL := internal.GetChecksumsURL(release, mirror)
-			if _, err := internal.Download(ctx, releaseDir, checksumsURL); err != nil {
-				logger.Error("error while downloading checksums - skipping", zap.Error(err), zap.String("checksums_url", checksumsURL))
-				continue
-			}
+		checksumsURL := internal.GetChecksumsURL(release, mirror)
+		if _, err = internal.Download(ctx, releaseDir, checksumsURL); err != nil {
+			logger.Error("error while downloading checksums", zap.Error(err), zap.String("checksums_url", checksumsURL))
+			continue
 		}
+
 		break
 	}
 
