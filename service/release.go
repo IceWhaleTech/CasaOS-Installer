@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	httpUtils "github.com/IceWhaleTech/CasaOS-Common/utils/http"
 	"github.com/IceWhaleTech/CasaOS-Common/utils/logger"
 	"github.com/IceWhaleTech/CasaOS-Installer/codegen"
 	"github.com/IceWhaleTech/CasaOS-Installer/common"
@@ -131,30 +132,52 @@ func DownloadRelease(ctx context.Context, release codegen.Release, force bool) (
 	var packageFilePath string
 	var mirror string
 
+	remainingSpace, _ := internal.GetRemainingSpace(releaseDir)
+
 	for _, mirror = range release.Mirrors {
 		// download packages if any of them is missing
-		{
-			packageURL, err := internal.GetPackageURLByCurrentArch(release, mirror)
-			if err != nil {
-				logger.Error("error while getting package url - skipping", zap.Error(err), zap.Any("release", release))
-				continue
-			}
-
-			packageFilePath, err = internal.Download(ctx, releaseDir, packageURL)
-			if err != nil {
-				logger.Error("error while downloading and extracting package - skipping", zap.Error(err), zap.String("package_url", packageURL))
-				continue
-			}
-			logger.Info("downloaded package success", zap.String("package_url", packageURL), zap.String("package_file_path", packageFilePath))
+		packageURL, err := internal.GetPackageURLByCurrentArch(release, mirror)
+		if err != nil {
+			logger.Error("error while getting package url - skipping", zap.Error(err), zap.Any("release", release))
+			continue
 		}
 
+		// head request to get the file size
+		resp, err := httpUtils.Do(func(ctx context.Context) (*http.Request, error) {
+			return http.NewRequestWithContext(ctx, http.MethodHead, packageURL, nil)
+		}, time.Duration(5))
+		if err != nil {
+			logger.Error("error while getting package size - skipping", zap.Error(err), zap.String("package_url", packageURL))
+			continue
+		}
+
+		// get the file size
+		fileSize, err := strconv.Atoi(resp.Header.Get("Content-Length"))
+		if err != nil {
+			logger.Error("error while getting package size - skipping", zap.Error(err), zap.String("package_url", packageURL))
+			continue
+		}
+
+		logger.Info("package size", zap.Int("file_size", fileSize))
+
+		// check if there is enough space
+		if remainingSpace < uint64(fileSize) {
+			logger.Error("not enough space to download package - skipping", zap.Uint64("remaining_space", remainingSpace), zap.Int("file_size", fileSize))
+			continue
+		}
+
+		packageFilePath, err = internal.Download(ctx, releaseDir, packageURL)
+		if err != nil {
+			logger.Error("error while downloading and extracting package - skipping", zap.Error(err), zap.String("package_url", packageURL))
+			continue
+		}
+		logger.Info("downloaded package success", zap.String("package_url", packageURL), zap.String("package_file_path", packageFilePath))
+
 		// download checksums.txt if it's missing
-		{
-			checksumsURL := internal.GetChecksumsURL(release, mirror)
-			if _, err := internal.Download(ctx, releaseDir, checksumsURL); err != nil {
-				logger.Error("error while downloading checksums - skipping", zap.Error(err), zap.String("checksums_url", checksumsURL))
-				continue
-			}
+		checksumsURL := internal.GetChecksumsURL(release, mirror)
+		if _, err := internal.Download(ctx, releaseDir, checksumsURL); err != nil {
+			logger.Error("error while downloading checksums - skipping", zap.Error(err), zap.String("checksums_url", checksumsURL))
+			continue
 		}
 		break
 	}
