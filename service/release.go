@@ -148,22 +148,12 @@ func DownloadRelease(ctx context.Context, release codegen.Release, force bool) (
 		}, time.Duration(5))
 		if err != nil {
 			logger.Error("error while getting package size - skipping", zap.Error(err), zap.String("package_url", packageURL))
-			continue
 		}
 
 		// get the file size
-		fileSize, err := strconv.Atoi(resp.Header.Get("Content-Length"))
-		if err != nil {
-			logger.Error("error while getting package size - skipping", zap.Error(err), zap.String("package_url", packageURL))
-			continue
-		}
-
-		logger.Info("package size", zap.Int("file_size", fileSize))
-
-		// check if there is enough space
-		if remainingSpace < uint64(fileSize) {
-			logger.Error("not enough space to download package - skipping", zap.Uint64("remaining_space", remainingSpace), zap.Int("file_size", fileSize))
-			continue
+		fileSize, _ := strconv.Atoi(resp.Header.Get("Content-Length"))
+		if uint64(fileSize) > remainingSpace {
+			logger.Error("not enough space to download package - skipping", zap.String("package_url", packageURL), zap.Int("file_size", fileSize), zap.Any("remaining_space", remainingSpace))
 		}
 
 		packageFilePath, err = internal.Download(ctx, releaseDir, packageURL)
