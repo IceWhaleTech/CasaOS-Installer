@@ -149,21 +149,19 @@ func DownloadRelease(ctx context.Context, release codegen.Release, force bool) (
 			continue
 		}
 
-		packageFilePath, err = internal.Download(ctx, releaseDir, packageURL)
-		if err != nil {
-			logger.Error("error while downloading and extracting package", zap.Error(err), zap.String("package_url", packageURL))
-			continue
-		}
-		logger.Info("downloaded package success", zap.String("package_url", packageURL), zap.String("package_file_path", packageFilePath))
-
-		// download checksums.txt if it's missing
-		checksumsURL := internal.GetChecksumsURL(release, mirror)
-		if _, err = internal.Download(ctx, releaseDir, checksumsURL); err != nil {
-			logger.Error("error while downloading checksums", zap.Error(err), zap.String("checksums_url", checksumsURL))
-			continue
-		}
-
 		break
+	}
+
+	packageFilePath, err = internal.Download(ctx, releaseDir, packageURL)
+	if err != nil {
+		logger.Error("error while downloading and extracting package", zap.Error(err), zap.String("package_url", packageURL))
+	}
+	logger.Info("downloaded package success", zap.String("package_url", packageURL), zap.String("package_file_path", packageFilePath))
+
+	// download checksums.txt if it's missing
+	checksumsURL := internal.GetChecksumsURL(release, mirror)
+	if _, err = internal.Download(ctx, releaseDir, checksumsURL); err != nil {
+		logger.Error("error while downloading checksums", zap.Error(err), zap.String("checksums_url", checksumsURL))
 	}
 
 	if packageFilePath == "" {
