@@ -131,7 +131,7 @@ func DownloadRelease(ctx context.Context, release codegen.Release, force bool) (
 	var packageFilePath string
 	var mirror string
 
-	remainingSpace, _ := internal.GetRemainingSpace(releaseDir)
+	remainingSpace, _ := internal.GetRemainingSpace(".")
 	packageURL := ""
 
 	for _, mirror = range release.Mirrors {
@@ -142,10 +142,14 @@ func DownloadRelease(ctx context.Context, release codegen.Release, force bool) (
 			continue
 		}
 
-		resp, _ := http.Head(packageURL)
+		resp, err := http.Head(packageURL)
+		if err != nil || resp.StatusCode != http.StatusOK {
+			logger.Error("error while getting package url - skipping", zap.Error(err), zap.String("package_url", packageURL))
+			continue
+		}
 		fileSize, _ := strconv.Atoi(resp.Header.Get("Content-Length"))
 		if uint64(fileSize) > remainingSpace {
-			logger.Error("not enough space to download package - skipping", zap.String("package_url", packageURL), zap.Int("file_size", fileSize), zap.Any("remaining_space", remainingSpace))
+			logger.Error("not enough space to download package - skipping")
 			continue
 		}
 
@@ -167,7 +171,7 @@ func DownloadRelease(ctx context.Context, release codegen.Release, force bool) (
 	}
 
 	if packageFilePath == "" {
-		return "", fmt.Errorf("package could not be found - there must be a bug")
+		return "", fmt.Errorf("download fail")
 	}
 
 	release.Mirrors = []string{mirror}
