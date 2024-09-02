@@ -100,8 +100,9 @@ func main() {
 		logger.Error("error when trying to launch", zap.Error(err))
 	}
 
-	// watch rauc offline
+	// watch rauc offline and release
 	os.MkdirAll(config.RAUC_OFFLINE_PATH, os.ModePerm)
+	os.MkdirAll(config.RAUC_RELEASE_PATH, os.ModePerm)
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
 		logger.Error("offline create watcher error ", zap.Any("error", err))
