@@ -331,13 +331,11 @@ func (r *StatusService) Cronjob(ctx context.Context, sysRoot string) error {
 		r.UpdateStatusWithMessage(FetchUpdateEnd, types.OUT_OF_DATE)
 
 		releaseFilePath, err = r.DownloadRelease(ctx, *release, true)
-		logger.Info("download release rauc update package success")
-
 		if err != nil {
 			logger.Error("error when trying to download release", zap.Error(err), zap.String("release file path", releaseFilePath))
 			r.UpdateStatusWithMessage(DownloadError, err.Error())
 		} else {
-			logger.Info("system is ready to update")
+			logger.Info("download release rauc update package success")
 			r.UpdateStatusWithMessage(DownloadEnd, types.READY_TO_UPDATE)
 		}
 	} else {
