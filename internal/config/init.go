@@ -62,6 +62,7 @@ const (
 
 	RAUC_OFFLINE_RELEASE_FILENAME = "release.yaml"
 	OFFLINE_RAUC_TEMP_PATH        = "/tmp/offline_rauc"
+	RAUC_RELEASE_PATH = "/DATA/rauc/releases"
 )
 
 var (
