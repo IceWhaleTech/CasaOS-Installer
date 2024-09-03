@@ -132,7 +132,6 @@ func DownloadRelease(ctx context.Context, release codegen.Release, force bool) (
 	var mirror string
 
 	remainingSpace, _ := internal.GetRemainingSpace(config.RAUC_RELEASE_PATH)
-	logger.Info("remaining space", zap.Uint64("remaining_space", remainingSpace))
 	packageURL := ""
 
 	for _, mirror = range release.Mirrors {
