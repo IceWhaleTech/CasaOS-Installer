@@ -349,7 +349,9 @@ func (r *StatusService) Cronjob(ctx context.Context, sysRoot string) error {
 	}
 
 	if releaseFilePath == "" {
-		logger.Error("release file path is empty")
+		if shouldUpgrade {
+			logger.Error("release file path is empty")
+		}
 	} else {
 		releaseDir := filepath.Dir(releaseFilePath)
 		latestReleaseDir := filepath.Join(filepath.Dir(releaseDir), "latest")
