@@ -26,6 +26,13 @@ jobs:
         - name: Get repository name
           run: echo "REPO_NAME=$(echo $GITHUB_REPOSITORY | cut -d'/' -f2)" >> $GITHUB_ENV
 
+        - name: debug
+          run: |
+            echo ${{ env.REPO_NAME }}
+            ls
+            ls code
+            ls openapi
+
         - name: Sync OpenAPI
           run: |
             cp -r code/openapi openapi/${{ env.REPO_NAME }}
