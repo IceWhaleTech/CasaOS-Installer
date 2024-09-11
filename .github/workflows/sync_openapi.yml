@@ -17,6 +17,6 @@ jobs:
   sync:
     uses: IceWhaleTech/github/.github/workflows/sync_openapi.yml@main
     with:
-      project-name: IceWhale-Files
+      project-name: CasaOS-Installer
     secrets:
       API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
