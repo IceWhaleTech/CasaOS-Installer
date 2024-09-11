@@ -1,6 +1,11 @@
 name: Sync OpenAPI
 
 on:
+  workflow_call:
+    inputs:
+      project-name:
+        required: true
+        type: string
   push:
     branches:
       - main
@@ -10,33 +15,8 @@ on:
 
 jobs:
   sync:
-    runs-on: ubuntu-22.04
-    steps:
-        - name: Checkout
-          uses: actions/checkout@v3
-          with:
-            path: code
-      
-        - name: Checkout OpenAPI repo
-          uses: actions/checkout@v3
-          with:
-            repository: IceWhaleTech/IceWhale-OpenAPI
-            path: openapi
-
-        - name: Get repository name
-          run: echo "REPO_NAME=$(echo $GITHUB_REPOSITORY | cut -d'/' -f2)" >> $GITHUB_ENV
-
-        - name: Sync OpenAPI
-          run: |
-            cp -r code/api openapi/${{ env.REPO_NAME }}
-    
-        - name: Commit and push changes
-          uses: cpina/github-action-push-to-another-repository@main
-          env:
-            API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
-          with:
-            source-directory: './openapi/${{ env.REPO_NAME }}'
-            destination-github-username: 'IceWhaleTech'
-            destination-repository-name: 'IceWhale-OpenAPI'
-            user-email: q2676515970@163.com
-            target-directory: './openapi/${{ env.REPO_NAME }}'
+    uses: IceWhaleTech/github/.github/workflows/sync_openapi.yml@main
+    with:
+      project-name: IceWhale-Files
+    secrets:
+      API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
