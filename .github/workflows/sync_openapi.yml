@@ -33,7 +33,7 @@ jobs:
         - name: Commit and push changes
           uses: cpina/github-action-push-to-another-repository@main
           env:
-            API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB2 }}
+            API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
           with:
             source-directory: './openapi/${{ env.REPO_NAME }}'
             destination-github-username: 'IceWhaleTech'
