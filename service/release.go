@@ -75,7 +75,10 @@ func BestByDelay(urls []string) string {
 		}
 	}
 
-	return "" // Return an empty string if no successful response is received
+	if len(urls) == 0 {
+		return ""
+	}
+	return urls[0] // Return first url if no successful response is received
 }
 
 func FetchRelease(ctx context.Context, tag string, constructReleaseFileURLFunc ConstructReleaseFileURLFunc) (*codegen.Release, error) {
