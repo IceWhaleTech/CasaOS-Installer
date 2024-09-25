@@ -26,7 +26,7 @@ func main() {
 		PrivateTestChannel()
 	case "stable":
 		StableChannel()
-	case "test":
+	case "internal":
 		TestChannel()
 	case "disable":
 		DisableChannel()
