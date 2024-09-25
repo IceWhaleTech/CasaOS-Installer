@@ -56,7 +56,10 @@ func Save() {
 
 func PublicTestChannel() {
 	fmt.Println("Public Test Channel")
-	config.ServerInfo.Mirrors = []string{"https://casaos.oss-cn-shanghai.aliyuncs.com/IceWhaleTech/zimaos-rauc/public-test/"}
+	config.ServerInfo.Mirrors = []string{
+		"https://casaos.oss-cn-shanghai.aliyuncs.com/IceWhaleTech/zimaos-rauc/public-test/",
+		"https://raw.githubusercontent.com/IceWhaleTech/ZimaOS/refs/heads/main/public-test/",
+	}
 	Save()
 }
 
@@ -68,7 +71,10 @@ func PrivateTestChannel() {
 
 func StableChannel() {
 	fmt.Println("Stable Channel")
-	config.ServerInfo.Mirrors = []string{"https://casaos.oss-cn-shanghai.aliyuncs.com/IceWhaleTech/zimaos-rauc/"}
+	config.ServerInfo.Mirrors = []string{
+		"https://casaos.oss-cn-shanghai.aliyuncs.com/IceWhaleTech/zimaos-rauc/",
+		"https://raw.githubusercontent.com/IceWhaleTech/ZimaOS/refs/heads/main/",
+	}
 	Save()
 }
 
