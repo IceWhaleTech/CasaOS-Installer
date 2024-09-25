@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"os/exec"
 	"strings"
 
 	"github.com/IceWhaleTech/CasaOS-Installer/internal/config"
@@ -26,7 +27,7 @@ func main() {
 		PrivateTestChannel()
 	case "stable":
 		StableChannel()
-	case "test":
+	case "internal":
 		TestChannel()
 	case "disable":
 		DisableChannel()
@@ -52,11 +53,19 @@ func Save() {
 	if err != nil {
 		fmt.Printf("Fail to save file: %v", err)
 	}
+	// restart casaos installer
+	err = exec.Command("systemctl", "restart", "casaos-installer").Run()
+	if err != nil {
+		fmt.Printf("Fail to restart casaos-installer: %v", err)
+	}
 }
 
 func PublicTestChannel() {
 	fmt.Println("Public Test Channel")
-	config.ServerInfo.Mirrors = []string{"https://casaos.oss-cn-shanghai.aliyuncs.com/IceWhaleTech/zimaos-rauc/public-test/"}
+	config.ServerInfo.Mirrors = []string{
+		"https://casaos.oss-cn-shanghai.aliyuncs.com/IceWhaleTech/zimaos-rauc/public-test/",
+		"https://raw.githubusercontent.com/IceWhaleTech/ZimaOS/refs/heads/main/public-test/",
+	}
 	Save()
 }
 
@@ -68,7 +77,10 @@ func PrivateTestChannel() {
 
 func StableChannel() {
 	fmt.Println("Stable Channel")
-	config.ServerInfo.Mirrors = []string{"https://casaos.oss-cn-shanghai.aliyuncs.com/IceWhaleTech/zimaos-rauc/"}
+	config.ServerInfo.Mirrors = []string{
+		"https://casaos.oss-cn-shanghai.aliyuncs.com/IceWhaleTech/zimaos-rauc/",
+		"https://raw.githubusercontent.com/IceWhaleTech/ZimaOS/refs/heads/main/",
+	}
 	Save()
 }
 
