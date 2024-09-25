@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"os/exec"
 	"strings"
 
 	"github.com/IceWhaleTech/CasaOS-Installer/internal/config"
@@ -51,6 +52,11 @@ func Save() {
 	err := config.Cfg.SaveTo(config.ConfigFilePath)
 	if err != nil {
 		fmt.Printf("Fail to save file: %v", err)
+	}
+	// restart casaos installer
+	err = exec.Command("systemctl", "restart", "casaos-installer").Run()
+	if err != nil {
+		fmt.Printf("Fail to restart casaos-installer: %v", err)
 	}
 }
 
