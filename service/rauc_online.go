@@ -33,7 +33,7 @@ func (r *RAUCService) Install(release codegen.Release, sysRoot string) error {
 }
 
 func (r *RAUCService) InstallInfo(release codegen.Release, sysRootPath string) (string, error) {
-	return RAUCFilePath(release)
+	return filepath.Join(config.SysRoot, config.RAUC_RELEASE_PATH, "latest"), nil
 }
 
 func (r *RAUCService) GetRelease(ctx context.Context, tag string, useCache bool) (*codegen.Release, error) {
