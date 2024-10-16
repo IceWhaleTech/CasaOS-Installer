@@ -19,7 +19,13 @@ func IsEmptyDir(path string) (bool, error) {
 
 func CleanWithWhiteList(dir string, whiteList []string) error {
 	for _, file := range whiteList {
-		if err := os.Remove(filepath.Join(dir, file)); err != nil {
+		filePath := filepath.Join(dir, file)
+		if _, err := os.Stat(filePath); err != nil {
+			if os.IsNotExist(err) {
+				continue
+			}
+		}
+		if err := os.Remove(filePath); err != nil {
 			logger.Error("error when trying to remove file", zap.Error(err))
 			return err
 		}
