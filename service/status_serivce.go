@@ -73,7 +73,7 @@ var EventTypeMapMessageType = map[EventType]message_bus.EventType{
 	InstallError: common.EventTypeInstallUpdateError,
 }
 
-var versionRegexp = regexp.MustCompile(`^v(\d)+\.(\d)+.(\d)+(-(alpha|beta)(\d))?$`)
+var versionRegexp = regexp.MustCompile(`^v(\d)+\.(\d)+\.(\d)+.*$`)
 
 func NewStatusService(implementService UpdaterServiceInterface, sysRoot string) *StatusService {
 	statusService := &StatusService{
