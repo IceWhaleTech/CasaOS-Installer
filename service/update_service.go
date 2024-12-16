@@ -6,6 +6,12 @@ import (
 	"github.com/IceWhaleTech/CasaOS-Installer/codegen"
 )
 
+// add more info like update count or anything.
+// TODO, it is helpful for debug
+type UpdateStats struct {
+	Name string
+}
+
 type UpdaterServiceInterface interface {
 	GetRelease(ctx context.Context, tag string, useCache bool) (*codegen.Release, error)
 	VerifyRelease(release codegen.Release) (string, error)
@@ -23,5 +29,5 @@ type UpdaterServiceInterface interface {
 
 	InstallInfo(release codegen.Release, sysRoot string) (string, error)
 
-	Stats() string
+	Stats() UpdateStats
 }
