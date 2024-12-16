@@ -126,3 +126,7 @@ func (r *RAUCService) PostMigration(sysRoot string) error {
 	// return MarkGood()
 	return nil
 }
+
+func (r *RAUCService) Stats() string {
+	return "Online RAUC"
+}

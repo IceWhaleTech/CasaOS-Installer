@@ -195,6 +195,7 @@ func watchOfflineDir(watcher *fsnotify.Watcher) {
 				}
 				if event.Has(fsnotify.Remove) || event.Has(fsnotify.Create) {
 					service.InstallerService = service.NewStatusService(service.NewInstallerService(sysRoot), sysRoot)
+					service.InstallerService.Cronjob(context.Background(), sysRoot)
 				}
 
 			case err, ok := <-watcher.Errors:

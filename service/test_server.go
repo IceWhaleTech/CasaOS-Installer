@@ -93,3 +93,7 @@ func (r *TestService) PostMigration(sysRoot string) error {
 func (r *TestService) InstallInfo(release codegen.Release, sysRootPath string) (string, error) {
 	return RAUCFilePath(release)
 }
+
+func (r *TestService) Stats() string {
+	return "Test Service"
+}

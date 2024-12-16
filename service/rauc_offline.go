@@ -125,3 +125,7 @@ func (r *RAUCOfflineService) PostMigration(sysRoot string) error {
 	// install didn't need to process rauc status now.
 	return nil
 }
+
+func (r *RAUCOfflineService) Stats() string {
+	return "Offline RAUC"
+}
