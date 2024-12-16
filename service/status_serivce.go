@@ -303,7 +303,7 @@ func (r *StatusService) Cronjob(ctx context.Context, sysRoot string) error {
 	}
 
 	r.UpdateStatusWithMessage(FetchUpdateBegin, types.FETCHING)
-	logger.Info("start to fetch online release ", zap.Any("array", config.ServerInfo.Mirrors))
+	logger.Info("start to fetch  release ", zap.String("rauc mode", r.Stats()), zap.Any("array", config.ServerInfo.Mirrors))
 
 	release, err := r.ImplementService.GetRelease(ctx, GetReleaseBranch(sysRoot), false)
 	if err != nil {
