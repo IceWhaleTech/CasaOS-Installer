@@ -367,6 +367,6 @@ func (r *StatusService) Cronjob(ctx context.Context, sysRoot string) error {
 	return nil
 }
 
-func (r *StatusService) Stats() UpdateStats {
+func (r *StatusService) Stats() UpdateServerStats {
 	return r.ImplementService.Stats()
 }

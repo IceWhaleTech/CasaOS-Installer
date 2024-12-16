@@ -126,8 +126,8 @@ func (r *RAUCOfflineService) PostMigration(sysRoot string) error {
 	return nil
 }
 
-func (r *RAUCOfflineService) Stats() UpdateStats {
-	return UpdateStats{
+func (r *RAUCOfflineService) Stats() UpdateServerStats {
+	return UpdateServerStats{
 		Name: "Offline RAUC",
 	}
 }

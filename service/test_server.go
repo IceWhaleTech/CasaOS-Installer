@@ -94,8 +94,8 @@ func (r *TestService) InstallInfo(release codegen.Release, sysRootPath string) (
 	return RAUCFilePath(release)
 }
 
-func (r *TestService) Stats() UpdateStats {
-	return UpdateStats{
+func (r *TestService) Stats() UpdateServerStats {
+	return UpdateServerStats{
 		Name: "Test Service",
 	}
 }

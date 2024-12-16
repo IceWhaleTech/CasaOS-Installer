@@ -8,7 +8,7 @@ import (
 
 // add more info like update count or anything.
 // TODO, it is helpful for debug
-type UpdateStats struct {
+type UpdateServerStats struct {
 	Name string
 }
 
@@ -29,5 +29,5 @@ type UpdaterServiceInterface interface {
 
 	InstallInfo(release codegen.Release, sysRoot string) (string, error)
 
-	Stats() UpdateStats
+	Stats() UpdateServerStats
 }
