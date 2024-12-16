@@ -322,7 +322,6 @@ func (r *StatusService) Cronjob(ctx context.Context, sysRoot string) error {
 	releaseFilePath := ""
 
 	if shouldUpgrade {
-		r.UpdateStatusWithMessage(DownloadBegin, types.DOWNLOADING)
 		if release.Background == nil {
 			logger.Error("release.Background is nil", zap.String("rauc mode", r.Stats()))
 		} else {
