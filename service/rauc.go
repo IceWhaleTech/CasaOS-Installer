@@ -180,13 +180,22 @@ func MockRAUCInfo(content string) (string, error) {
 func GetRAUCInfo(path string) (string, error) {
 	cmd := exec.Command("rauc", "info", path)
 	var out bytes.Buffer
+	var errReason bytes.Buffer
 	cmd.Stdout = &out
+	cmd.Stderr = &errReason
 	err := cmd.Run()
+
 	if err != nil {
-		logger.Error("get info from rauc fail", zap.Error(err))
+		logger.Error("get info from rauc fail", zap.Error(err), zap.String("reason", errReason.String()), zap.String("path", path))
+		lines := strings.Split(errReason.String(), "\n")
+		if len(lines) < 2 {
+			return "", fmt.Errorf("get info from rauc fail: %s", errReason.String())
+		}
+		theLastTwoLine := lines[len(lines)-2]
+		return "", fmt.Errorf("get info from rauc fail: %s", theLastTwoLine)
 	}
 
-	return out.String(), err
+	return out.String(), nil
 }
 
 func GetDescription(raucInfo string) (string, error) {
