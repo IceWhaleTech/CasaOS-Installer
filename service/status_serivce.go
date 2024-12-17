@@ -303,7 +303,7 @@ func (r *StatusService) Cronjob(ctx context.Context, sysRoot string) error {
 	}
 
 	r.UpdateStatusWithMessage(FetchUpdateBegin, types.FETCHING)
-	logger.Info("start to fetch online release ", zap.Any("array", config.ServerInfo.Mirrors))
+	logger.Info("start to fetch  release ", zap.Any("info", r.Stats()), zap.Any("array", config.ServerInfo.Mirrors))
 
 	release, err := r.ImplementService.GetRelease(ctx, GetReleaseBranch(sysRoot), false)
 	if err != nil {
@@ -312,15 +312,9 @@ func (r *StatusService) Cronjob(ctx context.Context, sysRoot string) error {
 		return err
 	}
 	r.release = release
+	r.UpdateStatusWithMessage(FetchUpdateEnd, types.OUT_OF_DATE)
 
-	logger.Info("get online release success", zap.String("online release version", release.Version))
-
-	r.UpdateStatusWithMessage(DownloadBegin, types.DOWNLOADING)
-	if release.Background == nil {
-		logger.Error("release.Background is nil")
-	} else {
-		go internal.DownloadReleaseBackground(*release.Background, release.Version)
-	}
+	logger.Info("get release success", zap.String("release version", release.Version))
 
 	// cache release packages if not already cached
 	shouldUpgrade := r.ShouldUpgrade(*release, sysRoot)
@@ -328,11 +322,15 @@ func (r *StatusService) Cronjob(ctx context.Context, sysRoot string) error {
 	releaseFilePath := ""
 
 	if shouldUpgrade {
-		r.UpdateStatusWithMessage(FetchUpdateEnd, types.OUT_OF_DATE)
+		if release.Background == nil {
+			logger.Error("release.Background is nil", zap.Any("info", r.Stats()))
+		} else {
+			go internal.DownloadReleaseBackground(*release.Background, release.Version)
+		}
 
 		releaseFilePath, err = r.DownloadRelease(ctx, *release, true)
 		if err != nil {
-			logger.Error("error when trying to download release", zap.Error(err), zap.String("release file path", releaseFilePath))
+			logger.Error("error when trying to download release", zap.Error(err), zap.String("release file path", releaseFilePath), zap.Any("info", r.Stats()))
 			r.UpdateStatusWithMessage(DownloadError, err.Error())
 		} else {
 			logger.Info("download release rauc update package success")
@@ -344,7 +342,7 @@ func (r *StatusService) Cronjob(ctx context.Context, sysRoot string) error {
 			logger.Error("error when trying to get install info", zap.Error(err))
 		}
 
-		logger.Info("system is up to date")
+		logger.Info("system is up to date", zap.Any("info", r.Stats()))
 		r.UpdateStatusWithMessage(FetchUpdateEnd, types.UP_TO_DATE)
 	}
 
@@ -367,4 +365,8 @@ func (r *StatusService) Cronjob(ctx context.Context, sysRoot string) error {
 	}
 
 	return nil
+}
+
+func (r *StatusService) Stats() UpdateServerStats {
+	return r.ImplementService.Stats()
 }
