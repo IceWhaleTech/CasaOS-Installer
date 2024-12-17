@@ -9,7 +9,8 @@ import (
 // add more info like update count or anything.
 // TODO, it is helpful for debug
 type UpdateServerStats struct {
-	Name string
+	Name    string
+	Channel ChannelType
 }
 
 type UpdaterServiceInterface interface {

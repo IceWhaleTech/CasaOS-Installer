@@ -128,6 +128,7 @@ func (r *RAUCOfflineService) PostMigration(sysRoot string) error {
 
 func (r *RAUCOfflineService) Stats() UpdateServerStats {
 	return UpdateServerStats{
-		Name: "Offline RAUC",
+		Name:    "Offline RAUC",
+		Channel: "offline",
 	}
 }
