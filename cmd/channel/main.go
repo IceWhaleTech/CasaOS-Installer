@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/IceWhaleTech/CasaOS-Installer/internal/config"
+	"github.com/IceWhaleTech/CasaOS-Installer/service"
 )
 
 func main() {
@@ -62,36 +63,30 @@ func Save() {
 
 func PublicTestChannel() {
 	fmt.Println("Public Test Channel")
-	config.ServerInfo.Mirrors = []string{
-		"https://casaos.oss-cn-shanghai.aliyuncs.com/IceWhaleTech/zimaos-rauc/public-test/",
-		"https://raw.githubusercontent.com/IceWhaleTech/ZimaOS/refs/heads/main/public-test/",
-	}
+	config.ServerInfo.Mirrors = service.ChannelData[service.PublicTestChannelType]
 	Save()
 }
 
 func PrivateTestChannel() {
 	fmt.Println("Private Test Channel")
-	config.ServerInfo.Mirrors = []string{"https://casaos.oss-cn-shanghai.aliyuncs.com/IceWhaleTech/zimaos-rauc/private-test/"}
+	config.ServerInfo.Mirrors = service.ChannelData[service.PrivateTestChannelType]
 	Save()
 }
 
 func StableChannel() {
 	fmt.Println("Stable Channel")
-	config.ServerInfo.Mirrors = []string{
-		"https://casaos.oss-cn-shanghai.aliyuncs.com/IceWhaleTech/zimaos-rauc/",
-		"https://raw.githubusercontent.com/IceWhaleTech/ZimaOS/refs/heads/main/",
-	}
+	config.ServerInfo.Mirrors = service.ChannelData[service.StableChannelType]
 	Save()
 }
 
 func TestChannel() {
 	fmt.Println("Test Verify Channel")
-	config.ServerInfo.Mirrors = []string{"https://casaos.oss-cn-shanghai.aliyuncs.com/IceWhaleTech/zimaos-rauc/test-verification-channel/"}
+	config.ServerInfo.Mirrors = service.ChannelData[service.TestVerifyChannelType]
 	Save()
 }
 
 func DisableChannel() {
 	fmt.Println("Disable Channel")
-	config.ServerInfo.Mirrors = []string{"https://localhost/IceWhaleTech/zimaos-rauc/"}
+	config.ServerInfo.Mirrors = service.ChannelData[service.DisableChannelType]
 	Save()
 }

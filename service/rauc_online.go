@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 	"path/filepath"
+	"reflect"
 
 	"github.com/IceWhaleTech/CasaOS-Common/utils/logger"
 	"github.com/IceWhaleTech/CasaOS-Installer/codegen"
@@ -13,6 +14,39 @@ import (
 	"github.com/IceWhaleTech/CasaOS-Installer/internal/config"
 	"github.com/IceWhaleTech/CasaOS-Installer/service/out"
 	"go.uber.org/zap"
+)
+
+type ChannelType string
+
+const (
+	StableChannelType      ChannelType = "stable"
+	PublicTestChannelType  ChannelType = "public-test"
+	PrivateTestChannelType ChannelType = "private-test"
+	TestVerifyChannelType  ChannelType = "test-verification"
+	DisableChannelType     ChannelType = "disable"
+	UnknownChannelType     ChannelType = "unknown"
+)
+
+var (
+	ChannelData = map[ChannelType][]string{
+		StableChannelType: []string{
+			"https://casaos.oss-cn-shanghai.aliyuncs.com/IceWhaleTech/zimaos-rauc/",
+			"https://raw.githubusercontent.com/IceWhaleTech/ZimaOS/refs/heads/main/",
+		},
+		PublicTestChannelType: []string{
+			"https://casaos.oss-cn-shanghai.aliyuncs.com/IceWhaleTech/zimaos-rauc/public-test/",
+			"https://raw.githubusercontent.com/IceWhaleTech/ZimaOS/refs/heads/main/public-test/",
+		},
+		PrivateTestChannelType: []string{
+			"https://casaos.oss-cn-shanghai.aliyuncs.com/IceWhaleTech/zimaos-rauc/private-test/",
+		},
+		TestVerifyChannelType: []string{
+			"https://casaos.oss-cn-shanghai.aliyuncs.com/IceWhaleTech/zimaos-rauc/test-verification-channel/",
+		},
+		DisableChannelType: []string{
+			"https://localhost/IceWhaleTech/zimaos-rauc/",
+		},
+	}
 )
 
 type RAUCService struct {
@@ -128,7 +162,15 @@ func (r *RAUCService) PostMigration(sysRoot string) error {
 }
 
 func (r *RAUCService) Stats() UpdateServerStats {
+	currentChannel := config.ServerInfo.Mirrors
+	channelType := UnknownChannelType
+	for cType, channel := range ChannelData {
+		if reflect.DeepEqual(channel, currentChannel) {
+			channelType = cType
+		}
+	}
 	return UpdateServerStats{
-		Name: "Online RAUC",
+		Name:    "Online RAUC",
+		Channel: channelType,
 	}
 }
