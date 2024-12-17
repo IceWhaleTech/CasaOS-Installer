@@ -17,8 +17,10 @@ func BackgroundPath(version codegen.Version) string {
 
 func DownloadReleaseBackground(url string, version string) {
 	// to check if the file exist
-	if _, err := os.Stat(BackgroundPath(version)); err == nil {
-		return
+	if fileInfo, err := os.Stat(BackgroundPath(version)); err == nil {
+		if fileInfo.Size() > 0 {
+			return
+		}
 	}
 
 	// if the background url is nil, return
