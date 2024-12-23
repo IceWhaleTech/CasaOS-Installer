@@ -352,7 +352,7 @@ func (r *StatusService) Cronjob(ctx context.Context, sysRoot string) error {
 		}
 	} else {
 		releaseDir := filepath.Dir(releaseFilePath)
-		latestReleaseDir := filepath.Join(filepath.Dir(releaseDir), "latest")
+		latestReleaseDir := filepath.Join(config.RAUC_RELEASE_PATH, "latest")
 
 		os.Remove(latestReleaseDir)
 		err = os.Symlink(releaseDir, latestReleaseDir)
