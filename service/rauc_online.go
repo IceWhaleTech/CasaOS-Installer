@@ -27,27 +27,25 @@ const (
 	UnknownChannelType     ChannelType = "unknown"
 )
 
-var (
-	ChannelData = map[ChannelType][]string{
-		StableChannelType: []string{
-			"https://casaos.oss-cn-shanghai.aliyuncs.com/IceWhaleTech/zimaos-rauc/",
-			"https://raw.githubusercontent.com/IceWhaleTech/ZimaOS/refs/heads/main/",
-		},
-		PublicTestChannelType: []string{
-			"https://casaos.oss-cn-shanghai.aliyuncs.com/IceWhaleTech/zimaos-rauc/public-test/",
-			"https://raw.githubusercontent.com/IceWhaleTech/ZimaOS/refs/heads/main/public-test/",
-		},
-		PrivateTestChannelType: []string{
-			"https://casaos.oss-cn-shanghai.aliyuncs.com/IceWhaleTech/zimaos-rauc/private-test/",
-		},
-		TestVerifyChannelType: []string{
-			"https://casaos.oss-cn-shanghai.aliyuncs.com/IceWhaleTech/zimaos-rauc/test-verification-channel/",
-		},
-		DisableChannelType: []string{
-			"https://localhost/IceWhaleTech/zimaos-rauc/",
-		},
-	}
-)
+var ChannelData = map[ChannelType][]string{
+	StableChannelType: {
+		"https://casaos.oss-cn-shanghai.aliyuncs.com/IceWhaleTech/zimaos-rauc/",
+		"https://raw.githubusercontent.com/IceWhaleTech/ZimaOS/refs/heads/main/",
+	},
+	PublicTestChannelType: {
+		"https://casaos.oss-cn-shanghai.aliyuncs.com/IceWhaleTech/zimaos-rauc/public-test/",
+		"https://raw.githubusercontent.com/IceWhaleTech/ZimaOS/refs/heads/main/public-test/",
+	},
+	PrivateTestChannelType: {
+		"https://casaos.oss-cn-shanghai.aliyuncs.com/IceWhaleTech/zimaos-rauc/private-test/",
+	},
+	TestVerifyChannelType: {
+		"https://casaos.oss-cn-shanghai.aliyuncs.com/IceWhaleTech/zimaos-rauc/test-verification-channel/",
+	},
+	DisableChannelType: {
+		"https://localhost/IceWhaleTech/zimaos-rauc/",
+	},
+}
 
 type RAUCService struct {
 	InstallRAUCHandler func(raucPath string) error
@@ -67,7 +65,8 @@ func (r *RAUCService) Install(release codegen.Release, sysRoot string) error {
 }
 
 func (r *RAUCService) InstallInfo(release codegen.Release, sysRootPath string) (string, error) {
-	return filepath.Join(config.SysRoot, config.RAUC_RELEASE_PATH, "latest"), nil
+	// return filepath.Join(config.SysRoot, config.RAUC_RELEASE_PATH, "latest"), nil
+	return RAUCFilePath(release)
 }
 
 func (r *RAUCService) GetRelease(ctx context.Context, tag string, useCache bool) (*codegen.Release, error) {
