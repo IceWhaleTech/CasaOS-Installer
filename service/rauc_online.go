@@ -27,7 +27,6 @@ const (
 	UnknownChannelType     ChannelType = "unknown"
 )
 
-
 var (
 	ChannelData = map[ChannelType][]string{
 		StableChannelType: []string{
