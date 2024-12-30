@@ -27,25 +27,28 @@ const (
 	UnknownChannelType     ChannelType = "unknown"
 )
 
-var ChannelData = map[ChannelType][]string{
-	StableChannelType: {
-		"https://casaos.oss-cn-shanghai.aliyuncs.com/IceWhaleTech/zimaos-rauc/",
-		"https://raw.githubusercontent.com/IceWhaleTech/ZimaOS/refs/heads/main/",
-	},
-	PublicTestChannelType: {
-		"https://casaos.oss-cn-shanghai.aliyuncs.com/IceWhaleTech/zimaos-rauc/public-test/",
-		"https://raw.githubusercontent.com/IceWhaleTech/ZimaOS/refs/heads/main/public-test/",
-	},
-	PrivateTestChannelType: {
-		"https://casaos.oss-cn-shanghai.aliyuncs.com/IceWhaleTech/zimaos-rauc/private-test/",
-	},
-	TestVerifyChannelType: {
-		"https://casaos.oss-cn-shanghai.aliyuncs.com/IceWhaleTech/zimaos-rauc/test-verification-channel/",
-	},
-	DisableChannelType: {
-		"https://localhost/IceWhaleTech/zimaos-rauc/",
-	},
-}
+
+var (
+	ChannelData = map[ChannelType][]string{
+		StableChannelType: []string{
+			"https://casaos.oss-cn-shanghai.aliyuncs.com/IceWhaleTech/zimaos-rauc/",
+			"https://raw.githubusercontent.com/IceWhaleTech/ZimaOS/refs/heads/main/",
+		},
+		PublicTestChannelType: []string{
+			"https://casaos.oss-cn-shanghai.aliyuncs.com/IceWhaleTech/zimaos-rauc/public-test/",
+			"https://raw.githubusercontent.com/IceWhaleTech/ZimaOS/refs/heads/main/public-test/",
+		},
+		PrivateTestChannelType: []string{
+			"https://casaos.oss-cn-shanghai.aliyuncs.com/IceWhaleTech/zimaos-rauc/private-test/",
+		},
+		TestVerifyChannelType: []string{
+			"https://casaos.oss-cn-shanghai.aliyuncs.com/IceWhaleTech/zimaos-rauc/test-verification-channel/",
+		},
+		DisableChannelType: []string{
+			"https://localhost/IceWhaleTech/zimaos-rauc/",
+		},
+	}
+)
 
 type RAUCService struct {
 	InstallRAUCHandler func(raucPath string) error
