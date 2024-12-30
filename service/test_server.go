@@ -90,10 +90,7 @@ func (r *TestService) PostMigration(sysRoot string) error {
 	return nil
 }
 
-// return the path of update package in local
 func (r *TestService) InstallInfo(release codegen.Release, sysRootPath string) (string, error) {
-	// 	return filepath.Join(config.SysRoot, config.RAUC_RELEASE_PATH, "latest"), nil
-	// TODO: fix other case might return err
 	return RAUCFilePath(release)
 }
 

@@ -66,7 +66,10 @@ func (r *RAUCService) Install(release codegen.Release, sysRoot string) error {
 	return InstallRAUC(release, sysRoot, r.InstallRAUCHandler)
 }
 
+// return the path of update package in local
 func (r *RAUCService) InstallInfo(release codegen.Release, sysRootPath string) (string, error) {
+	// 	return filepath.Join(config.SysRoot, config.RAUC_RELEASE_PATH, "latest"), nil
+	// TODO: fix other case might return err
 	return RAUCFilePath(release)
 }
 
