@@ -113,7 +113,7 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	MigrateInstaller()
+	MigrateOrFixOldVersion()
 
 	mux := &util_http.HandlerMultiplexer{
 		HandlerMap: map[string]http.Handler{
@@ -262,7 +262,7 @@ func registerRouter(listener net.Listener) {
 	}
 }
 
-func MigrateInstaller() {
+func MigrateOrFixOldVersion() {
 	Fix130WrongLatestDir()
 }
 
