@@ -269,10 +269,12 @@ func MigrateOrFixOldVersion() {
 func Fix130WrongLatestDir() {
 	// bug ref: https://icewhale.feishu.cn/wiki/J9KBwpgmFiqjt8kv17DcAz1gnch
 
-	if _, err := os.Stat(filepath.Join(config.SysRoot, config.RAUC_RELEASE_PATH, "latest")); err == nil {
-		err := os.RemoveAll(filepath.Join(config.SysRoot, config.RAUC_RELEASE_PATH, "latest"))
+	if _, err := os.Stat(filepath.Join(config.SysRoot, filepath.Dir(config.RAUC_RELEASE_PATH), "latest")); err == nil {
+		err := os.RemoveAll(filepath.Join(config.SysRoot, filepath.Dir(config.RAUC_RELEASE_PATH), "latest"))
 		if err != nil {
 			logger.Error("error when trying to remove latest dir", zap.Error(err))
 		}
+	} else {
+		logger.Info("latest dir not found")
 	}
 }
