@@ -113,6 +113,8 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
+	MigrateInstaller()
+
 	mux := &util_http.HandlerMultiplexer{
 		HandlerMap: map[string]http.Handler{
 			"v2":  route.InitV2Router(),
@@ -257,5 +259,20 @@ func registerRouter(listener net.Listener) {
 			break
 		}
 		time.Sleep(1 * time.Second)
+	}
+}
+
+func MigrateInstaller() {
+	Fix130WrongLatestDir()
+}
+
+func Fix130WrongLatestDir() {
+	// bug ref: https://icewhale.feishu.cn/wiki/J9KBwpgmFiqjt8kv17DcAz1gnch
+
+	if _, err := os.Stat(filepath.Join(config.SysRoot, config.RAUC_RELEASE_PATH, "latest")); err == nil {
+		err := os.RemoveAll(filepath.Join(config.SysRoot, config.RAUC_RELEASE_PATH, "latest"))
+		if err != nil {
+			logger.Error("error when trying to remove latest dir", zap.Error(err))
+		}
 	}
 }
