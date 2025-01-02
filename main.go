@@ -274,7 +274,5 @@ func Fix130WrongLatestDir() {
 		if err != nil {
 			logger.Error("error when trying to remove latest dir", zap.Error(err))
 		}
-	} else {
-		logger.Info("latest dir not found")
 	}
 }
