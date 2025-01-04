@@ -273,6 +273,7 @@ func (r *StatusService) CleanUpOldRelease(sysRoot string) error {
 			logger.Info("cleanning up", zap.String("dir", dir))
 			whiteList = []string{"zimaos_zimacube-" + version + ".raucb", "checksums.txt"}
 
+			//! Important!: 这里不能删除，为了当前版本在重启以后还能看到更新日志弹框
 			if !(currentVersion.String() == version) {
 				whiteList = append(whiteList, "release.yaml")
 			}
