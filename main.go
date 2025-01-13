@@ -21,7 +21,6 @@ import (
 	"github.com/robfig/cron/v3"
 
 	util_http "github.com/IceWhaleTech/CasaOS-Common/utils/http"
-	"github.com/IceWhaleTech/CasaOS-Installer/codegen/message_bus"
 
 	"github.com/IceWhaleTech/CasaOS-Installer/common"
 	"github.com/IceWhaleTech/CasaOS-Installer/internal/config"
@@ -140,7 +139,6 @@ func main() {
 	}
 
 	go registerRouter(listener)
-	go registerMsg()
 
 	// should do before cron job to prevent stop by `installing` status
 	err = service.InstallerService.PostMigration(sysRoot)
@@ -212,27 +210,6 @@ func watchOfflineDir(watcher *fsnotify.Watcher) {
 	err := watcher.Add(filepath.Join(sysRoot, config.RAUC_OFFLINE_PATH))
 	if err != nil {
 		logger.Error("offline watch err", zap.Any("error info", err))
-	}
-}
-
-func registerMsg() {
-	var messageBus *message_bus.ClientWithResponses
-	var err error
-	for i := 0; i < 10; i++ {
-		if messageBus, err = service.MyService.MessageBus(); err != nil {
-			logger.Error("error when trying to connect to message bus... skipping", zap.Error(err))
-			continue
-		}
-		response, err := messageBus.RegisterEventTypesWithResponse(context.Background(), common.EventTypes)
-		if err != nil {
-			logger.Error("error when trying to register one or more event types - some event type will not be discoverable", zap.Error(err))
-			continue
-		}
-		if response != nil && response.StatusCode() != http.StatusOK {
-			logger.Error("error when trying to register one or more event types - some event type will not be discoverable", zap.String("status", response.Status()), zap.String("body", string(response.Body)))
-			continue
-		}
-		time.Sleep(3 * time.Second)
 	}
 }
 

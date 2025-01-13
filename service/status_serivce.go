@@ -83,7 +83,15 @@ func NewStatusService(implementService UpdaterServiceInterface, sysRoot string) 
 	statusService.status = codegen.Status{
 		Status: codegen.Idle,
 	}
-	statusService.release, _ = implementService.GetRelease(context.Background(), GetReleaseBranch(sysRoot), true)
+
+	go func() {
+		release, err := implementService.GetRelease(context.Background(), GetReleaseBranch(sysRoot), true)
+		if err != nil {
+			logger.Error("fail get release", zap.Error(err))
+		} else {
+			statusService.release = release
+		}
+	}()
 	return statusService
 }
 
