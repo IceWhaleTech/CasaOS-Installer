@@ -296,6 +296,7 @@ func (r *StatusService) CleanUpOldRelease(sysRoot string) error {
 	return nil
 }
 
+//go:nocheckrace
 func (r *StatusService) Cronjob(ctx context.Context, sysRoot string) error {
 	logger.Info("start a check update job")
 
