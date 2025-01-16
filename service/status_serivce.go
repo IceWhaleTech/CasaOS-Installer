@@ -85,7 +85,6 @@ func NewStatusService(implementService UpdaterServiceInterface, sysRoot string) 
 		Status: codegen.Idle,
 	}
 
-	//go:nocheckrace
 	go func() {
 		release, err := implementService.GetRelease(context.Background(), GetReleaseBranch(sysRoot), true)
 		if err != nil {
