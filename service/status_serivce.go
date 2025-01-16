@@ -75,7 +75,6 @@ var EventTypeMapMessageType = map[EventType]message_bus.EventType{
 
 var versionRegexp = regexp.MustCompile(`^v(\d)+\.(\d)+.(\d)+(-(alpha|beta)?(\d)+)?$`)
 
-//go:nocheckrace
 func NewStatusService(implementService UpdaterServiceInterface, sysRoot string) *StatusService {
 	statusService := &StatusService{
 		ImplementService: implementService,
@@ -296,7 +295,6 @@ func (r *StatusService) CleanUpOldRelease(sysRoot string) error {
 	return nil
 }
 
-//go:nocheckrace
 func (r *StatusService) Cronjob(ctx context.Context, sysRoot string) error {
 	logger.Info("start a check update job")
 
