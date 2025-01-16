@@ -43,9 +43,11 @@ func TestRAUCServer(t *testing.T) {
 	releasePath, err := installerServer.DownloadRelease(ctx, *release, false)
 	parentDir := filepath.Dir(releasePath)
 
-	// err may be "download fail"
-	if assert.Contains(t, err.Error(), "download fail") {
-		t.SkipNow()
+	if err != nil {
+		// err may be "download fail"
+		if assert.Contains(t, err.Error(), "download fail") {
+			t.SkipNow()
+		}
 	}
 
 	assert.NoError(t, err)
