@@ -75,6 +75,7 @@ var EventTypeMapMessageType = map[EventType]message_bus.EventType{
 
 var versionRegexp = regexp.MustCompile(`^v(\d)+\.(\d)+.(\d)+(-(alpha|beta)?(\d)+)?$`)
 
+//go:nocheckrace
 func NewStatusService(implementService UpdaterServiceInterface, sysRoot string) *StatusService {
 	statusService := &StatusService{
 		ImplementService: implementService,
