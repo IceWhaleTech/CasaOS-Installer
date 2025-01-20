@@ -41,6 +41,10 @@ func InstallRAUC(release codegen.Release, sysRoot string, InstallRAUCHandler fun
 	if err != nil {
 		return err
 	}
+	logger.Info("verify rauc whether in cache", zap.String("rauc file path", raucFilePath))
+	if _, err := os.Stat(raucFilePath); os.IsNotExist(err) {
+		return fmt.Errorf("not found rauc install package")
+	}
 
 	err = InstallRAUCHandler(raucFilePath)
 	if err != nil {
@@ -114,12 +118,6 @@ func RAUCFilePath(release codegen.Release) (string, error) {
 
 	packageFilePath := filepath.Join(releaseDir, packageFilename)
 
-	// packageFilePath = packageFilePath[:len(packageFilePath)-len(".tar")] + ".raucb"
-	// to check file exist
-	logger.Info("verify rauc whether in cache", zap.String("rauc file path", packageFilePath))
-	if _, err := os.Stat(packageFilePath); os.IsNotExist(err) {
-		return "", fmt.Errorf("not found rauc install package")
-	}
 	return packageFilePath, nil
 }
 
