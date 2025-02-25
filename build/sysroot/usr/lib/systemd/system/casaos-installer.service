@@ -1,5 +1,5 @@
 [Unit]
-After=casaos-message-bus.service
+After=zimaos-message-bus.service
 Description=CasaOS Installer (and Updater) Service
 
 [Service]
