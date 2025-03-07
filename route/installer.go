@@ -182,3 +182,27 @@ func (a *api) GetInstall(ctx echo.Context) error {
 		Path: &path,
 	})
 }
+
+// GetBetaSubscriptionStatus implements codegen.ServerInterface.
+func (a *api) GetBetaSubscriptionStatus(ctx echo.Context) error {
+	beta, err := service.GetBetaSubscriptionStatus()
+	if err != nil {
+		return ctx.JSON(http.StatusInternalServerError, &codegen.ResponseInternalServerError{
+			Message: lo.ToPtr(err.Error()),
+		})
+	}
+	return ctx.JSON(http.StatusOK, &codegen.GetBetaSubscriptionStatusOK{
+		Data: &beta,
+	})
+}
+
+// SetBetaSubscriptionStatus implements codegen.ServerInterface.
+func (a *api) SetBetaSubscriptionStatus(ctx echo.Context, params codegen.SetBetaSubscriptionStatusParams) error {
+	err := service.SetBetaSubscriptionStatus(params)
+	if err != nil {
+		return ctx.JSON(http.StatusInternalServerError, &codegen.ResponseInternalServerError{
+			Message: lo.ToPtr(err.Error()),
+		})
+	}
+	return ctx.JSON(http.StatusOK, &codegen.ResponseOK{})
+}
