@@ -30,7 +30,28 @@ builds:
       - linux
     goarch:
       - amd64
-  
+  - id: casaos-installer-arm64
+    binary: build/sysroot/usr/bin/casaos-installer
+    hooks:
+      post:
+        - upx --best --lzma -v --no-progress "{{ .Path }}"
+    env:
+      - CC=aarch64-linux-gnu-gcc
+    ldflags:
+      - -X main.commit={{.Commit}}
+      - -X main.date={{.Date}}
+      - -s
+      - -w
+      - -extldflags "-static"
+    tags:
+      - musl
+      - netgo
+      - osusergo
+    goos:
+      - linux
+    goarch:
+      - arm64
+
   - id: channel-tool-amd64
     binary: build/sysroot/usr/bin/channel-tool
     main: ./cmd/channel
@@ -53,6 +74,28 @@ builds:
     goarch:
       - amd64
 
+  - id: channel-tool-arm64
+    binary: build/sysroot/usr/bin/channel-tool
+    main: ./cmd/channel
+    env:
+      - CC=aarch64-linux-gnu-gcc
+    gcflags:
+      - all=-N -l
+    ldflags:
+      - -X main.commit={{.Commit}}
+      - -X main.date={{.Date}}
+      - -s
+      - -w
+      - -extldflags "-static"
+    tags:
+      - musl
+      - netgo
+      - osusergo
+    goos:
+      - linux
+    goarch:
+      - arm64
+
 archives:
   - name_template: >-
       {{ .Os }}-{{- if eq .Arch "arm" }}arm-7{{- else }}{{ .Arch }}{{- end }}-{{ .ProjectName }}-v{{ .Version }}
@@ -60,6 +103,8 @@ archives:
     builds:
       - casaos-installer-amd64
       - channel-tool-amd64
+      - casaos-installer-arm64
+      - channel-tool-arm64
     files:
       - build/**/*
 checksum:
