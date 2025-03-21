@@ -4,10 +4,10 @@ project_name: casaos-installer
 before:
   hooks:
     - go generate
-    - go mod tidy -v
+    - go mod tidy
     - go run github.com/loeffel-io/ls-lint@latest
     - go run github.com/google/go-licenses@latest check . --disallowed_types=restricted
-    - go test -timeout 380s -race -v ./... 
+    - go test -timeout 380s -race -v ./...
 builds:
   - id: casaos-installer-amd64
     binary: build/sysroot/usr/bin/casaos-installer
