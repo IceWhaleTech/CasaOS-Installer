@@ -204,5 +204,7 @@ func (a *api) SetBetaSubscriptionStatus(ctx echo.Context, params codegen.SetBeta
 			Message: lo.ToPtr(err.Error()),
 		})
 	}
-	return ctx.JSON(http.StatusOK, &codegen.ResponseOK{})
+	return ctx.JSON(http.StatusOK, &codegen.ResponseOK{
+		Message: lo.ToPtr("ok"),
+	})
 }
