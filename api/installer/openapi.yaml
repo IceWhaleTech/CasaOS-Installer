@@ -81,7 +81,7 @@ paths:
           $ref: "#/components/responses/ResponseNotFound"
         "500":
           $ref: "#/components/responses/ResponseInternalServerError"
- 
+
   /install:
     get:
       summary: Get the Info of the installation. such as install package path
@@ -108,7 +108,7 @@ paths:
           $ref: "#/components/responses/StatusOK"
         "500":
           $ref: "#/components/responses/ResponseInternalServerError"
-    
+
   /reset:
     put:
       deprecated: true
@@ -117,6 +117,43 @@ paths:
       tags:
         - Web methods
         - OTA methods
+      responses:
+        "200":
+          $ref: "#/components/responses/ResponseOK"
+        "500":
+          $ref: "#/components/responses/ResponseInternalServerError"
+
+  /beta-subscription:
+    get:
+      tags:
+        - Common methods
+      summary: Get beta subscription status
+      description: |-
+        Get beta subscription status.
+      operationId: getBetaSubscriptionStatus
+      responses:
+        "200":
+          $ref: "#/components/responses/GetBetaSubscriptionStatusOK"
+        "500":
+          $ref: "#/components/responses/ResponseInternalServerError"
+    put:
+      tags:
+        - Common methods
+      summary: Enable or disable beta subscription
+      description: |-
+        Enable or disable beta subscription.
+      operationId: setBetaSubscriptionStatus
+      parameters:
+        - name: status
+          in: query
+          description: beta subscription status
+          required: true
+          schema:
+            type: string
+            enum:
+              - enable
+              - disable
+            example: "enable"
       responses:
         "200":
           $ref: "#/components/responses/ResponseOK"
@@ -134,8 +171,8 @@ paths:
         "200":
           $ref: "#/components/responses/NoticeInfoOK"
         "500":
-          $ref: "#/components/responses/ResponseInternalServerError"      
-    
+          $ref: "#/components/responses/ResponseInternalServerError"
+
 components:
   securitySchemes:
     access_token:
@@ -234,6 +271,17 @@ components:
               - properties:
                   data:
                     $ref: "#/components/schemas/NoticeInfoOKData"
+
+    GetBetaSubscriptionStatusOK:
+      description: OK
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: "#/components/schemas/BaseResponse"
+              - properties:
+                  data:
+                    $ref: "#/components/schemas/Beta"
   schemas:
     BaseResponse:
       properties:
@@ -343,3 +391,15 @@ components:
         short:
           type: string
           example: gateway
+
+    Beta:
+      readOnly: true
+      required:
+        - status
+      properties:
+        status:
+          type: string
+          enum:
+            - enabled
+            - disabled
+          example: "enable"

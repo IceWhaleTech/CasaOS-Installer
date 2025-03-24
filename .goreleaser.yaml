@@ -4,7 +4,7 @@ project_name: casaos-installer
 before:
   hooks:
     - go generate
-    - go mod tidy -v
+    - go mod tidy
     - go run github.com/loeffel-io/ls-lint@latest
     - go run github.com/google/go-licenses@latest check . --disallowed_types=restricted
     - go test -race -v ./...
@@ -30,7 +30,7 @@ builds:
       - linux
     goarch:
       - amd64
-  
+
   - id: channel-tool-amd64
     binary: build/sysroot/usr/bin/channel-tool
     main: ./cmd/channel
