@@ -14,7 +14,7 @@ jobs:
     steps:
       - name: Install dependencies for cross-compiling
         run: |
-          sudo apt update 
+          sudo apt update
           sudo apt-get --no-install-recommends --yes install \
             upx libc6-dev-amd64-cross \
             gcc-aarch64-linux-gnu libc6-dev-arm64-cross \
@@ -29,9 +29,11 @@ jobs:
         id: get_version
         run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
       - name: Set up Go
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v5
         with:
-          go-version: "1.20"
+          go-version: "1.21"
+          cache-dependency-path: |
+            go.sum
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v4
         with:
