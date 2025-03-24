@@ -1,36 +1,33 @@
 package service
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
 
-	"github.com/IceWhaleTech/CasaOS-Common/utils/command"
 	"github.com/IceWhaleTech/CasaOS-Common/utils/logger"
 	"github.com/IceWhaleTech/CasaOS-Installer/codegen"
+	"github.com/IceWhaleTech/CasaOS-Installer/internal/config"
 	"go.uber.org/zap"
 )
 
 func SetBetaSubscriptionStatus(status codegen.SetBetaSubscriptionStatusParams) error {
 	switch status.Status {
 	case codegen.Enable:
-		result, err := command.ExecResultStr("channel-tool public")
+		config.ServerInfo.Mirrors = ChannelData[PublicTestChannelType]
+		config.Cfg.Section("server").Key("mirrors").SetValue(strings.Join(config.ServerInfo.Mirrors, ","))
+		err := config.Cfg.SaveTo(config.ConfigFilePath)
 		if err != nil {
-			return err
-		}
-
-		if strings.TrimSpace(result) == "Public Test Channel" {
-			return nil
+			fmt.Printf("Fail to save file: %v", err)
 		}
 
 	case codegen.Disable:
-		result, err := command.ExecResultStr("channel-tool stable")
+		config.ServerInfo.Mirrors = ChannelData[StableChannelType]
+		config.Cfg.Section("server").Key("mirrors").SetValue(strings.Join(config.ServerInfo.Mirrors, ","))
+		err := config.Cfg.SaveTo(config.ConfigFilePath)
 		if err != nil {
-			return err
-		}
-
-		if strings.TrimSpace(result) != "Stable Channel" {
-			return nil
+			fmt.Printf("Fail to save file: %v", err)
 		}
 
 		sysRoot := "/media/ZimaOS-HD"
