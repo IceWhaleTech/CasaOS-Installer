@@ -18,7 +18,8 @@ jobs:
           sudo apt-get --no-install-recommends --yes install \
             upx libc6-dev-amd64-cross \
             gcc-aarch64-linux-gnu libc6-dev-arm64-cross \
-            gcc-arm-linux-gnueabihf libc6-dev-armhf-cross
+            gcc-arm-linux-gnueabihf libc6-dev-armhf-cross \
+            gcc-riscv64-linux-gnu libc6-dev-riscv64-cross
       - name: Checkout
         uses: actions/checkout@v3
         with:
