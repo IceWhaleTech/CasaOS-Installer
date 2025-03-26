@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -22,6 +23,7 @@ func SetBetaSubscriptionStatus(status codegen.SetBetaSubscriptionStatusParams) e
 			fmt.Printf("Fail to save file: %v", err)
 		}
 
+		InstallerService.Cronjob(context.Background(), config.SysRoot)
 	case codegen.Disable:
 		config.ServerInfo.Mirrors = ChannelData[StableChannelType]
 		config.Cfg.Section("server").Key("mirrors").SetValue(strings.Join(config.ServerInfo.Mirrors, ","))
@@ -30,15 +32,7 @@ func SetBetaSubscriptionStatus(status codegen.SetBetaSubscriptionStatusParams) e
 			fmt.Printf("Fail to save file: %v", err)
 		}
 
-		sysRoot := "/media/ZimaOS-HD"
-
-		currentVersion, err := CurrentReleaseVersion(sysRoot)
-		if err != nil {
-			logger.Error("error when trying to get current release version", zap.Error(err))
-			return err
-		}
-
-		dirs, err := filepath.Glob(filepath.Join(sysRoot, "DATA", "rauc", "releases", "*"))
+		dirs, err := filepath.Glob(filepath.Join(config.SysRoot, "DATA", "rauc", "releases", "*"))
 		if err != nil {
 			logger.Error("error when trying to get all dirs in release", zap.Error(err))
 			return err
@@ -51,7 +45,7 @@ func SetBetaSubscriptionStatus(status codegen.SetBetaSubscriptionStatusParams) e
 			}
 
 			version := strings.TrimPrefix(baseDir, "v")
-			if IsNewerVersionString(currentVersion.String(), version) && strings.Contains(version, "beta") {
+			if strings.Contains(version, "beta") {
 				if err := os.RemoveAll(dir); err != nil {
 					logger.Error("error when trying to remove dir", zap.Error(err))
 				}
