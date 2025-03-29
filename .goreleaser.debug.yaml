@@ -27,7 +27,6 @@ builds:
       - linux
     goarch:
       - amd64
-
   - id: casaos-installer-arm64
     binary: build/sysroot/usr/bin/casaos-installer
     env:
@@ -66,6 +65,24 @@ builds:
       - arm
     goarm:
       - "7"
+  - id: casaos-installer-riscv64
+    binary: build/sysroot/usr/bin/casaos-installer
+    env:
+      - CC=riscv64-linux-gnu-gcc
+    gcflags:
+      - all=-N -l
+    ldflags:
+      - -X main.commit={{.Commit}}
+      - -X main.date={{.Date}}
+      - -extldflags "-static"
+    tags:
+      - musl
+      - netgo
+      - osusergo
+    goos:
+      - linux
+    goarch:
+      - riscv64
   - id: casaos-installer-cli-amd64
     binary: build/sysroot/usr/bin/casaos-installer-cli
     main: ./cmd/cli
@@ -125,12 +142,11 @@ builds:
       - arm
     goarm:
       - "7"
-
-  - id: channel-tool-amd64
-    binary: build/sysroot/usr/bin/channel-tool
-    main: ./cmd/channel
+  - id: casaos-installer-cli-riscv64
+    binary: build/sysroot/usr/bin/casaos-installer-cli
+    main: ./cmd/cli
     env:
-      - CC=x86_64-linux-gnu-gcc
+      - CC=riscv64-linux-gnu-gcc
     gcflags:
       - all=-N -l
     ldflags:
@@ -144,15 +160,60 @@ builds:
     goos:
       - linux
     goarch:
+      - riscv64
+  - id: channel-tool-amd64
+    binary: build/sysroot/usr/bin/channel-tool
+    main: ./cmd/channel
+    env:
+      - CC=x86_64-linux-gnu-gcc
+    gcflags:
+      - all=-N -l
+    ldflags:
+      - -X main.commit={{.Commit}}
+      - -X main.date={{.Date}}
+      - -extld  -extldflags "-static"
+    tags:
+      - musl
+      - netgo
+      - osusergo
+    goos:
+      - linux
+    goarch:
       - amd64
-
+  - id: channel-tool-riscv64
+    binary: build/sysroot/usr/bin/channel-tool
+    main: ./cmd/channel
+    env:
+      - CC=riscv64-linux-gnu-gcc
+    gcflags:
+      - all=-N -l
+    ldflags:
+      - -X main.commit={{.Commit}}
+      - -X main.date={{.Date}}
+      - -extldflags "-static"
+    tags:
+      - musl
+      - netgo
+      - osusergo
+    goos:
+      - linux
+    goarch:
+      - riscv64
 archives:
   - name_template: >-
       {{ .Os }}-{{- if eq .Arch "arm" }}arm-7{{- else }}{{ .Arch }}{{- end }}-{{ .ProjectName }}-v{{ .Version }}
     id: casaos-installer
     builds:
       - casaos-installer-amd64
+      - casaos-installer-arm64
+      - casaos-installer-arm-7
+      - casaos-installer-riscv64
+      - casaos-installer-cli-amd64
+      - casaos-installer-cli-arm64
+      - casaos-installer-cli-arm-7
+      - casaos-installer-cli-riscv64
       - channel-tool-amd64
+      - channel-tool-riscv64
     files:
       - build/**/*
 checksum:
