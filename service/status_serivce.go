@@ -363,10 +363,12 @@ func (r *StatusService) Cronjob(ctx context.Context, sysRoot string) error {
 		releaseDir := filepath.Dir(releaseFilePath)
 		latestReleaseDir := filepath.Join(filepath.Dir(releaseDir), "latest")
 
-		os.Remove(latestReleaseDir)
-		err = os.Symlink(releaseDir, latestReleaseDir)
+		if link, _ := os.Readlink(latestReleaseDir); link != releaseDir {
+			os.Remove(latestReleaseDir)
+			err = os.Symlink(releaseDir, latestReleaseDir)
 
-		logger.Info("create latest symlink ok", zap.Error(err), zap.Any("releaseDir", releaseDir), zap.Any("latestReleaseDir", latestReleaseDir))
+			logger.Info("create latest symlink ok", zap.Error(err), zap.Any("releaseDir", releaseDir), zap.Any("latestReleaseDir", latestReleaseDir))
+		}
 
 		if err = r.CleanUpOldRelease(sysRoot); err != nil {
 			logger.Error("error when trying to clean up", zap.Error(err))
