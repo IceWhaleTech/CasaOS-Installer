@@ -96,9 +96,8 @@ func TestDownloadRauc(t *testing.T) {
 	config.ServerInfo.CachePath = filepath.Join(tmpDir, "cache")
 
 	releaseFilePath, err := service.DownloadRelease(ctx, *release, false)
-
 	// err may be "download fail"
-	if assert.Contains(t, err.Error(), "download fail") {
+	if err != nil && assert.Contains(t, err.Error(), "download fail") {
 		t.SkipNow()
 	}
 
@@ -128,7 +127,7 @@ func TestDownloadRelease(t *testing.T) {
 
 	releaseFilePath, err := service.DownloadRelease(ctx, *release, false)
 	// err may be "download fail"
-	if assert.Contains(t, err.Error(), "download fail") {
+	if err != nil && assert.Contains(t, err.Error(), "download fail") {
 		t.SkipNow()
 	}
 	assert.NoError(t, err)
